@@ -1,7 +1,6 @@
 // server-actions/email/actions.ts
 "use server";
 
-import { SystemGmailConfig } from "./../../node_modules/.prisma/client/index.d";
 import { createClient } from "@/utils/supabase/server";
 import { ActionResult } from "@/types/server-action-results";
 import prisma from "@/utils/prisma/client";

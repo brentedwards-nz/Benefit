@@ -215,7 +215,7 @@ export async function readMostRecentEmail() {
     const findEmailPart = (
       payloadParts: any[] | undefined,
       mimeType: string
-    ) => {
+    ): string | null => {
       if (!payloadParts) return null;
       for (const part of payloadParts) {
         if (part.mimeType === mimeType && part.body?.data) {
