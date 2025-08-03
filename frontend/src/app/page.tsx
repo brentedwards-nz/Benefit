@@ -23,12 +23,13 @@ export default async function Index() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-foreground bg-background">
       <div className="text-center max-w-2xl px-4">
         <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 animate-gradient-x">
-          Group Fitness Manager
+          Bene-Fit Welness Solutions
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
-          The ultimate application for streamlining **Group Fitness programs**
-          for gyms. Effortlessly manage **class timetables** and
-          **instructors**, ensuring your fitness operations run smoothly.
+          We are a group of fitness professionals who provide body and mind
+          packages to groups, corporates, and individuals. As a health
+          collective, we assist you by providing plans which incorporate
+          nutrition, workout, breath therapy, coaching, and more.
         </p>
 
         {user ? (
@@ -47,7 +48,7 @@ export default async function Index() {
         ) : (
           <div className="mt-8">
             <p className="text-xl text-muted-foreground mb-4">
-              Ready to revolutionize your gym's group fitness?
+              Let us work with you to help you change your life.
             </p>
             <Link
               href="/auth/signin"
@@ -61,8 +62,8 @@ export default async function Index() {
 
       <footer className="mt-20 text-sm text-gray-500">
         <p>
-          &copy; {new Date().getFullYear()} Group Fitness Manager. All rights
-          reserved.
+          &copy; {new Date().getFullYear()} Bene-Fit Wellness Solutions. All
+          rights reserved.
         </p>
         <p className="mt-2">Powered by Next.js and Supabase</p>
       </footer>

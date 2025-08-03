@@ -8,8 +8,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Group fitness manager",
-  description: "Streamline managing your group fitness programme with AI",
+  title: "Bene-Fit Wellness Solutions",
+  description: "Changing lives through wellness. Feel the Bene-Fit",
 };
 
 export default function RootLayout({
