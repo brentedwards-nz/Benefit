@@ -19,13 +19,10 @@ import {
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
-import {
-  signInWithMagicLink,
-  MagicSignInResult,
-} from "@/server-actions/auth/actions";
-import { createClient } from "@/utils/supabase/client";
+import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+
 type OAuthProvider = "google" | "facebook";
 
 function FormComponent() {
@@ -37,15 +34,47 @@ function FormComponent() {
     message: "",
   });
 
-  const initialState: MagicSignInResult = {
+  const [emailState, setEmailState] = useState({
     success: false,
     message: "",
-  };
+  });
 
-  const [signInWithMagicLinkState, formActionMagicLink] = useFormState(
-    signInWithMagicLink,
-    initialState
-  );
+  const handleEmailSignIn = async (formData: FormData) => {
+    const email = formData.get("email") as string;
+
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      setEmailState({
+        success: false,
+        message: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    try {
+      const result = await signIn("email", {
+        email,
+        callbackUrl: "/dashboard",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setEmailState({
+          success: false,
+          message: "Failed to send email. Please try again.",
+        });
+      } else {
+        setEmailState({
+          success: true,
+          message: "Check your email for a sign-in link.",
+        });
+      }
+    } catch (error) {
+      setEmailState({
+        success: false,
+        message: "An unexpected error occurred.",
+      });
+    }
+  };
 
   const signInWithOAuth = async (provider: OAuthProvider) => {
     try {
@@ -55,28 +84,26 @@ function FormComponent() {
         success: false,
         message: "",
       });
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-        },
+
+      const result = await signIn(provider, {
+        callbackUrl: "/dashboard",
+        redirect: false,
       });
-      if (error) {
+
+      if (result?.error) {
         setOAuthRequest({
           provider: "",
           pending: false,
           success: false,
-          message: error.message,
+          message: result.error,
         });
       } else {
         setOAuthRequest({
           provider: "",
           pending: true,
           success: true,
-          message: `Logging in via ${
-            provider.charAt(0).toUpperCase() + provider.slice(1)
-          }...`,
+          message: `Logging in via ${provider.charAt(0).toUpperCase() + provider.slice(1)
+            }...`,
         });
       }
     } catch (error) {
@@ -108,7 +135,7 @@ function FormComponent() {
             type="submit"
             className="w-full"
             disabled={oAuthRequest.pending || pending}
-            formAction={formActionMagicLink}
+            formAction={handleEmailSignIn}
           >
             {pending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -120,15 +147,14 @@ function FormComponent() {
         </div>
       </div>
       <div className="flex justify-center">
-        {signInWithMagicLinkState.message && (
+        {emailState.message && (
           <p
-            className={`text-sm mt-2 ${
-              signInWithMagicLinkState.success
+            className={`text-sm mt-2 ${emailState.success
                 ? "text-green-600"
                 : "text-red-600"
-            }`}
+              }`}
           >
-            {signInWithMagicLinkState.message}
+            {emailState.message}
           </p>
         )}
       </div>
@@ -147,8 +173,8 @@ function FormComponent() {
           disabled={oAuthRequest.pending || pending}
         >
           {oAuthRequest.pending &&
-          !oAuthRequest.success &&
-          oAuthRequest.provider == "google" ? (
+            !oAuthRequest.success &&
+            oAuthRequest.provider == "google" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <IconBrandGoogle />
@@ -162,8 +188,8 @@ function FormComponent() {
           disabled={oAuthRequest.pending || pending}
         >
           {oAuthRequest.pending &&
-          !oAuthRequest.success &&
-          oAuthRequest.provider == "facebook" ? (
+            !oAuthRequest.success &&
+            oAuthRequest.provider == "facebook" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <IconBrandFacebook />
@@ -174,9 +200,8 @@ function FormComponent() {
       <div className="flex justify-center">
         {oAuthRequest.message && (
           <p
-            className={`text-sm mt-2 ${
-              oAuthRequest.success ? "text-gray-500" : "text-red-600"
-            }`}
+            className={`text-sm mt-2 ${oAuthRequest.success ? "text-gray-500" : "text-red-600"
+              }`}
           >
             {oAuthRequest.message}
           </p>

@@ -1,4 +1,5 @@
 import { ThemeProvider } from "@/components/theme-provider";
+import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
@@ -21,14 +22,16 @@ export default function RootLayout({
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <main className="min-h-screen flex flex-col items-center">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <NextAuthProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </NextAuthProvider>
         </main>
       </body>
     </html>

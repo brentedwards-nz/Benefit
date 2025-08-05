@@ -2,7 +2,7 @@
 
 "use server";
 
-import { createClient } from "@/utils/supabase/server"; // Import your server-side Supabase client
+import { getServerSession } from "next-auth";
 import Link from "next/link"; // Import Link for client-side navigation
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
@@ -14,10 +14,7 @@ const redirectToSignIn = () => {
 };
 
 export default async function Index() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await getServerSession();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-foreground bg-background">
@@ -32,11 +29,11 @@ export default async function Index() {
           nutrition, workout, breath therapy, coaching, and more.
         </p>
 
-        {user ? (
+        {session?.user ? (
           // User is logged in
           <div className="mt-8">
             <p className="text-xl text-gray-200 mb-4">
-              Welcome back, {user.email?.split("@")[0]}!
+              Welcome back, {session.user.email?.split("@")[0]}!
             </p>
             <Link
               href="/dashboard"
@@ -65,7 +62,7 @@ export default async function Index() {
           &copy; {new Date().getFullYear()} Bene-Fit Wellness Solutions. All
           rights reserved.
         </p>
-        <p className="mt-2">Powered by Next.js and Supabase</p>
+        <p className="mt-2">Powered by Next.js and NextAuth.js</p>
       </footer>
     </div>
   );

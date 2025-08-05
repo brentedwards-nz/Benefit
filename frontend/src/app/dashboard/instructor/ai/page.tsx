@@ -6,10 +6,10 @@ import { readProfile, updateProfile } from "@/server-actions/profile/actions";
 import type { Profile } from "@/server-actions/profile/types";
 import { ProfileFormValues } from "@/components/profile/schema";
 import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
+import { useSession } from "next-auth/react";
 
 const Profile = () => {
-  const supabase = createClient();
+  const { data: session } = useSession();
 
   const [initialData, setInitialData] = useState<Profile | undefined>(
     undefined
@@ -18,15 +18,10 @@ const Profile = () => {
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUserId(user?.id);
-    };
-
-    getUser();
-  }, [supabase]);
+    if (session?.user?.id) {
+      setUserId(session.user.id);
+    }
+  }, [session]);
 
   useEffect(() => {
     const fetchProfileData = async () => {

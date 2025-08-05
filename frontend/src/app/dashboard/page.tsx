@@ -1,12 +1,10 @@
 // frontend/app/dashboard/page.tsx
 import { ProfileCard } from "@/components/cards/profile-card";
-import { createClient } from "@/utils/supabase/server";
+import { getServerSession } from "next-auth";
 
 export default async function Dashboard() {
-  const supabase = await createClient();
-
-  const { data: user, error: userError } = await supabase.auth.getUser();
-  const auth_id = userError || !user ? "UNDEFINED" : user.user.id;
+  const session = await getServerSession();
+  const auth_id = session?.user?.id || "UNDEFINED";
 
   return (
     <>

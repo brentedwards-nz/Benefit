@@ -1,102 +1,34 @@
-// prisma/schema.prisma
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  schemas  = ["public", "auth", "vault"]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Read-only model for auth.users (ignored by Migrate, but used for relations)
-model users {
-  id       String    @id @map("id") @db.Uuid
-  profiles profiles? // Optional relation back to profiles
-  staff    staff[] // Optional relation back to staff (array because one user can be many staff entries)
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model Account {
+// }
 
-  @@map("users")
-  @@ignore
-  @@schema("auth")
-}
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model Session {
+// }
 
-// Read-only model for vault.secrets (ignored by Migrate, but used for relations)
-// This assumes 'secrets' is the table name in the 'vault' schema.
-model VaultSecret {
-  id String @id @map("id") @db.Uuid
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model User {
+// }
 
-  @@map("secrets")
-  @@schema("vault")
-}
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model VerificationToken {
+// }
 
-// Your custom public schema models below:
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model Profile {
+// }
 
-model club {
-  club_id      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  club_name    String
-  club_address String?
-  club_phone   String?
-  current      Boolean   @default(false)
-  disabled     Boolean   @default(true)
-  created_at   DateTime? @default(now()) @db.Timestamp(6)
-  staff        staff[]
-
-  @@schema("public")
-}
-
-model profiles {
-  auth_id      String    @id @db.Uuid
-  first_name   String?
-  last_name    String?
-  birth_date   DateTime? @db.Date
-  current      Boolean   @default(false)
-  disabled     Boolean   @default(true)
-  avatar_url   String?
-  contact_info Json?
-  created_at   DateTime? @default(now()) @db.Timestamp(6)
-  users        users     @relation(fields: [auth_id], references: [id], onDelete: Cascade, onUpdate: NoAction) @ignore
-
-  @@schema("public")
-}
-
-model staff {
-  staff_id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  club_id  String    @db.Uuid
-  auth_id  String    @db.Uuid
-  hired_at DateTime? @default(now()) @db.Timestamp(6)
-  current  Boolean   @default(false)
-  disabled Boolean   @default(true)
-  roles    Json?     @default(dbgenerated("'[{\"role\": \"Profile Only\"}]'")) @db.JsonB
-  users    users     @relation(fields: [auth_id], references: [id], onDelete: Cascade, map: "staff_auth_id_fkey1") @ignore
-  club     club      @relation(fields: [club_id], references: [club_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([club_id, auth_id], map: "staff_club_id_profile_id_key")
-  @@schema("public")
-}
-
-enum Role {
-  SystemAdmin
-  Owner
-  Admin
-  Coordinator
-  Instructor
-  ProfileOnly
-
-  @@schema("public")
-}
-
-model SystemGmailConfig {
-  id              BigInt   @id @default(autoincrement())
-  connected_email String   @unique @db.Text
-  access_token    String   @db.Text
-  expires_at      DateTime @db.Timestamptz(6)
-  scopes          String   @db.Text
-  vault_secret_id String?  @unique @db.Uuid
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @db.Timestamptz(6)
-
-  @@map("system_gmail_config")
-  @@schema("public")
-}
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model SystemGmailConfig {
+// }

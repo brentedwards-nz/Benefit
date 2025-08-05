@@ -1,30 +1,33 @@
-import { createClient } from "@/utils/supabase/server";
+"use client";
+
+import { useAuth } from "@/hooks/use-auth";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
-export default async function AuthButton() {
-  const supabase = await createClient();
+export default function AuthButton() {
+  const { user, isAuthenticated, isLoading } = useAuth();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const signOut = async () => {
-    "use server";
-
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-    return redirect("/auth/signin");
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: "/auth/signin" });
   };
 
-  return user ? (
+  if (isLoading) {
+    return (
+      <div className="py-2 px-3 flex rounded-md no-underline bg-btn-background">
+        Loading...
+      </div>
+    );
+  }
+
+  return isAuthenticated ? (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOut}>
-        <button className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover">
-          Logout
-        </button>
-      </form>
+      Hey, {user?.email}!
+      <button
+        onClick={handleSignOut}
+        className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover"
+      >
+        Logout
+      </button>
     </div>
   ) : (
     <Link
