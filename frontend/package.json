@@ -4,10 +4,6 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "supa_stop": "npx supabase stop",
-    "supa_start": "npx supabase start",
-    "supa_restart": "npx supabase stop && npx supabase start",
-    "supa_kill": "docker stop $(docker ps -q --filter \"name=supabase_\")",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -32,8 +28,6 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tooltip": "^1.2.7",
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
     "@tabler/icons-react": "^3.34.0",
     "autoprefixer": "10.4.17",
     "class-variance-authority": "^0.7.1",
@@ -70,7 +64,6 @@
     "@types/react-dom": "18.2.18",
     "encoding": "^0.1.13",
     "prisma": "^6.11.1",
-    "supabase": "^2.30.4",
     "tsx": "^4.20.3"
   }
 }

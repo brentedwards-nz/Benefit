@@ -8,34 +8,16 @@ const menuDefinition: NavData = {
       items: [],
     },
     {
-      title: "Instructor",
-      url: "/dashboard/instructor",
+      title: "Client",
+      url: "/dashboard/client",
       items: [
         {
           title: "AI",
-          url: "/dashboard/instructor/ai",
+          url: "/dashboard/client/ai",
         },
         {
           title: "Profile",
-          url: "/dashboard/instructor/profile",
-        },
-      ],
-    },
-    {
-      title: "Club",
-      url: "/dashboard/club",
-      items: [
-        {
-          title: "Overview",
-          url: "/dashboard/club/overview",
-        },
-        {
-          title: "Email",
-          url: "/dashboard/club/email",
-        },
-        {
-          title: "Email Auth",
-          url: "/dashboard/club/email_auth",
+          url: "/dashboard/client/profile",
         },
       ],
     },
@@ -44,12 +26,12 @@ const menuDefinition: NavData = {
       url: "/dashboard/admin",
       items: [
         {
-          title: "Profile",
-          url: "#",
+          title: "Email",
+          url: "/dashboard/admin/email",
         },
         {
-          title: "Configuration",
-          url: "/dashboard/admin/configuration",
+          title: "Email Auth",
+          url: "/dashboard/admin/email_auth",
         },
       ],
     },
