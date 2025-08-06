@@ -2,7 +2,7 @@
 
 import prisma from "@/utils/prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function createUserProfile(userId: string, userData: {
     name?: string | null;

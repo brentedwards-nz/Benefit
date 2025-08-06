@@ -7,7 +7,7 @@ import Link from "next/link"; // Import Link for client-side navigation
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 const redirectToSignIn = () => {
   revalidatePath("/auth/signin");

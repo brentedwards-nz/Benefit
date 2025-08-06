@@ -1,7 +1,7 @@
 // frontend/app/dashboard/page.tsx
 import { ProfileCard } from "@/components/cards/profile-card";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
