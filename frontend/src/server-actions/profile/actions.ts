@@ -63,7 +63,7 @@ export async function readProfile(
   }
 
   try {
-    const profile = await prisma.profiles.findUnique({
+    const profile = await prisma.profile.findUnique({
       where: {
         auth_id: user_id,
       },
@@ -94,18 +94,18 @@ export async function readProfile(
     const contact_info = Array.isArray(profile.contact_info)
       ? (profile.contact_info as ContactInfoItem[])
       : typeof profile.contact_info === "string"
-      ? (JSON.parse(profile.contact_info) as ContactInfoItem[])
-      : profile.contact_info === null
-      ? null
-      : [];
+        ? (JSON.parse(profile.contact_info) as ContactInfoItem[])
+        : profile.contact_info === null
+          ? null
+          : [];
 
     const firstPhoneItem = contact_info
       ? contact_info.find((item) => item.type === "phone" && item.primary)
-          ?.value
+        ?.value
       : "";
     const firstEmailItem = contact_info
       ? contact_info.find((item) => item.type === "email" && item.primary)
-          ?.value
+        ?.value
       : "";
 
     const profileResult: Profile = {
@@ -134,9 +134,8 @@ export async function readProfile(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"
+        }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -189,7 +188,7 @@ export async function updateProfile(
       })
     );
 
-    const updatedOrCreatedRecord = await prisma.profiles.upsert({
+    const updatedOrCreatedRecord = await prisma.profile.upsert({
       where: {
         auth_id: auth_id,
       },
@@ -235,9 +234,8 @@ export async function updateProfile(
       last_name:
         updatedOrCreatedRecord?.last_name ?? "** Last name required **",
       full_name:
-        `${updatedOrCreatedRecord.first_name || ""} ${
-          updatedOrCreatedRecord.last_name || ""
-        }`.trim() || "Name required",
+        `${updatedOrCreatedRecord.first_name || ""} ${updatedOrCreatedRecord.last_name || ""
+          }`.trim() || "Name required",
       birth_date: updatedOrCreatedRecord.birth_date,
       current: updatedOrCreatedRecord.current,
       disabled: updatedOrCreatedRecord.disabled,
@@ -255,9 +253,8 @@ export async function updateProfile(
   } catch (err: any) {
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"
+        }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"

@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
@@ -9,26 +11,83 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model Account {
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Your custom public schema models below:
+
+model Profile {
+  auth_id      String    @id @db.Uuid
+  first_name   String?
+  last_name    String?
+  birth_date   DateTime? @db.Date
+  current      Boolean   @default(false)
+  disabled     Boolean   @default(true)
+  avatar_url   String?
+  contact_info Json?
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+}
+
+// Temporarily commented out to avoid permission issues
+// enum Role {
+//   SystemAdmin
+//   Owner
+//   Admin
+//   Coordinator
+//   Instructor
+//   ProfileOnly
 // }
 
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model Session {
-// }
-
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model User {
-// }
-
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model VerificationToken {
-// }
-
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model Profile {
-// }
-
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model SystemGmailConfig {
-// }
+model SystemGmailConfig {
+  id              BigInt   @id @default(autoincrement())
+  connected_email String   @unique @db.Text
+  access_token    String   @db.Text
+  expires_at      DateTime @db.Timestamptz(6)
+  scopes          String   @db.Text
+  vault_secret_id String?  @unique @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+}

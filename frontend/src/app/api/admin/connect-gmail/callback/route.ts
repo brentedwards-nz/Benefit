@@ -1,7 +1,7 @@
 // app/api/admin/connect-gmail/callback/route.ts
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js"; // Import Supabase client for server-side operations
+// import { createClient } from "@supabase/supabase-js"; // Import Supabase client for server-side operations
 
 // Ensure these environment variables are correctly set.
 // Use the exact names from your .env.local file.
@@ -10,12 +10,12 @@ const GOOGLE_GMAIL_CLIENT_SECRET = process.env.GOOGLE_GMAIL_CLIENT_SECRET!;
 const GOOGLE_GMAIL_CLIENT_REDIRECT_URI =
   process.env.GOOGLE_GMAIL_CLIENT_REDIRECT_URI!; // This is the URL of this file itself!
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+// const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // Base URL for redirects
 
 // Initialize Supabase Admin Client (uses service_role_key for full permissions)
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+// const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -91,63 +91,64 @@ export async function GET(request: Request) {
     }
 
     // --- 5. Store Refresh Token in Supabase Vault & Config in system_gmail_config table ---
+    // TODO: Implement with NextAuth/Prisma instead of Supabase
 
     // Call the RPC function `public.vault_create_secret`
-    const rpcResult = await supabaseAdmin.rpc("vault_create_secret", {
-      p_name: `gmail_refresh_token_${connectedEmailAddress.replace(
-        /[^a-zA-Z0-9]/g,
-        "_"
-      )}`, // Create a unique name for the secret
-      p_secret: refreshToken, // The actual refresh token
-      p_description: `Gmail Refresh Token for system account: ${connectedEmailAddress}`,
-    });
+    // const rpcResult = await supabaseAdmin.rpc("vault_create_secret", {
+    //   p_name: `gmail_refresh_token_${connectedEmailAddress.replace(
+    //     /[^a-zA-Z0-9]/g,
+    //     "_"
+    //   )}`, // Create a unique name for the secret
+    //   p_secret: refreshToken, // The actual refresh token
+    //   p_description: `Gmail Refresh Token for system account: ${connectedEmailAddress}`,
+    // });
 
-    const { data: vaultSecretData, error: vaultError } = rpcResult;
+    // const { data: vaultSecretData, error: vaultError } = rpcResult;
 
-    if (vaultError) {
-      console.error("Error storing refresh token in Vault:", vaultError);
-      return redirectToDashboardClubError(
-        "vault_store_failed",
-        vaultError.message
-      );
-    }
+    // if (vaultError) {
+    //   console.error("Error storing refresh token in Vault:", vaultError);
+    //   return redirectToDashboardClubError(
+    //     "vault_store_failed",
+    //     vaultError.message
+    //   );
+    // }
 
-    // Supabase RPCs usually return an array of objects for single row, so access [0].id
-    const vaultSecretId = vaultSecretData;
+    // // Supabase RPCs usually return an array of objects for single row, so access [0].id
+    // const vaultSecretId = vaultSecretData;
 
-    if (!vaultSecretId) {
-      console.error(
-        "Vault secret ID was not returned by vault_create_secret RPC."
-      );
-      return redirectToDashboardClubError(
-        "vault_id_missing",
-        "Vault secret ID was not returned by vault_create_secret RPC."
-      );
-    }
+    // if (!vaultSecretId) {
+    //   console.error(
+    //     "Vault secret ID was not returned by vault_create_secret RPC."
+    //   );
+    //   return redirectToDashboardClubError(
+    //     "vault_id_missing",
+    //     "Vault secret ID was not returned by vault_create_secret RPC."
+    //   );
+    // }
 
-    const { error: configError } = await supabaseAdmin
-      .from("system_gmail_config")
-      .upsert(
-        {
-          connected_email: connectedEmailAddress,
-          access_token: accessToken!, // Access token is short-lived and will be refreshed
-          expires_at: new Date(expiryDate!).toISOString(),
-          scopes: scopesGranted!,
-          vault_secret_id: vaultSecretId, // Link to the securely stored refresh token in Vault
-        },
-        { onConflict: "connected_email", ignoreDuplicates: false }
-      );
+    // const { error: configError } = await supabaseAdmin
+    //   .from("system_gmail_config")
+    //   .upsert(
+    //     {
+    //       connected_email: connectedEmailAddress,
+    //       access_token: accessToken!, // Access token is short-lived and will be refreshed
+    //       expires_at: new Date(expiryDate!).toISOString(),
+    //       scopes: scopesGranted!,
+    //       vault_secret_id: vaultSecretId, // Link to the securely stored refresh token in Vault
+    //     },
+    //     { onConflict: "connected_email", ignoreDuplicates: false }
+    //   );
 
-    if (configError) {
-      console.error(
-        "Error storing Gmail config in Supabase table:",
-        configError
-      );
-      return redirectToDashboardClubError(
-        "db_config_failed",
-        configError.message
-      );
-    }
+    // if (configError) {
+    //   console.error(
+    //     "Error storing Gmail config in Supabase table:",
+    //     configError
+    //   );
+    //   return redirectToDashboardClubError(
+    //     "db_config_failed",
+    //     configError.message
+    //   );
+    // }
 
     const successUrl = new URL("/dashboard/club/email_auth", BASE_URL);
     successUrl.searchParams.set("success", "gmail_connected");

@@ -1,7 +1,7 @@
 // app/api/admin/disconnect-gmail/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+// import { createClient } from "@/utils/supabase/server";
 import prisma from "@/utils/prisma/client";
 
 export async function DELETE(request: NextRequest) {
@@ -24,26 +24,27 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+  // TODO: Implement NextAuth authentication check
+  // try {
+  //   const supabase = await createClient();
+  //   const {
+  //     data: { user },
+  //     error: authError,
+  //   } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized: You must be logged in." },
-        { status: 401 }
-      );
-    }
-  } catch (error) {
-    console.error("Auth check failed:", error);
-    return NextResponse.json(
-      { success: false, message: "Authentication check failed." },
-      { status: 500 }
-    );
-  }
+  //   if (authError || !user) {
+  //     return NextResponse.json(
+  //       { success: false, message: "Unauthorized: You must be logged in." },
+  //       { status: 401 }
+  //     );
+  //   }
+  // } catch (error) {
+  //   console.error("Auth check failed:", error);
+  //   return NextResponse.json(
+  //     { success: false, message: "Authentication check failed." },
+  //     { status: 500 }
+  //   );
+  // }
 
   try {
     const accountToDelete = await prisma.systemGmailConfig.findUnique({
@@ -81,9 +82,10 @@ export async function DELETE(request: NextRequest) {
         where: { id: accountId },
       }),
 
-      prisma.vaultSecret.deleteMany({
-        where: { id: vaultSecretId },
-      }),
+      // TODO: Implement vault secret deletion with proper model
+      // prisma.vaultSecret.deleteMany({
+      //   where: { id: vaultSecretId },
+      // }),
     ]);
 
     return NextResponse.json({

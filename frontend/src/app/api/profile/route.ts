@@ -1,23 +1,30 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { NextResponse } from 'next/server';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/utils/prisma/client';
 
-export async function GET(request: Request) {
-  const session = await getServerSession();
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const auth_id = session.user.id;
 
   try {
     const profile = await prisma.profile.findUnique({
-      where: { auth_id },
+      where: {
+        auth_id: session.user.id,
+      },
       select: {
+        auth_id: true,
         first_name: true,
         last_name: true,
         birth_date: true,
+        current: true,
+        disabled: true,
+        avatar_url: true,
+        contact_info: true,
+        created_at: true,
       },
     });
 
@@ -27,6 +34,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(profile);
   } catch (error) {
+    console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

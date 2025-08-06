@@ -2,7 +2,7 @@
 
 "use server";
 
-import { createServiceRoleClient } from "@/utils/supabase/server";
+// import { createServiceRoleClient } from "@/utils/supabase/server";
 import { ActionResult } from "@/types/server-action-results";
 import { MinimalUser } from "./types";
 
@@ -12,51 +12,57 @@ export async function getDetailedSupabaseUserById(
   console.log("getDetailedSupabaseUserById called with userId:", user_id);
 
   try {
-    const supabase = await createServiceRoleClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.admin.getUserById(user_id);
+    // TODO: Implement with NextAuth and Prisma
+    // const supabase = await createServiceRoleClient();
+    // const {
+    //   data: { user },
+    //   error,
+    // } = await supabase.auth.admin.getUserById(user_id);
 
-    if (error) {
-      // Supabase returned an error
-      console.error("Supabase error:", error);
-      return {
-        success: false,
-        message: `Supabase error: ${error.message}`,
-        code: error.code || "SUPABASE_AUTH_ERROR", // Use Supabase error code if available
-      };
-    }
+    // if (error) {
+    //   // Supabase returned an error
+    //   console.error("Supabase error:", error);
+    //   return {
+    //     success: false,
+    //     message: `Supabase error: ${error.message}`,
+    //     code: error.code || "SUPABASE_AUTH_ERROR", // Use Supabase error code if available
+    //   };
+    // }
 
-    if (!user) {
-      // User not found
-      return {
-        success: false,
-        message: `User with ID ${user_id} not found.`,
-        code: "USER_NOT_FOUND",
-      };
-    }
+    // if (!user) {
+    //   // User not found
+    //   return {
+    //     success: false,
+    //     message: `User with ID ${user_id} not found.`,
+    //     code: "USER_NOT_FOUND",
+    //   };
+    // }
 
-    const minimalUser: MinimalUser = {
-      id: user.id,
-      email: user.email,
-      phone: user.phone as string | undefined, // Cast if your user_metadata is 'any'
-      full_name: user.user_metadata?.full_name as string | undefined, // Cast if your user_metadata is 'any'
-      avatar_url: user.user_metadata?.avatar_url as string | undefined, // Cast if your user_metadata is 'any'
-    };
+    // const minimalUser: MinimalUser = {
+    //   id: user.id,
+    //   email: user.email,
+    //   phone: user.phone as string | undefined, // Cast if your user_metadata is 'any'
+    //   full_name: user.user_metadata?.full_name as string | undefined, // Cast if your user_metadata is 'any'
+    //   avatar_url: user.user_metadata?.avatar_url as string | undefined, // Cast if your user_metadata is 'any'
+    // };
 
-    // Success case
+    // // Success case
+    // return {
+    //   success: true,
+    //   data: minimalUser,
+    // };
+
     return {
-      success: true,
-      data: minimalUser,
+      success: false,
+      message: "User functionality not implemented yet",
+      code: "NOT_IMPLEMENTED",
     };
   } catch (err: any) {
     // Catch any unexpected errors during the execution of the action
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"
+        }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"

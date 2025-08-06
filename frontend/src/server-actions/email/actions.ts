@@ -1,7 +1,7 @@
 // server-actions/email/actions.ts
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+// import { createClient } from "@/utils/supabase/server";
 import { ActionResult } from "@/types/server-action-results";
 import prisma from "@/utils/prisma/client";
 import { ConnectedGmailAccount, Email, From } from "./types";
@@ -20,15 +20,14 @@ export async function readConnectedGmailAccounts(): Promise<
   console.log("Fetching Connected Accounts");
 
   try {
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error("Unauthorized: You must be logged in.");
-    }
+    // TODO: Implement NextAuth authentication check
+    // const supabase = await createClient();
+    // const {
+    //   data: { user },
+    // } = await supabase.auth.getUser();
+    // if (!user) {
+    //   throw new Error("Unauthorized: You must be logged in.");
+    // }
 
     const gmailAccounts = await prisma.systemGmailConfig.findMany({
       select: {
@@ -54,16 +53,16 @@ export async function readConnectedGmailAccounts(): Promise<
 
     const accountsResult: ConnectedGmailAccount[] = gmailAccounts.map(
       (account) =>
-        ({
-          id: account.id,
-          connected_email: account.connected_email,
-          access_token: account.access_token,
-          expires_at: account.expires_at,
-          scopes: account.scopes,
-          vault_secret_id: account.vault_secret_id,
-          created_at: account.created_at,
-          updated_at: account.updated_at,
-        } as ConnectedGmailAccount)
+      ({
+        id: account.id,
+        connected_email: account.connected_email,
+        access_token: account.access_token,
+        expires_at: account.expires_at,
+        scopes: account.scopes,
+        vault_secret_id: account.vault_secret_id,
+        created_at: account.created_at,
+        updated_at: account.updated_at,
+      } as ConnectedGmailAccount)
     );
 
     return {
@@ -77,9 +76,8 @@ export async function readConnectedGmailAccounts(): Promise<
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"
+        }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -283,9 +281,8 @@ export async function readEmail(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"
+        }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"

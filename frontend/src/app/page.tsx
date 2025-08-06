@@ -7,6 +7,7 @@ import Link from "next/link"; // Import Link for client-side navigation
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const redirectToSignIn = () => {
   revalidatePath("/auth/signin");
@@ -14,7 +15,7 @@ const redirectToSignIn = () => {
 };
 
 export default async function Index() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-foreground bg-background">

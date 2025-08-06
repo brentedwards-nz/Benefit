@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { IconAlertCircle } from "@tabler/icons-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function AuthError() {
+function AuthErrorContent() {
     const searchParams = useSearchParams();
     const error = searchParams.get("error");
 
@@ -45,5 +46,34 @@ export default function AuthError() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function AuthError() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Card className="w-full max-w-sm shadow-lg">
+                    <CardHeader className="text-center">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                            <IconAlertCircle className="h-6 w-6 text-red-600" />
+                        </div>
+                        <CardTitle className="text-xl">Authentication Error</CardTitle>
+                        <CardDescription>
+                            Loading...
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                        <Link href="/auth/signin">
+                            <Button className="w-full">
+                                Try Again
+                            </Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
+        }>
+            <AuthErrorContent />
+        </Suspense>
     );
 } 
