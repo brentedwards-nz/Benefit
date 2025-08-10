@@ -201,3 +201,5 @@ export const AppSidebar = React.forwardRef<
     </Sidebar>
   );
 });
+
+AppSidebar.displayName = "AppSidebar";

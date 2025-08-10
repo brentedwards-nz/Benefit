@@ -131,11 +131,12 @@ export async function GET(request: Request) {
       });
 
       console.log("Gmail config stored successfully:", result.connected_email);
-    } catch (configError: any) {
+    } catch (configError: unknown) {
       console.error("Error storing Gmail config in database:", configError);
+      const errorMessage = configError instanceof Error ? configError.message : String(configError);
       return redirectToDashboardAdminError(
         "db_config_failed",
-        configError.message
+        errorMessage
       );
     }
 
@@ -143,11 +144,12 @@ export async function GET(request: Request) {
     const successUrl = new URL("/dashboard/admin/email_auth", baseUrl);
     successUrl.searchParams.set("success", "gmail_connected");
     return NextResponse.redirect(successUrl.toString());
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       "Error during token exchange or profile fetch:",
-      error.message
+      error
     );
-    return redirectToDashboardAdminError("gmail_auth_failed", error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return redirectToDashboardAdminError("gmail_auth_failed", errorMessage);
   }
 }

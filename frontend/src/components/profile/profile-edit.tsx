@@ -101,7 +101,7 @@ export function ProfileEditForm({
   const handlePrimaryChange = (indexToSetPrimary: number) => {
     const contactInfos = form.getValues("contact_info");
 
-    let updatedContactInfos: {
+    const updatedContactInfos: {
       type: "email" | "phone" | "address" | "social";
       value: string;
       primary: boolean;

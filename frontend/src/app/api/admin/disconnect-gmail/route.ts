@@ -95,7 +95,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("Deletion failed:", error);
 
-    if (error instanceof Error && (error as any).code === "P2025") {
+    if (error instanceof Error && 'code' in error && error.code === "P2025") {
       return NextResponse.json(
         {
           success: false,
