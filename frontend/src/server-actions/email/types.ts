@@ -15,7 +15,7 @@ export type ConnectedGmailAccount = {
   access_token: string;
   expires_at: Date;
   scopes: string;
-  vault_secret_id: string | null;
+  encrypted_refresh_token: string | null;
   created_at: Date;
   updated_at: Date;
 };

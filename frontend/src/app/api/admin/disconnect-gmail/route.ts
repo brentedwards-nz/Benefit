@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest) {
         id: accountId,
       },
       select: {
-        vault_secret_id: true,
+        encrypted_refresh_token: true,
       },
     });
 
@@ -66,12 +66,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const vaultSecretId = accountToDelete.vault_secret_id;
-    if (!vaultSecretId) {
+    const encryptedRefreshToken = accountToDelete.encrypted_refresh_token;
+    if (!encryptedRefreshToken) {
       return NextResponse.json(
         {
           success: false,
-          message: `Vault secret id ${vaultSecretId} not found.`,
+          message: `Encrypted refresh token not found.`,
         },
         { status: 404 }
       );

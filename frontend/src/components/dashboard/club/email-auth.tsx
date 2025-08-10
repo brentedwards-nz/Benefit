@@ -78,6 +78,9 @@ const EmailAuth = () => {
 
   // Function to handle the disconnection
   const handleDisconnect = async (accountId: bigint, accountEmail: string) => {
+    // Only run on client side
+    if (typeof window === "undefined") return;
+
     const confirmation = window.confirm(
       `Are you sure you want to disconnect the account "${accountEmail}"?`
     );

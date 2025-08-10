@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
@@ -11,22 +9,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// NextAuth.js required models
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -57,37 +53,49 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Your custom public schema models below:
-
-model Profile {
-  auth_id      String    @id @db.Uuid
+model Client {
+  id           String     @id
   first_name   String?
   last_name    String?
-  birth_date   DateTime? @db.Date
-  current      Boolean   @default(false)
-  disabled     Boolean   @default(true)
+  birth_date   DateTime?  @db.Date
+  current      Boolean    @default(false)
+  disabled     Boolean    @default(true)
   avatar_url   String?
   contact_info Json?
-  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  created_at   DateTime?  @db.Timestamp(6)
+  updated_at   DateTime?  @db.Timestamp(6)
+  roles        UserRole[] @default([Client])
+  auth_id      String     @unique(map: "client_auth_id_unique")
 }
 
-// Temporarily commented out to avoid permission issues
-// enum Role {
-//   SystemAdmin
-//   Owner
-//   Admin
-//   Coordinator
-//   Instructor
-//   ProfileOnly
-// }
+model Programme {
+  id               String    @id @default(cuid())
+  humanReadableId  String    @unique
+  name             String
+  startDate        DateTime
+  maxClients       Int
+  numberOfSessions Int
+  programmeCost    Decimal   @db.Decimal(10, 2)
+  notes            String?
+  adhocData        Json?
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+}
 
 model SystemGmailConfig {
-  id              BigInt   @id @default(autoincrement())
-  connected_email String   @unique @db.Text
-  access_token    String   @db.Text
-  expires_at      DateTime @db.Timestamptz(6)
-  scopes          String   @db.Text
-  vault_secret_id String?  @unique @db.Uuid
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  id                      BigInt   @id(map: "system_gmail_config_pkey") @default(autoincrement())
+  connected_email         String   @unique(map: "system_gmail_config_connected_email_key")
+  access_token            String
+  expires_at              DateTime @db.Timestamptz(6)
+  scopes                  String
+  created_at              DateTime @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime @default(now()) @db.Timestamptz(6)
+  encrypted_refresh_token String?
+}
+
+enum UserRole {
+  SystemAdmin
+  Owner
+  Admin
+  Client
 }

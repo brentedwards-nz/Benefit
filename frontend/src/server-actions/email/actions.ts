@@ -7,6 +7,7 @@ import prisma from "@/utils/prisma/client";
 import { ConnectedGmailAccount, Email, From } from "./types";
 import { google } from "googleapis";
 import { agentQuery } from "@/utils/ai/agent/agent";
+import { getAuthenticatedGmailClient } from "@/lib/gmail-utils";
 import {
   AITool,
   AIContent,
@@ -36,7 +37,7 @@ export async function readConnectedGmailAccounts(): Promise<
         access_token: true,
         expires_at: true,
         scopes: true,
-        vault_secret_id: true,
+        encrypted_refresh_token: true,
         created_at: true,
         updated_at: true,
       },
@@ -59,7 +60,7 @@ export async function readConnectedGmailAccounts(): Promise<
         access_token: account.access_token,
         expires_at: account.expires_at,
         scopes: account.scopes,
-        vault_secret_id: account.vault_secret_id,
+        encrypted_refresh_token: account.encrypted_refresh_token,
         created_at: account.created_at,
         updated_at: account.updated_at,
       } as ConnectedGmailAccount)
@@ -129,37 +130,8 @@ export async function readEmail(
   usAi: boolean = false
 ): Promise<ActionResult<Email[]>> {
   try {
-    const systemConfig = await prisma.systemGmailConfig.findFirst({
-      orderBy: {
-        created_at: "asc", // Or 'id: asc' to get the oldest record first
-      },
-    });
-
-    if (!systemConfig) {
-      return {
-        success: false,
-        message: `No Gmail configuration found`,
-        code: "CONFIG_NOT_FOUND",
-      };
-    }
-
-    // 2. Check for token expiration
-    if (systemConfig.expires_at < new Date()) {
-      return {
-        success: false,
-        message: "Access token has expired. Please re-authenticate.",
-        code: "TOKEN_EXPIRED",
-      };
-    }
-
-    // 3. Initialize Google OAuth2 client with the access token
-    const oAuth2Client = new google.auth.OAuth2();
-    oAuth2Client.setCredentials({
-      access_token: systemConfig.access_token,
-    });
-
-    // 4. Initialize Gmail API service
-    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    // Use the authenticated Gmail client utility
+    const { gmail, connectedEmail } = await getAuthenticatedGmailClient();
 
     //q: `in:${folder1} OR label:${label1}`,
     const query: string = createGmailQuery(folders, labels);

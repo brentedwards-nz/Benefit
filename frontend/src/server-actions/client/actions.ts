@@ -5,6 +5,7 @@ import { ActionResult } from "@/types/server-action-results";
 import prisma from "@/utils/prisma/client";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "crypto";
 
 import { Client, ContactInfoItem } from "./types";
 import { z } from "zod";
@@ -202,7 +203,7 @@ export async function updateClient(
         contact_info: contactInfoJson,
       },
       create: {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         auth_id: auth_id,
         first_name: validatedData.first_name,
         last_name: validatedData.last_name,

@@ -1,7 +1,8 @@
 // app/api/admin/connect-gmail/callback/route.ts
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
-// import { createClient } from "@supabase/supabase-js"; // Import Supabase client for server-side operations
+import prisma from "@/utils/prisma/client";
+import { encrypt } from "@/lib/encryption";
 
 // Ensure these environment variables are correctly set.
 // Use the exact names from your .env.local file.
@@ -12,23 +13,26 @@ const GOOGLE_GMAIL_CLIENT_REDIRECT_URI =
 
 // const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 // const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Get base URL from request headers or environment
+const getBaseUrl = (request: Request) => {
+  const host = request.headers.get('host');
+  const protocol = request.headers.get('x-forwarded-proto') || 'http';
+  return `${protocol}://${host}`;
+};
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // Base URL for redirects
 
 // Initialize Supabase Admin Client (uses service_role_key for full permissions)
 // const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code"); // Authorization code from Google
-  const errorParam = searchParams.get("error"); // Error from Google if authorization failed
-  const errorDescription = searchParams.get("error_description");
-
   // Helper for consistent redirects
-  const redirectToDashboardClubError = (
+  const redirectToDashboardAdminError = (
     errorType: string,
     details?: string
   ) => {
-    const url = new URL("/dashboard/club/error", BASE_URL);
+    const baseUrl = getBaseUrl(request);
+    const url = new URL("/dashboard/admin/error", baseUrl);
     url.searchParams.set("error", errorType);
     if (details) {
       url.searchParams.set("details", details);
@@ -36,10 +40,21 @@ export async function GET(request: Request) {
     return NextResponse.redirect(url.toString());
   };
 
+  // Validate environment variables
+  if (!GOOGLE_GMAIL_CLIENT_ID || !GOOGLE_GMAIL_CLIENT_SECRET || !GOOGLE_GMAIL_CLIENT_REDIRECT_URI) {
+    console.error("Missing Google OAuth environment variables");
+    return redirectToDashboardAdminError("missing_env_vars", "Google OAuth credentials not configured");
+  }
+
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get("code"); // Authorization code from Google
+  const errorParam = searchParams.get("error"); // Error from Google if authorization failed
+  const errorDescription = searchParams.get("error_description");
+
   // 1. Handle errors from Google's redirect (e.g., user denied access)
   if (errorParam) {
     console.error("Google OAuth Error:", errorParam, errorDescription);
-    return redirectToDashboardClubError(
+    return redirectToDashboardAdminError(
       "gmail_auth_denied",
       errorDescription || errorParam
     );
@@ -48,7 +63,7 @@ export async function GET(request: Request) {
   // 2. Check if an authorization code was received
   if (!code) {
     console.error("No authorization code found in callback.");
-    return redirectToDashboardClubError("no_auth_code");
+    return redirectToDashboardAdminError("no_auth_code");
   }
 
   // Initialize OAuth2 client with your credentials
@@ -73,7 +88,7 @@ export async function GET(request: Request) {
       console.error(
         'No refresh token received. Ensure "access_type: offline" and "prompt: consent" are used in generateAuthUrl.'
       );
-      return redirectToDashboardClubError("no_refresh_token_issued");
+      return redirectToDashboardAdminError("no_refresh_token_issued");
     }
 
     // 4. Get the email address of the account that was just connected
@@ -84,73 +99,48 @@ export async function GET(request: Request) {
     const connectedEmailAddress = profileResponse.data.emailAddress;
 
     if (connectedEmailAddress == null) {
-      return redirectToDashboardClubError(
+      return redirectToDashboardAdminError(
         "vault_store_failed",
         "Error getting user profile"
       );
     }
 
-    // --- 5. Store Refresh Token in Supabase Vault & Config in system_gmail_config table ---
-    // TODO: Implement with NextAuth/Prisma instead of Supabase
+    // Store Gmail config in database using Prisma
+    try {
+      // Encrypt the refresh token before storing
+      const encryptedRefreshToken = encrypt(refreshToken);
 
-    // Call the RPC function `public.vault_create_secret`
-    // const rpcResult = await supabaseAdmin.rpc("vault_create_secret", {
-    //   p_name: `gmail_refresh_token_${connectedEmailAddress.replace(
-    //     /[^a-zA-Z0-9]/g,
-    //     "_"
-    //   )}`, // Create a unique name for the secret
-    //   p_secret: refreshToken, // The actual refresh token
-    //   p_description: `Gmail Refresh Token for system account: ${connectedEmailAddress}`,
-    // });
+      const result = await prisma.systemGmailConfig.upsert({
+        where: {
+          connected_email: connectedEmailAddress,
+        },
+        update: {
+          access_token: accessToken!,
+          expires_at: new Date(expiryDate!),
+          scopes: scopesGranted!,
+          encrypted_refresh_token: encryptedRefreshToken,
+          updated_at: new Date(),
+        },
+        create: {
+          connected_email: connectedEmailAddress,
+          access_token: accessToken!,
+          expires_at: new Date(expiryDate!),
+          scopes: scopesGranted!,
+          encrypted_refresh_token: encryptedRefreshToken,
+        },
+      });
 
-    // const { data: vaultSecretData, error: vaultError } = rpcResult;
+      console.log("Gmail config stored successfully:", result.connected_email);
+    } catch (configError: any) {
+      console.error("Error storing Gmail config in database:", configError);
+      return redirectToDashboardAdminError(
+        "db_config_failed",
+        configError.message
+      );
+    }
 
-    // if (vaultError) {
-    //   console.error("Error storing refresh token in Vault:", vaultError);
-    //   return redirectToDashboardClubError(
-    //     "vault_store_failed",
-    //     vaultError.message
-    //   );
-    // }
-
-    // // Supabase RPCs usually return an array of objects for single row, so access [0].id
-    // const vaultSecretId = vaultSecretData;
-
-    // if (!vaultSecretId) {
-    //   console.error(
-    //     "Vault secret ID was not returned by vault_create_secret RPC."
-    //   );
-    //   return redirectToDashboardClubError(
-    //     "vault_id_missing",
-    //     "Vault secret ID was not returned by vault_create_secret RPC."
-    //   );
-    // }
-
-    // const { error: configError } = await supabaseAdmin
-    //   .from("system_gmail_config")
-    //   .upsert(
-    //     {
-    //       connected_email: connectedEmailAddress,
-    //       access_token: accessToken!, // Access token is short-lived and will be refreshed
-    //       expires_at: new Date(expiryDate!).toISOString(),
-    //       scopes: scopesGranted!,
-    //       vault_secret_id: vaultSecretId, // Link to the securely stored refresh token in Vault
-    //     },
-    //     { onConflict: "connected_email", ignoreDuplicates: false }
-    //   );
-
-    // if (configError) {
-    //   console.error(
-    //     "Error storing Gmail config in Supabase table:",
-    //     configError
-    //   );
-    //   return redirectToDashboardClubError(
-    //     "db_config_failed",
-    //     configError.message
-    //   );
-    // }
-
-    const successUrl = new URL("/dashboard/club/email_auth", BASE_URL);
+    const baseUrl = getBaseUrl(request);
+    const successUrl = new URL("/dashboard/admin/email_auth", baseUrl);
     successUrl.searchParams.set("success", "gmail_connected");
     return NextResponse.redirect(successUrl.toString());
   } catch (error: any) {
@@ -158,6 +148,6 @@ export async function GET(request: Request) {
       "Error during token exchange or profile fetch:",
       error.message
     );
-    return redirectToDashboardClubError("gmail_auth_failed", error.message);
+    return redirectToDashboardAdminError("gmail_auth_failed", error.message);
   }
 }

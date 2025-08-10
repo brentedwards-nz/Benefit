@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { readProfile } from "@/server-actions/profile/actions";
+import { readClient } from "@/server-actions/client/actions";
 
 export interface ClubCardProps {
   club_id: string;

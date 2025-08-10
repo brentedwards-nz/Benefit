@@ -51,10 +51,10 @@ import {
   //ContactInfoItemFormValues,
 } from "./schema";
 
-import { Profile } from "@/server-actions/profile/types";
+import { Client } from "@/server-actions/client/types";
 
 interface ProfileEditFormProps {
-  initialData: Profile;
+  initialData: Client;
   onSubmit: (data: ProfileFormValues) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -77,14 +77,14 @@ export function ProfileEditForm({
       initialData.birth_date instanceof Date
         ? initialData.birth_date
         : initialData.birth_date
-        ? new Date(initialData.birth_date)
-        : null,
+          ? new Date(initialData.birth_date)
+          : null,
     DateTime:
       initialData.DateTime instanceof Date
         ? initialData.DateTime
         : initialData.DateTime
-        ? new Date(initialData.DateTime)
-        : null,
+          ? new Date(initialData.DateTime)
+          : null,
   };
 
   const form = useForm<ProfileFormValues>({

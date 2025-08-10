@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ProfileEditForm } from "@/components/profile/profile-edit";
-import { readProfile, updateProfile } from "@/server-actions/profile/actions";
-import type { Profile } from "@/server-actions/profile/types";
+import { readClient, updateClient } from "@/server-actions/client/actions";
+import type { Client } from "@/server-actions/client/types";
 import { ProfileFormValues } from "@/components/profile/schema";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 const Profile = () => {
   const { data: session } = useSession();
 
-  const [initialData, setInitialData] = useState<Profile | undefined>(
+  const [initialData, setInitialData] = useState<Client | undefined>(
     undefined
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +30,7 @@ const Profile = () => {
         return;
       }
       try {
-        const result = await readProfile(userId);
+        const result = await readClient(userId);
         if (result.success) {
           setInitialData(result.data);
         } else {
@@ -55,7 +55,7 @@ const Profile = () => {
     try {
       const { primary_phone, primary_email, DateTime, ...updateData } = data;
 
-      const newProfile: Profile = {
+      const newClient: Client = {
         auth_id: userId,
         first_name: updateData.first_name,
         last_name: updateData.last_name,
@@ -69,7 +69,7 @@ const Profile = () => {
         primary_email: "",
         DateTime: data.DateTime ?? null,
       };
-      const result = await updateProfile(userId, newProfile);
+      const result = await updateClient(userId, newClient);
       if (result.success) {
         toast.success("Profile updated successfully!");
         setInitialData(result.data);

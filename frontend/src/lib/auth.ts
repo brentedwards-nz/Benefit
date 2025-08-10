@@ -4,6 +4,7 @@ import FacebookProvider from "next-auth/providers/facebook";
 import EmailProvider from "next-auth/providers/email";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/utils/prisma/client";
+import { randomUUID } from "crypto";
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
@@ -57,9 +58,10 @@ export const authOptions: NextAuthOptions = {
         async createUser({ user }) {
             // This event is triggered when a new user is created
             try {
-                // Create a profile record for the new user
-                await prisma.profile.create({
+                // Create a client record for the new user
+                await prisma.client.create({
                     data: {
+                        id: randomUUID(),
                         auth_id: user.id,
                         first_name: user.name?.split(' ')[0] || null,
                         last_name: user.name?.split(' ').slice(1).join(' ') || null,
@@ -76,9 +78,9 @@ export const authOptions: NextAuthOptions = {
                         ]
                     }
                 });
-                console.log(`Profile created for user: ${user.id}`);
+                console.log(`Client created for user: ${user.id}`);
             } catch (error) {
-                console.error('Error creating profile:', error);
+                console.error('Error creating client:', error);
                 // Don't throw here - we don't want to break the sign-in process
             }
         },

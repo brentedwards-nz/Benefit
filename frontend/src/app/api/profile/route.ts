@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const profile = await prisma.profile.findUnique({
+    const client = await prisma.client.findUnique({
       where: {
         auth_id: session.user.id,
       },
@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
     }
 
-    return NextResponse.json(profile);
+    return NextResponse.json(client);
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

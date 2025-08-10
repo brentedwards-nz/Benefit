@@ -3,6 +3,7 @@
 import prisma from "@/utils/prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { randomUUID } from "crypto";
 
 export async function createUserProfile(userId: string, userData: {
     name?: string | null;
@@ -10,14 +11,14 @@ export async function createUserProfile(userId: string, userData: {
     image?: string | null;
 }) {
     try {
-        // Check if profile already exists
-        const existingProfile = await prisma.profile.findUnique({
+        // Check if client already exists
+        const existingClient = await prisma.client.findUnique({
             where: { auth_id: userId }
         });
 
-        if (existingProfile) {
-            console.log(`Profile already exists for user: ${userId}`);
-            return { success: true, message: "Profile already exists" };
+        if (existingClient) {
+            console.log(`Client already exists for user: ${userId}`);
+            return { success: true, message: "Client already exists" };
         }
 
         // Parse name into first and last name
@@ -25,9 +26,10 @@ export async function createUserProfile(userId: string, userData: {
         const firstName = nameParts[0] || null;
         const lastName = nameParts.slice(1).join(' ') || null;
 
-        // Create the profile
-        const profile = await prisma.profile.create({
+        // Create the client
+        const client = await prisma.client.create({
             data: {
+                id: randomUUID(),
                 auth_id: userId,
                 first_name: firstName,
                 last_name: lastName,
@@ -45,15 +47,15 @@ export async function createUserProfile(userId: string, userData: {
             }
         });
 
-        console.log(`Profile created for user: ${userId}`);
-        return { success: true, data: profile };
+        console.log(`Client created for user: ${userId}`);
+        return { success: true, data: client };
     } catch (error) {
-        console.error('Error creating profile:', error);
-        return { success: false, error: "Failed to create profile" };
+        console.error('Error creating client:', error);
+        return { success: false, error: "Failed to create client" };
     }
 }
 
-export async function ensureUserProfile() {
+export async function ensureUserClient() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
