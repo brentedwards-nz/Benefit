@@ -8,13 +8,13 @@ async function main() {
     // Create a sample client with multiple roles
     console.log('Creating sample client with multiple roles...')
     const client = await prisma.client.upsert({
-        where: { auth_id: '550e8400-e29b-41d4-a716-446655440000' },
+        where: { authId: '550e8400-e29b-41d4-a716-446655440000' },
         update: {},
         create: {
             id: '550e8400-e29b-41d4-a716-446655440000',
-            auth_id: '550e8400-e29b-41d4-a716-446655440000',
-            first_name: 'John',
-            last_name: 'Doe',
+            authId: '550e8400-e29b-41d4-a716-446655440000',
+            firstName: 'John',
+            lastName: 'Doe',
             current: true,
             disabled: false,
             roles: [UserRole.Client, UserRole.Admin], // Multiple roles
@@ -23,13 +23,13 @@ async function main() {
 
     // Create another client with different roles
     const adminClient = await prisma.client.upsert({
-        where: { auth_id: '550e8400-e29b-41d4-a716-446655440001' },
+        where: { authId: '550e8400-e29b-41d4-a716-446655440001' },
         update: {},
         create: {
             id: '550e8400-e29b-41d4-a716-446655440001',
-            auth_id: '550e8400-e29b-41d4-a716-446655440001',
-            first_name: 'Jane',
-            last_name: 'Smith',
+            authId: '550e8400-e29b-41d4-a716-446655440001',
+            firstName: 'Jane',
+            lastName: 'Smith',
             current: true,
             disabled: false,
             roles: [UserRole.Admin, UserRole.Owner], // Multiple roles

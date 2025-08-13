@@ -65,18 +65,18 @@ export async function readClient(
   try {
     const client = await prisma.client.findUnique({
       where: {
-        auth_id: user_id,
+        authId: user_id,
       },
       select: {
-        auth_id: true,
-        first_name: true,
-        last_name: true,
-        birth_date: true,
+        authId: true,
+        firstName: true,
+        lastName: true,
+        birthDate: true,
         current: true,
         disabled: true,
-        avatar_url: true,
-        contact_info: true,
-        created_at: true,
+        avatarUrl: true,
+        contactInfo: true,
+        createdAt: true,
       },
     });
 
@@ -91,11 +91,11 @@ export async function readClient(
       };
     }
 
-    const contact_info = Array.isArray(client.contact_info)
-      ? (client.contact_info as ContactInfoItem[])
-      : typeof client.contact_info === "string"
-        ? (JSON.parse(client.contact_info) as ContactInfoItem[])
-        : client.contact_info === null
+    const contact_info = Array.isArray(client.contactInfo)
+      ? (client.contactInfo as ContactInfoItem[])
+      : typeof client.contactInfo === "string"
+        ? (JSON.parse(client.contactInfo) as ContactInfoItem[])
+        : client.contactInfo === null
           ? null
           : [];
 
@@ -109,18 +109,18 @@ export async function readClient(
       : "";
 
     const clientResult: Client = {
-      auth_id: client.auth_id,
-      first_name: client?.first_name ?? "** First name required **",
-      last_name: client?.last_name ?? "** Last name required **",
+      auth_id: client.authId,
+      first_name: client?.firstName ?? "** First name required **",
+      last_name: client?.lastName ?? "** Last name required **",
       full_name:
-        `${client.first_name || ""} ${client.last_name || ""}`.trim() ||
+        `${client.firstName || ""} ${client.lastName || ""}`.trim() ||
         "Name required",
-      birth_date: client.birth_date,
+      birth_date: client.birthDate,
       current: client.current,
       disabled: client.disabled,
-      avatar_url: client.avatar_url,
+      avatar_url: client.avatarUrl,
       contact_info: contact_info,
-      DateTime: client.created_at,
+      DateTime: client.createdAt,
       primary_phone: firstPhoneItem,
       primary_email: firstEmailItem,
     };
@@ -190,38 +190,38 @@ export async function updateClient(
 
     const updatedOrCreatedRecord = await prisma.client.upsert({
       where: {
-        auth_id: auth_id,
+        authId: auth_id,
       },
       update: {
-        first_name: validatedData.first_name,
-        last_name: validatedData.last_name,
-        birth_date: validatedData.birth_date,
+        firstName: validatedData.first_name,
+        lastName: validatedData.last_name,
+        birthDate: validatedData.birth_date,
         current: validatedData.current,
         disabled: validatedData.disabled,
-        avatar_url: validatedData.avatar_url,
-        contact_info: contactInfoJson,
+        avatarUrl: validatedData.avatar_url,
+        contactInfo: contactInfoJson,
       },
       create: {
         id: crypto.randomUUID(),
-        auth_id: auth_id,
-        first_name: validatedData.first_name,
-        last_name: validatedData.last_name,
-        birth_date: validatedData.birth_date,
+        authId: auth_id,
+        firstName: validatedData.first_name,
+        lastName: validatedData.last_name,
+        birthDate: validatedData.birth_date,
         current: validatedData.current,
         disabled: validatedData.disabled,
-        avatar_url: validatedData.avatar_url,
-        contact_info: contactInfoJson,
+        avatarUrl: validatedData.avatar_url,
+        contactInfo: contactInfoJson,
       },
       select: {
-        auth_id: true,
-        first_name: true,
-        last_name: true,
-        birth_date: true,
+        authId: true,
+        firstName: true,
+        lastName: true,
+        birthDate: true,
         current: true,
         disabled: true,
-        avatar_url: true,
-        contact_info: true,
-        created_at: true,
+        avatarUrl: true,
+        contactInfo: true,
+        createdAt: true,
       },
     });
 
@@ -229,22 +229,22 @@ export async function updateClient(
     revalidatePath("/dashboard");
 
     const clientResult: Client = {
-      auth_id: updatedOrCreatedRecord.auth_id,
+      auth_id: updatedOrCreatedRecord.authId,
       first_name:
-        updatedOrCreatedRecord?.first_name ?? "** First name required **",
+        updatedOrCreatedRecord?.firstName ?? "** First name required **",
       last_name:
-        updatedOrCreatedRecord?.last_name ?? "** Last name required **",
+        updatedOrCreatedRecord?.lastName ?? "** Last name required **",
       full_name:
-        `${updatedOrCreatedRecord.first_name || ""} ${updatedOrCreatedRecord.last_name || ""
+        `${updatedOrCreatedRecord.firstName || ""} ${updatedOrCreatedRecord.lastName || ""
           }`.trim() || "Name required",
-      birth_date: updatedOrCreatedRecord.birth_date,
+      birth_date: updatedOrCreatedRecord.birthDate,
       current: updatedOrCreatedRecord.current,
       disabled: updatedOrCreatedRecord.disabled,
-      avatar_url: updatedOrCreatedRecord.avatar_url,
-      contact_info: Array.isArray(updatedOrCreatedRecord.contact_info)
-        ? (updatedOrCreatedRecord.contact_info as ContactInfoItem[])
+      avatar_url: updatedOrCreatedRecord.avatarUrl,
+      contact_info: Array.isArray(updatedOrCreatedRecord.contactInfo)
+        ? (updatedOrCreatedRecord.contactInfo as ContactInfoItem[])
         : [],
-      DateTime: updatedOrCreatedRecord.created_at,
+      DateTime: updatedOrCreatedRecord.createdAt,
     };
 
     return {

@@ -13,7 +13,7 @@ export async function createUserProfile(userId: string, userData: {
     try {
         // Check if client already exists
         const existingClient = await prisma.client.findUnique({
-            where: { auth_id: userId }
+            where: { authId: userId }
         });
 
         if (existingClient) {
@@ -30,13 +30,13 @@ export async function createUserProfile(userId: string, userData: {
         const client = await prisma.client.create({
             data: {
                 id: randomUUID(),
-                auth_id: userId,
-                first_name: firstName,
-                last_name: lastName,
+                authId: userId,
+                firstName: firstName,
+                lastName: lastName,
                 current: true,
                 disabled: false,
-                avatar_url: userData.image || null,
-                contact_info: userData.email ? [
+                avatarUrl: userData.image || null,
+                contactInfo: userData.email ? [
                     {
                         type: "email",
                         value: userData.email,

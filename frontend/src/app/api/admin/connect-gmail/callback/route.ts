@@ -112,25 +112,25 @@ export async function GET(request: Request) {
 
       const result = await prisma.systemGmailConfig.upsert({
         where: {
-          connected_email: connectedEmailAddress,
+          connectedEmail: connectedEmailAddress,
         },
         update: {
-          access_token: accessToken!,
-          expires_at: new Date(expiryDate!),
+          accessToken: accessToken!,
+          expiresAt: new Date(expiryDate!),
           scopes: scopesGranted!,
-          encrypted_refresh_token: encryptedRefreshToken,
-          updated_at: new Date(),
+          encryptedRefreshToken: encryptedRefreshToken,
+          updatedAt: new Date(),
         },
         create: {
-          connected_email: connectedEmailAddress,
-          access_token: accessToken!,
-          expires_at: new Date(expiryDate!),
+          connectedEmail: connectedEmailAddress,
+          accessToken: accessToken!,
+          expiresAt: new Date(expiryDate!),
           scopes: scopesGranted!,
-          encrypted_refresh_token: encryptedRefreshToken,
+          encryptedRefreshToken: encryptedRefreshToken,
         },
       });
 
-      console.log("Gmail config stored successfully:", result.connected_email);
+      console.log("Gmail config stored successfully:", result.connectedEmail);
     } catch (configError: unknown) {
       console.error("Error storing Gmail config in database:", configError);
       const errorMessage = configError instanceof Error ? configError.message : String(configError);

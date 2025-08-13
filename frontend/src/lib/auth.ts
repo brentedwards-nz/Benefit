@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import EmailProvider from "next-auth/providers/email";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/utils/prisma/client";
 import { randomUUID } from "crypto";
 
@@ -19,14 +19,14 @@ export const authOptions: NextAuthOptions = {
         }),
         EmailProvider({
             server: {
-                host: process.env.EMAIL_SERVER_HOST,
-                port: process.env.EMAIL_SERVER_PORT,
+                host: process.env.EMAIL_SERVER_HOST || "smtp.gmail.com",
+                port: parseInt(process.env.EMAIL_SERVER_PORT || "587"),
                 auth: {
                     user: process.env.EMAIL_SERVER_USER,
                     pass: process.env.EMAIL_SERVER_PASSWORD,
                 },
             },
-            from: process.env.EMAIL_FROM,
+            from: process.env.EMAIL_FROM || "noreply@example.com",
         }),
     ],
     pages: {
@@ -37,9 +37,8 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async signIn({ user, account, profile }) {
-            // This callback runs after successful authentication
-            // but before the session is created
-            return true; // Allow the sign in
+            // Always allow sign in for all providers
+            return true;
         },
         async session({ session, token }: { session: any; token: any }) {
             if (session.user && token.sub) {
@@ -62,13 +61,13 @@ export const authOptions: NextAuthOptions = {
                 await prisma.client.create({
                     data: {
                         id: randomUUID(),
-                        auth_id: user.id,
-                        first_name: user.name?.split(' ')[0] || null,
-                        last_name: user.name?.split(' ').slice(1).join(' ') || null,
+                        authId: user.id,
+                        firstName: user.name?.split(' ')[0] || null,
+                        lastName: user.name?.split(' ').slice(1).join(' ') || null,
                         current: true,
                         disabled: false,
-                        avatar_url: user.image || null,
-                        contact_info: [
+                        avatarUrl: user.image || null,
+                        contactInfo: [
                             {
                                 type: "email",
                                 value: user.email || "",

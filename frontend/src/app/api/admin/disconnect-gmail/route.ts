@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest) {
         id: accountId,
       },
       select: {
-        encrypted_refresh_token: true,
+        encryptedRefreshToken: true,
       },
     });
 
@@ -66,7 +66,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const encryptedRefreshToken = accountToDelete.encrypted_refresh_token;
+    const encryptedRefreshToken = accountToDelete.encryptedRefreshToken;
     if (!encryptedRefreshToken) {
       return NextResponse.json(
         {

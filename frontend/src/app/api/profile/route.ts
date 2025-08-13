@@ -13,18 +13,18 @@ export async function GET(request: NextRequest) {
   try {
     const client = await prisma.client.findUnique({
       where: {
-        auth_id: session.user.id,
+        authId: session.user.id,
       },
       select: {
-        auth_id: true,
-        first_name: true,
-        last_name: true,
-        birth_date: true,
+        authId: true,
+        firstName: true,
+        lastName: true,
+        birthDate: true,
         current: true,
         disabled: true,
-        avatar_url: true,
-        contact_info: true,
-        created_at: true,
+        avatarUrl: true,
+        contactInfo: true,
+        createdAt: true,
       },
     });
 

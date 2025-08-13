@@ -19,7 +19,7 @@ model Account {
   access_token      String?
   expires_at        Int?
   token_type        String?
-  scope             String?
+  scope             String
   id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -54,43 +54,77 @@ model VerificationToken {
 }
 
 model Client {
-  id           String     @id
-  first_name   String?
-  last_name    String?
-  birth_date   DateTime?  @db.Date
-  current      Boolean    @default(false)
-  disabled     Boolean    @default(true)
-  avatar_url   String?
-  contact_info Json?
-  created_at   DateTime?  @db.Timestamp(6)
-  updated_at   DateTime?  @db.Timestamp(6)
-  roles        UserRole[] @default([Client])
-  auth_id      String     @unique(map: "client_auth_id_unique")
+  id          String     @id
+  firstName   String?
+  lastName    String?
+  birthDate   DateTime?  @db.Date
+  current     Boolean    @default(false)
+  disabled    Boolean    @default(true)
+  avatarUrl   String?
+  contactInfo Json?
+  createdAt   DateTime?  @db.Timestamp(6)
+  updatedAt   DateTime?  @db.Timestamp(6)
+  roles       UserRole[] @default([Client])
+  authId      String     @unique(map: "client_auth_id_unique")
 }
 
 model Programme {
-  id               String    @id @default(cuid())
-  humanReadableId  String    @unique
-  name             String
+  id                  String    @id @default(cuid())
+  programmeTemplateId String
+  humanReadableId     String    @unique
+  name                String
+  startDate           DateTime
+  maxClients          Int
+  numberOfSessions    Int
+  programmeCost       Decimal   @db.Decimal(10, 2)
+  notes               String?
+  adhocData           Json?
+  createdAt           DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime? @default(now()) @db.Timestamp(6)
+
+  // Relation to ProgrammeEnrolment
+  enrolments        ProgrammeEnrolment[]
+  ProgrammeTemplate ProgrammeTemplate?   @relation(fields: [programmeTemplateId], references: [id])
+}
+
+model ProgrammeTemplate {
+  id               String   @id @default(cuid())
+  name             String   @unique
   startDate        DateTime
   maxClients       Int
   numberOfSessions Int
-  programmeCost    Decimal   @db.Decimal(10, 2)
+  programmeCost    Decimal  @db.Decimal(10, 2)
   notes            String?
   adhocData        Json?
-  created_at       DateTime? @default(now()) @db.Timestamp(6)
-  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+
+  programmes         Programme[]
+  ProgrammeEnrolment ProgrammeEnrolment[]
+}
+
+model ProgrammeEnrolment {
+  id        String    @id @default(cuid())
+  programId String
+  clientId  String
+  notes     String?
+  adhocData Json?
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt DateTime? @default(now()) @db.Timestamp(6)
+
+  // Relation to Programme with cascade delete
+  programme           Programme          @relation(fields: [programId], references: [id], onDelete: Cascade)
+  ProgrammeTemplate   ProgrammeTemplate? @relation(fields: [programmeTemplateId], references: [id])
+  programmeTemplateId String?
 }
 
 model SystemGmailConfig {
-  id                      BigInt   @id(map: "system_gmail_config_pkey") @default(autoincrement())
-  connected_email         String   @unique(map: "system_gmail_config_connected_email_key")
-  access_token            String
-  expires_at              DateTime @db.Timestamptz(6)
-  scopes                  String
-  created_at              DateTime @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime @default(now()) @db.Timestamptz(6)
-  encrypted_refresh_token String?
+  id                    BigInt   @id(map: "system_gmail_config_pkey") @default(autoincrement())
+  connectedEmail        String   @unique(map: "system_gmail_config_connected_email_key")
+  accessToken           String
+  expiresAt             DateTime @db.Timestamptz(6)
+  scopes                String
+  createdAt             DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @db.Timestamptz(6)
+  encryptedRefreshToken String?
 }
 
 enum UserRole {

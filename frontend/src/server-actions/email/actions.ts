@@ -33,13 +33,13 @@ export async function readConnectedGmailAccounts(): Promise<
     const gmailAccounts = await prisma.systemGmailConfig.findMany({
       select: {
         id: true,
-        connected_email: true,
-        access_token: true,
-        expires_at: true,
+        connectedEmail: true,
+        accessToken: true,
+        expiresAt: true,
         scopes: true,
-        encrypted_refresh_token: true,
-        created_at: true,
-        updated_at: true,
+        encryptedRefreshToken: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -56,13 +56,13 @@ export async function readConnectedGmailAccounts(): Promise<
       (account) =>
       ({
         id: account.id,
-        connected_email: account.connected_email,
-        access_token: account.access_token,
-        expires_at: account.expires_at,
+        connected_email: account.connectedEmail,
+        access_token: account.accessToken,
+        expires_at: account.expiresAt,
         scopes: account.scopes,
-        encrypted_refresh_token: account.encrypted_refresh_token,
-        created_at: account.created_at,
-        updated_at: account.updated_at,
+        encrypted_refresh_token: account.encryptedRefreshToken,
+        created_at: account.createdAt,
+        updated_at: account.updatedAt,
       } as ConnectedGmailAccount)
     );
 
@@ -126,7 +126,7 @@ const createGmailQuery = (folders: string[], labels: string[]): string => {
 
 export async function readEmail(
   folders: string[] = ["Inbox"],
-  labels: string[] = [],
+  labels: string[] = [""],
   usAi: boolean = false
 ): Promise<ActionResult<Email[]>> {
   try {
@@ -200,7 +200,7 @@ export async function readEmail(
 
       const prompt: string = `
         Summarize this email.
-        Keep the main points, 
+        Keep the top 3 main points, 
         Any closing salutation like 'Kind Regards.' including sender name
         Remove any legal disclaimers or unnecessary text.
       `;

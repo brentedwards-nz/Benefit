@@ -9,9 +9,9 @@ import { EmailCardProps, EmailCard } from "@/components/cards/email-card";
 const transformEmails = (emailData: Email[]): EmailCardProps[] => {
   return emailData.map(
     (email: Email) =>
-      ({
-        email: email, // Assign the whole email object here
-      } as EmailCardProps)
+    ({
+      email: email, // Assign the whole email object here
+    } as EmailCardProps)
   );
 };
 
@@ -20,7 +20,7 @@ export default async function EmailPage() {
   let error: string | null = null;
 
   try {
-    const emailResult = await readEmail(["InBox"], ["Benefit"]);
+    const emailResult = await readEmail([], ["Benefit"]);
 
     if (emailResult.success) {
       if (Array.isArray(emailResult.data)) {

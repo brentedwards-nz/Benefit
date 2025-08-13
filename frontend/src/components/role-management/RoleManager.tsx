@@ -10,8 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 interface ClientWithRoles {
     id: string
-    first_name?: string | null
-    last_name?: string | null
+    firstName?: string | null
+    lastName?: string | null
     roles: UserRole[]
 }
 
@@ -43,7 +43,7 @@ export function RoleManager({ client, onRolesUpdate }: RoleManagerProps) {
         <Card>
             <CardHeader>
                 <CardTitle>
-                    Role Management for {client.first_name} {client.last_name}
+                    Role Management for {client.firstName} {client.lastName}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -110,14 +110,14 @@ export function ClientRoleExample() {
     const [clients, setClients] = useState<ClientWithRoles[]>([
         {
             id: '1',
-            first_name: 'John',
-            last_name: 'Doe',
+            firstName: 'John',
+            lastName: 'Doe',
             roles: [UserRole.Client, UserRole.Admin],
         },
         {
             id: '2',
-            first_name: 'Jane',
-            last_name: 'Smith',
+            firstName: 'Jane',
+            lastName: 'Smith',
             roles: [UserRole.Admin, UserRole.Owner],
         },
     ])

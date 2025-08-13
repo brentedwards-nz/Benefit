@@ -10,7 +10,7 @@ export async function getAuthenticatedGmailClient() {
     // Get the system Gmail configuration
     const systemConfig = await prisma.systemGmailConfig.findFirst({
         orderBy: {
-            created_at: 'asc',
+            createdAt: 'asc',
         },
     });
 
@@ -18,12 +18,12 @@ export async function getAuthenticatedGmailClient() {
         throw new Error('No Gmail configuration found. Please connect Gmail in admin settings.');
     }
 
-    if (!systemConfig.encrypted_refresh_token) {
+    if (!systemConfig.encryptedRefreshToken) {
         throw new Error('No refresh token found. Please re-connect Gmail in admin settings.');
     }
 
     // Decrypt the refresh token
-    const refreshToken = decrypt(systemConfig.encrypted_refresh_token);
+    const refreshToken = decrypt(systemConfig.encryptedRefreshToken);
 
     // Initialize OAuth2 client
     const oauth2Client = new google.auth.OAuth2(
@@ -34,13 +34,13 @@ export async function getAuthenticatedGmailClient() {
 
     // Set credentials
     oauth2Client.setCredentials({
-        access_token: systemConfig.access_token,
+        access_token: systemConfig.accessToken,
         refresh_token: refreshToken,
-        expiry_date: systemConfig.expires_at.getTime(),
+        expiry_date: systemConfig.expiresAt.getTime(),
     });
 
     // Check if token needs refreshing
-    if (systemConfig.expires_at < new Date()) {
+    if (systemConfig.expiresAt < new Date()) {
         console.log('Access token expired, refreshing...');
 
         try {
@@ -51,9 +51,9 @@ export async function getAuthenticatedGmailClient() {
             await prisma.systemGmailConfig.update({
                 where: { id: systemConfig.id },
                 data: {
-                    access_token: credentials.access_token!,
-                    expires_at: new Date(credentials.expiry_date!),
-                    updated_at: new Date(),
+                    accessToken: credentials.access_token!,
+                    expiresAt: new Date(credentials.expiry_date!),
+                    updatedAt: new Date(),
                 },
             });
 
@@ -66,6 +66,6 @@ export async function getAuthenticatedGmailClient() {
 
     return {
         gmail: google.gmail({ version: 'v1', auth: oauth2Client }),
-        connectedEmail: systemConfig.connected_email,
+        connectedEmail: systemConfig.connectedEmail,
     };
 }
