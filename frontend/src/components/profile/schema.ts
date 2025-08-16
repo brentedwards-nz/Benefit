@@ -10,25 +10,23 @@ export const ContactInfoItemSchema = z.object({
 });
 
 export const ProfileSchema = z.object({
-  auth_id: z.string(),
-  first_name: z.string().min(1, { message: "First name is required." }),
-  last_name: z.string().min(1, { message: "Last name is required." }),
-  birth_date: z.date().nullable().optional(),
+  id: z.string(),
+  firstName: z.string().min(1, { message: "First name is required." }),
+  lastName: z.string().min(1, { message: "Last name is required." }),
+  birthDate: z.date().nullable().optional(),
+  gender: z.enum(['Male', 'Female', 'Other', 'PreferNotToSay']).nullable().optional(),
   current: z.boolean(),
   disabled: z.boolean(),
-  avatar_url: z
+  avatarUrl: z
     .string()
     .url({ message: "Must be a valid URL." })
     .nullable()
     .optional(),
-  contact_info: z.array(ContactInfoItemSchema).nullable().optional(),
-  primary_phone: z.string().nullable().optional(),
-  primary_email: z
-    .string()
-    .email({ message: "Invalid email format." })
-    .nullable()
-    .optional(),
-  DateTime: z.date().nullable().optional(),
+  contactInfo: z.array(ContactInfoItemSchema).nullable().optional(),
+  createdAt: z.date().nullable().optional(),
+  updatedAt: z.date().nullable().optional(),
+  roles: z.array(z.string()),
+  authId: z.string(),
 });
 
 export type ProfileFormValues = z.infer<typeof ProfileSchema>;

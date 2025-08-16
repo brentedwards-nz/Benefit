@@ -53,21 +53,20 @@ const Profile = () => {
     }
     setIsLoading(true);
     try {
-      const { primary_phone, primary_email, DateTime, ...updateData } = data;
-
       const newClient: Client = {
-        auth_id: userId,
-        first_name: updateData.first_name,
-        last_name: updateData.last_name,
-        full_name: "",
-        birth_date: updateData?.birth_date ?? null,
-        current: updateData.current,
-        disabled: updateData.disabled,
-        avatar_url: updateData.avatar_url ?? null,
-        contact_info: updateData.contact_info ?? null,
-        primary_phone: "",
-        primary_email: "",
-        DateTime: data.DateTime ?? null,
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate ?? null,
+        gender: data.gender ?? null,
+        current: data.current,
+        disabled: data.disabled,
+        avatarUrl: data.avatarUrl ?? null,
+        contactInfo: data.contactInfo ?? null,
+        createdAt: data.createdAt ?? null,
+        updatedAt: data.updatedAt ?? null,
+        roles: data.roles,
+        authId: data.authId,
       };
       const result = await updateClient(userId, newClient);
       if (result.success) {

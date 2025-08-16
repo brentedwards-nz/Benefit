@@ -20,29 +20,34 @@ const ContactInfoItemSchema = z.object({
 
 // Zod schema for the Client data
 const ClientSchema = z.object({
-  auth_id: z.string().min(1, "Authentication ID is required."),
-  first_name: z
+  id: z.string().optional(),
+  firstName: z
     .string()
     .min(1, "First name is required.")
     .max(50, "First name must be 50 characters or less."),
-  last_name: z
+  lastName: z
     .string()
     .min(1, "Last name is required.")
     .max(50, "Last name must be 50 characters or less."),
-  birth_date: z
+  birthDate: z
     .date() // Expects a Date object directly, which is good for `Prisma.Date`
     .nullable() // Allow null
     .optional() // Allow undefined
     .refine((date) => !date || date < new Date(), {
       message: "Birth date cannot be in the future.",
     }),
+  gender: z.enum(['Male', 'Female', 'Other', 'PreferNotToSay']).nullable().optional(),
   current: z.boolean().default(true), // Default to true if not provided
   disabled: z.boolean().default(false), // Default to false if not provided
-  avatar_url: z.string().url("Must be a valid URL.").nullable().optional(), // Allow null or undefined
-  contact_info: z
+  avatarUrl: z.string().url("Must be a valid URL.").nullable().optional(), // Allow null or undefined
+  contactInfo: z
     .array(ContactInfoItemSchema)
     .nullable() // Allow null for the entire array
     .optional(), // Allow undefined for the entire array
+  createdAt: z.date().nullable().optional(),
+  updatedAt: z.date().nullable().optional(),
+  roles: z.array(z.string()).optional(),
+  authId: z.string().optional(),
 });
 
 // console.log(
@@ -69,15 +74,19 @@ export async function readClient(
         authId: user_id,
       },
       select: {
-        authId: true,
+        id: true,
         firstName: true,
         lastName: true,
         birthDate: true,
+        gender: true,
         current: true,
         disabled: true,
         avatarUrl: true,
         contactInfo: true,
         createdAt: true,
+        updatedAt: true,
+        roles: true,
+        authId: true,
       },
     });
 
@@ -92,7 +101,7 @@ export async function readClient(
       };
     }
 
-    const contact_info = Array.isArray(client.contactInfo)
+    const contactInfo = Array.isArray(client.contactInfo)
       ? (client.contactInfo as ContactInfoItem[])
       : typeof client.contactInfo === "string"
         ? (JSON.parse(client.contactInfo) as ContactInfoItem[])
@@ -100,30 +109,20 @@ export async function readClient(
           ? null
           : [];
 
-    const firstPhoneItem = contact_info
-      ? contact_info.find((item) => item.type === "phone" && item.primary)
-        ?.value
-      : "";
-    const firstEmailItem = contact_info
-      ? contact_info.find((item) => item.type === "email" && item.primary)
-        ?.value
-      : "";
-
     const clientResult: Client = {
-      auth_id: client.authId,
-      first_name: client?.firstName ?? "** First name required **",
-      last_name: client?.lastName ?? "** Last name required **",
-      full_name:
-        `${client.firstName || ""} ${client.lastName || ""}`.trim() ||
-        "Name required",
-      birth_date: client.birthDate,
+      id: client.id,
+      firstName: client.firstName || "** First name required **",
+      lastName: client.lastName || "** Last name required **",
+      birthDate: client.birthDate,
+      gender: client.gender,
       current: client.current,
       disabled: client.disabled,
-      avatar_url: client.avatarUrl,
-      contact_info: contact_info,
-      DateTime: client.createdAt,
-      primary_phone: firstPhoneItem,
-      primary_email: firstEmailItem,
+      avatarUrl: client.avatarUrl,
+      contactInfo: contactInfo,
+      createdAt: client.createdAt,
+      updatedAt: client.updatedAt,
+      roles: client.roles,
+      authId: client.authId,
     };
 
     return {
@@ -148,10 +147,7 @@ export async function readClient(
 
 export async function updateClient(
   auth_id: string,
-  data: Omit<
-    Client,
-    "auth_id" | "full_name" | "DateTime" | "primary_phone" | "primary_email"
-  >
+  data: Partial<Client>
 ): Promise<ActionResult<Client>> {
   if (typeof auth_id !== "string" || auth_id.trim() === "") {
     return {
@@ -162,17 +158,13 @@ export async function updateClient(
   }
 
   const validationResult = ClientSchema.safeParse({
-    auth_id: auth_id,
+    authId: auth_id,
     ...data,
   });
   if (!validationResult.success) {
     return {
       success: false,
       message: "Invalid input data. Please check the provided fields.",
-      // errors: validationResult.error.errors.map((err) => ({
-      //   path: err.path.join("."),
-      //   message: err.message,
-      // })),
       code: "VALIDATION_ERROR",
     };
   }
@@ -180,7 +172,7 @@ export async function updateClient(
   const validatedData = validationResult.data;
 
   try {
-    const contactInfoJson: any[] = (validatedData.contact_info || []).map(
+    const contactInfoJson: any[] = (validatedData.contactInfo || []).map(
       (item: any) => ({
         type: item.type,
         value: item.value,
@@ -194,35 +186,41 @@ export async function updateClient(
         authId: auth_id,
       },
       update: {
-        firstName: validatedData.first_name,
-        lastName: validatedData.last_name,
-        birthDate: validatedData.birth_date,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        birthDate: validatedData.birthDate,
+        gender: validatedData.gender,
         current: validatedData.current,
         disabled: validatedData.disabled,
-        avatarUrl: validatedData.avatar_url,
+        avatarUrl: validatedData.avatarUrl,
         contactInfo: contactInfoJson,
       },
       create: {
         id: randomUUID(),
         authId: auth_id,
-        firstName: validatedData.first_name,
-        lastName: validatedData.last_name,
-        birthDate: validatedData.birth_date,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        birthDate: validatedData.birthDate,
+        gender: validatedData.gender,
         current: validatedData.current,
         disabled: validatedData.disabled,
-        avatarUrl: validatedData.avatar_url,
+        avatarUrl: validatedData.avatarUrl,
         contactInfo: contactInfoJson,
       },
       select: {
-        authId: true,
+        id: true,
         firstName: true,
         lastName: true,
         birthDate: true,
+        gender: true,
         current: true,
         disabled: true,
         avatarUrl: true,
         contactInfo: true,
         createdAt: true,
+        updatedAt: true,
+        roles: true,
+        authId: true,
       },
     });
 
@@ -230,22 +228,21 @@ export async function updateClient(
     revalidatePath("/dashboard");
 
     const clientResult: Client = {
-      auth_id: updatedOrCreatedRecord.authId,
-      first_name:
-        updatedOrCreatedRecord?.firstName ?? "** First name required **",
-      last_name:
-        updatedOrCreatedRecord?.lastName ?? "** Last name required **",
-      full_name:
-        `${updatedOrCreatedRecord.firstName || ""} ${updatedOrCreatedRecord.lastName || ""
-          }`.trim() || "Name required",
-      birth_date: updatedOrCreatedRecord.birthDate,
+      id: updatedOrCreatedRecord.id,
+      firstName: updatedOrCreatedRecord.firstName || "** First name required **",
+      lastName: updatedOrCreatedRecord.lastName || "** Last name required **",
+      birthDate: updatedOrCreatedRecord.birthDate,
+      gender: updatedOrCreatedRecord.gender,
       current: updatedOrCreatedRecord.current,
       disabled: updatedOrCreatedRecord.disabled,
-      avatar_url: updatedOrCreatedRecord.avatarUrl,
-      contact_info: Array.isArray(updatedOrCreatedRecord.contactInfo)
+      avatarUrl: updatedOrCreatedRecord.avatarUrl,
+      contactInfo: Array.isArray(updatedOrCreatedRecord.contactInfo)
         ? (updatedOrCreatedRecord.contactInfo as ContactInfoItem[])
         : [],
-      DateTime: updatedOrCreatedRecord.createdAt,
+      createdAt: updatedOrCreatedRecord.createdAt,
+      updatedAt: updatedOrCreatedRecord.updatedAt,
+      roles: updatedOrCreatedRecord.roles,
+      authId: updatedOrCreatedRecord.authId,
     };
 
     return {

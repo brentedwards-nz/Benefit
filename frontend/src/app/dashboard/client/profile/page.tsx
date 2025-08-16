@@ -7,9 +7,10 @@ import type { Client } from "@/server-actions/client/types";
 import { ProfileFormValues } from "@/components/profile/schema";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { Loading } from "@/components/ui/loading";
 
 const Profile = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const [initialData, setInitialData] = useState<Client | undefined>(
     undefined
@@ -20,6 +21,8 @@ const Profile = () => {
   useEffect(() => {
     if (session?.user?.id) {
       setUserId(session.user.id);
+    } else {
+      // No session or user ID found
     }
   }, [session]);
 
@@ -53,23 +56,24 @@ const Profile = () => {
     }
     setIsLoading(true);
     try {
-      const { primary_phone, primary_email, DateTime, ...updateData } = data;
-
-      const newClient: Client = {
-        auth_id: userId,
-        first_name: updateData.first_name,
-        last_name: updateData.last_name,
-        full_name: "",
-        birth_date: updateData?.birth_date ?? null,
-        current: updateData.current,
-        disabled: updateData.disabled,
-        avatar_url: updateData.avatar_url ?? null,
-        contact_info: updateData.contact_info ?? null,
-        primary_phone: "",
-        primary_email: "",
-        DateTime: data.DateTime ?? null,
+      // Transform ProfileFormValues to Client type for update
+      const updateData: Client = {
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate || null,
+        gender: data.gender || null,
+        current: data.current,
+        disabled: data.disabled,
+        avatarUrl: data.avatarUrl || null,
+        contactInfo: data.contactInfo || null,
+        createdAt: data.createdAt || null,
+        updatedAt: data.updatedAt || null,
+        roles: data.roles,
+        authId: data.authId,
       };
-      const result = await updateClient(userId, newClient);
+
+      const result = await updateClient(userId, updateData);
       if (result.success) {
         toast.success("Profile updated successfully!");
         setInitialData(result.data);
@@ -87,18 +91,38 @@ const Profile = () => {
     // Implement cancel logic, e.g., navigate back or reset form
   };
 
-  if (isLoading) {
+  if (isLoading || !initialData) {
     return (
-      <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center min-h-[100vh]">
-        <p>Loading profile...</p>
-      </div>
+      <Loading
+        title="Loading Profile"
+        description="Please wait while we load your profile..."
+        steps={[
+          "Authenticating user session",
+          "Loading profile data",
+          "Preparing profile form"
+        ]}
+        size="md"
+      />
     );
   }
 
-  if (!initialData && !isLoading) {
+  if (!initialData) {
     return (
       <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center min-h-[100vh]">
-        <p>No profile found or an error occurred. Please try again.</p>
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Profile Not Found</h2>
+          <p>No profile found or an error occurred. Please try again.</p>
+          {!userId && (
+            <div className="mt-4">
+              <a
+                href="/auth/signin"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Sign In
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -115,7 +139,6 @@ const Profile = () => {
               isLoading={isLoading}
             />
           )}
-          {!initialData && <h1>WTF</h1>}
         </div>
       </div>
     </>

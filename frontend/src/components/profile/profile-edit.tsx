@@ -68,22 +68,18 @@ export function ProfileEditForm({
 }: ProfileEditFormProps) {
   const defaultValues: ProfileFormValues = {
     ...initialData,
-    contact_info:
-      initialData.contact_info?.map((ci) => ({
+    firstName: initialData.firstName || '',
+    lastName: initialData.lastName || '',
+    contactInfo:
+      initialData.contactInfo?.map((ci) => ({
         ...ci,
         id: ci.id || Math.random().toString(),
       })) || [],
-    birth_date:
-      initialData.birth_date instanceof Date
-        ? initialData.birth_date
-        : initialData.birth_date
-          ? new Date(initialData.birth_date)
-          : null,
-    DateTime:
-      initialData.DateTime instanceof Date
-        ? initialData.DateTime
-        : initialData.DateTime
-          ? new Date(initialData.DateTime)
+    birthDate:
+      initialData.birthDate instanceof Date
+        ? initialData.birthDate
+        : initialData.birthDate
+          ? new Date(initialData.birthDate)
           : null,
   };
 
@@ -95,11 +91,11 @@ export function ProfileEditForm({
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "contact_info",
+    name: "contactInfo",
   });
 
   const handlePrimaryChange = (indexToSetPrimary: number) => {
-    const contactInfos = form.getValues("contact_info");
+    const contactInfos = form.getValues("contactInfo");
 
     const updatedContactInfos: {
       type: "email" | "phone" | "address" | "social";
@@ -123,7 +119,7 @@ export function ProfileEditForm({
         }
       });
     }
-    form.setValue("contact_info", updatedContactInfos!, { shouldDirty: true });
+    form.setValue("contactInfo", updatedContactInfos!, { shouldDirty: true });
   };
 
   const handleFormSubmit = (data: ProfileFormValues) => {
@@ -146,7 +142,7 @@ export function ProfileEditForm({
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="first_name"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
@@ -159,7 +155,7 @@ export function ProfileEditForm({
             />
             <FormField
               control={form.control}
-              name="last_name"
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
@@ -174,8 +170,8 @@ export function ProfileEditForm({
               <FormLabel>Full Name</FormLabel>
               <FormControl>
                 <Input
-                  value={`${form.watch("first_name")} ${form.watch(
-                    "last_name"
+                  value={`${form.watch("firstName")} ${form.watch(
+                    "lastName"
                   )}`}
                   readOnly
                   disabled
@@ -188,7 +184,7 @@ export function ProfileEditForm({
 
             <FormField
               control={form.control}
-              name="birth_date"
+              name="birthDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
@@ -230,7 +226,31 @@ export function ProfileEditForm({
 
             <FormField
               control={form.control}
-              name="avatar_url"
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="avatarUrl"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Avatar URL</FormLabel>
@@ -266,7 +286,7 @@ export function ProfileEditForm({
               >
                 <FormField
                   control={form.control}
-                  name={`contact_info.${index}.type`}
+                  name={`contactInfo.${index}.type`}
                   render={({ field }) => (
                     <FormItem className="w-full md:w-1/4">
                       <FormLabel>Type</FormLabel>
@@ -292,7 +312,7 @@ export function ProfileEditForm({
                 />
                 <FormField
                   control={form.control}
-                  name={`contact_info.${index}.value`}
+                  name={`contactInfo.${index}.value`}
                   render={({ field }) => (
                     <FormItem className="w-full md:w-1/2">
                       <FormLabel>Value</FormLabel>
@@ -305,7 +325,7 @@ export function ProfileEditForm({
                 />
                 <FormField
                   control={form.control}
-                  name={`contact_info.${index}.label`}
+                  name={`contactInfo.${index}.label`}
                   render={({ field }) => (
                     <FormItem className="w-full md:w-1/4">
                       <FormLabel>Label (Optional)</FormLabel>
@@ -323,7 +343,7 @@ export function ProfileEditForm({
                 <div className="flex items-center space-x-2 self-end mb-1">
                   <FormField
                     control={form.control}
-                    name={`contact_info.${index}.primary`}
+                    name={`contactInfo.${index}.primary`}
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-0">
                         <FormControl>
@@ -359,9 +379,9 @@ export function ProfileEditForm({
             >
               <PlusCircle className="mr-2 h-4 w-4" /> Add Contact
             </Button>
-            {form.formState.errors.contact_info?.root && (
+            {form.formState.errors.contactInfo?.root && (
               <p className="text-sm font-medium text-destructive mt-2">
-                {form.formState.errors.contact_info.root.message}
+                {form.formState.errors.contactInfo.root.message}
               </p>
             )}
           </CardContent>
@@ -436,27 +456,28 @@ export function ProfileEditForm({
               <FormItem>
                 <FormLabel>Auth ID</FormLabel>
                 <FormControl>
-                  <Input value={form.watch("auth_id")} readOnly disabled />
+                  <Input value={form.watch("authId")} readOnly disabled />
                 </FormControl>
                 <FormDescription>
-                  Unique identifier from authentication system.
+                  Your unique authentication identifier.
                 </FormDescription>
               </FormItem>
+
               <FormItem>
-                <FormLabel>Last Updated</FormLabel>
+                <FormLabel>Created At</FormLabel>
                 <FormControl>
                   <Input
                     value={
-                      form.watch("DateTime")
-                        ? format(form.watch("DateTime")!, "PPP p")
-                        : "N/A"
+                      form.watch("createdAt")
+                        ? format(form.watch("createdAt")!, "PPP p")
+                        : "Not set"
                     }
                     readOnly
                     disabled
                   />
                 </FormControl>
                 <FormDescription>
-                  The last time this profile was updated.
+                  When your profile was created.
                 </FormDescription>
               </FormItem>
             </CardContent>

@@ -1,12 +1,40 @@
-// frontend/app/dashboard/page.tsx
-import { ProfileCard } from "@/components/cards/profile-card";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+"use client";
 
-export default async function Dashboard() {
-  const session = await getServerSession(authOptions);
-  const auth_id = session?.user?.id || "UNDEFINED";
-  console.log("Dashboard page loaded:", auth_id);
+import { ProfileCard } from "@/components/cards/profile-card";
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { Loading } from "@/components/ui/loading";
+
+export default function Dashboard() {
+  const { data: session, status } = useSession();
+  const [auth_id, setAuth_id] = useState<string>("UNDEFINED");
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      setAuth_id(session.user.id);
+    } else {
+      setAuth_id("UNDEFINED");
+    }
+  }, [session]);
+
+  console.log("Dashboard page loaded - Session:", session);
+  console.log("Dashboard page loaded - Auth ID:", auth_id);
+  console.log("Dashboard page loaded - User:", session?.user);
+
+  if (status === "loading") {
+    return (
+      <Loading
+        title="Loading Dashboard"
+        description="Setting up your personalized experience..."
+        steps={[
+          "Authenticating user session",
+          "Loading profile data",
+          "Preparing dashboard"
+        ]}
+        size="lg"
+      />
+    );
+  }
 
   return (
     <>

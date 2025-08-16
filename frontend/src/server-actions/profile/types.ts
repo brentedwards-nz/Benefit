@@ -8,16 +8,17 @@ export interface ContactInfoItem {
 }
 
 export type Client = {
-  auth_id: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  birth_date: Date | null; // Assuming birth_date can be null or a Date object
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  birthDate: Date | null;
+  gender: 'Male' | 'Female' | 'Other' | 'PreferNotToSay' | null;
   current: boolean;
   disabled: boolean;
-  avatar_url: string | null; // Assuming avatar_url can be null or a string
-  contact_info: ContactInfoItem[] | null;
-  primary_phone?: string | null; // Optional primary phone number
-  primary_email?: string | null; // Optional primary email address
-  DateTime: Date | null; // Assuming birth_date can be null or a Date object
+  avatarUrl: string | null;
+  contactInfo: ContactInfoItem[] | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  roles: string[];
+  authId: string;
 };

@@ -3,10 +3,8 @@
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -122,52 +120,62 @@ function FormComponent() {
 
   return (
     <>
-      <div className="flex flex-col">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+      <div className="flex flex-col space-y-4">
+        <div className="grid gap-3">
+          <Label htmlFor="email" className="text-sm font-medium text-foreground">
+            Email Address
+          </Label>
           <Input
             id="email"
             name="email"
-            placeholder="your-email@email.com"
+            type="email"
+            placeholder="your-email@example.com"
             disabled={oAuthRequest.pending || pending}
+            className="h-11"
           />
           <Button
             type="submit"
-            className="w-full"
+            className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
             disabled={oAuthRequest.pending || pending}
             formAction={handleEmailSignIn}
           >
             {pending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <IconMail />
+              <IconMail className="mr-2 h-4 w-4" />
             )}
-            Login With Email
+            Sign in with Email
           </Button>
         </div>
-      </div>
-      <div className="flex justify-center">
+
+        {/* Email Status Message */}
         {emailState.message && (
-          <p
-            className={`text-sm mt-2 ${emailState.success
-                ? "text-green-600"
-                : "text-red-600"
-              }`}
-          >
-            {emailState.message}
-          </p>
+          <div className="flex justify-center">
+            <p
+              className={`text-sm px-3 py-2 rounded-md ${emailState.success
+                  ? "text-green-700 bg-green-50 border border-green-200"
+                  : "text-red-700 bg-red-50 border border-red-200"
+                }`}
+            >
+              {emailState.message}
+            </p>
+          </div>
         )}
       </div>
-      <div className="flex items-center my-4 w-full">
-        <div className="flex-grow h-px bg-gray-300"></div>{" "}
-        <span className="flex-shrink-0 mx-4 text-gray-500 text-sm uppercase">
+
+      {/* Divider */}
+      <div className="flex items-center my-6 w-full">
+        <div className="flex-grow h-px bg-border"></div>
+        <span className="flex-shrink-0 mx-4 text-sm text-muted-foreground font-medium">
           Or continue with
         </span>
-        <div className="flex-grow h-px bg-gray-300"></div>{" "}
+        <div className="flex-grow h-px bg-border"></div>
       </div>
-      <div className="space-x-2 flex justify-center w-full">
+
+      {/* OAuth Buttons */}
+      <div className="space-y-3">
         <Button
-          className="flex-1"
+          className="w-full h-11 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm"
           variant="outline"
           onClick={() => signInWithOAuth("google")}
           disabled={oAuthRequest.pending || pending}
@@ -177,13 +185,13 @@ function FormComponent() {
             oAuthRequest.provider == "google" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <IconBrandGoogle />
+            <IconBrandGoogle className="mr-2 h-4 w-4" />
           )}
-          Google
+          Continue with Google
         </Button>
+
         <Button
-          className="flex-1"
-          variant="outline"
+          className="w-full h-11 bg-[#1877F2] hover:bg-[#1877F2]/90 text-white border-0 shadow-sm"
           onClick={() => signInWithOAuth("facebook")}
           disabled={oAuthRequest.pending || pending}
         >
@@ -192,49 +200,60 @@ function FormComponent() {
             oAuthRequest.provider == "facebook" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <IconBrandFacebook />
+            <IconBrandFacebook className="mr-2 h-4 w-4" />
           )}
-          Facebook
+          Continue with Facebook
         </Button>
       </div>
-      <div className="flex justify-center">
-        {oAuthRequest.message && (
+
+      {/* OAuth Status Message */}
+      {oAuthRequest.message && (
+        <div className="flex justify-center mt-4">
           <p
-            className={`text-sm mt-2 ${oAuthRequest.success ? "text-gray-500" : "text-red-600"
+            className={`text-sm px-3 py-2 rounded-md ${oAuthRequest.success
+                ? "text-blue-700 bg-blue-50 border border-blue-200"
+                : "text-red-700 bg-red-50 border border-red-200"
               }`}
           >
             {oAuthRequest.message}
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
 
 export function SignInCard() {
   return (
-    <Card className="w-full max-w-sm shadow-lg gap-1">
-      <CardHeader className="">
-        <CardTitle className="text-xl">Login to your account</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account
+    <Card className="w-full border shadow-lg bg-card">
+      <CardHeader className="space-y-1 pb-4">
+        <CardTitle className="text-2xl font-semibold text-card-foreground">
+          Sign in to your account
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          Choose your preferred sign-in method below
         </CardDescription>
-        <CardAction hidden={true}>
-          <Button variant="link">Sign Up</Button>
-        </CardAction>
       </CardHeader>
 
-      <CardContent className="p-6 pb-0 pt-2">
+      <CardContent className="space-y-6">
         <form>
           <FormComponent />
         </form>
       </CardContent>
 
-      <CardFooter className="flex-col gap-0">
-        <div className="space-x-2 flex justify-center mt-4">
-          <Link href={"/"}>Home</Link>
+      <CardContent className="pt-0">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link
+              href="/"
+              className="font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline"
+            >
+              Contact us to get started
+            </Link>
+          </p>
         </div>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 }

@@ -58,6 +58,7 @@ model Client {
   firstName   String?
   lastName    String?
   birthDate   DateTime?  @db.Date
+  gender      Gender?
   current     Boolean    @default(false)
   disabled    Boolean    @default(true)
   avatarUrl   String?
@@ -126,4 +127,11 @@ enum UserRole {
   Owner
   Admin
   Client
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+  PreferNotToSay
 }
