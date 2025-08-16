@@ -42,9 +42,9 @@ export default function RootLayout({
         <main className="flex-1 flex flex-col">
           {/* {children}{" "} */}
           {children}
-          <Toaster richColors />
           {/* This is where your page content will be rendered */}
         </main>
+        <Toaster richColors />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -33,6 +33,14 @@ const menuDefinition: NavData = {
           title: "Email Auth",
           url: "/dashboard/admin/email_auth",
         },
+        {
+          title: "Programmes",
+          url: "/dashboard/admin/programmes",
+        },
+        {
+          title: "Templates",
+          url: "/dashboard/admin/programmes/templates",
+        },
       ],
     },
     {

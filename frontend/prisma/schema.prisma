@@ -11,17 +11,17 @@ datasource db {
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String
   type              String
   provider          String
+  scope             String
   providerAccountId String
-  refresh_token     String?
+  userId            String
   access_token      String?
   expires_at        Int?
-  token_type        String?
-  scope             String
   id_token          String?
+  refresh_token     String?
   session_state     String?
+  token_type        String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -29,9 +29,9 @@ model Account {
 
 model Session {
   id           String   @id @default(cuid())
+  expires      DateTime
   sessionToken String   @unique
   userId       String
-  expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -39,8 +39,8 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime?
   image         String?
+  emailVerified DateTime?
   accounts      Account[]
   sessions      Session[]
 }
@@ -69,51 +69,45 @@ model Client {
 }
 
 model Programme {
-  id                  String    @id @default(cuid())
+  id                  String               @id @default(cuid())
   programmeTemplateId String
-  humanReadableId     String    @unique
+  humanReadableId     String               @unique
   name                String
   startDate           DateTime
   maxClients          Int
-  numberOfSessions    Int
-  programmeCost       Decimal   @db.Decimal(10, 2)
+  programmeCost       Decimal              @db.Decimal(10, 2)
   notes               String?
   adhocData           Json?
-  createdAt           DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt           DateTime? @default(now()) @db.Timestamp(6)
-
-  // Relation to ProgrammeEnrolment
-  enrolments        ProgrammeEnrolment[]
-  ProgrammeTemplate ProgrammeTemplate?   @relation(fields: [programmeTemplateId], references: [id])
+  createdAt           DateTime?            @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime?            @default(now()) @db.Timestamp(6)
+  sessionsDescription Json?
+  ProgrammeTemplate   ProgrammeTemplate    @relation(fields: [programmeTemplateId], references: [id])
+  enrolments          ProgrammeEnrolment[]
 }
 
 model ProgrammeTemplate {
-  id               String   @id @default(cuid())
-  name             String   @unique
-  startDate        DateTime
-  maxClients       Int
-  numberOfSessions Int
-  programmeCost    Decimal  @db.Decimal(10, 2)
-  notes            String?
-  adhocData        Json?
-
-  programmes         Programme[]
-  ProgrammeEnrolment ProgrammeEnrolment[]
+  id                  String               @id @default(cuid())
+  name                String               @unique
+  maxClients          Int
+  programmeCost       Decimal              @db.Decimal(10, 2)
+  notes               String?
+  adhocData           Json?
+  sessionsDescription Json?
+  programmes          Programme[]
+  ProgrammeEnrolment  ProgrammeEnrolment[]
 }
 
 model ProgrammeEnrolment {
-  id        String    @id @default(cuid())
-  programId String
-  clientId  String
-  notes     String?
-  adhocData Json?
-  createdAt DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt DateTime? @default(now()) @db.Timestamp(6)
-
-  // Relation to Programme with cascade delete
+  id                  String             @id @default(cuid())
+  programId           String
+  clientId            String
+  notes               String?
+  adhocData           Json?
+  createdAt           DateTime?          @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime?          @default(now()) @db.Timestamp(6)
+  programmeTemplateId String?
   programme           Programme          @relation(fields: [programId], references: [id], onDelete: Cascade)
   ProgrammeTemplate   ProgrammeTemplate? @relation(fields: [programmeTemplateId], references: [id])
-  programmeTemplateId String?
 }
 
 model SystemGmailConfig {
