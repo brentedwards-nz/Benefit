@@ -15,8 +15,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { mainMenu } from "./mainMenu";
 
 export const metadata = {
-  title: "My Next.js App",
-  description: "A basic Next.js application layout",
+  title: "Dashboard",
+  description: "Manage your wellness journey with Bene-Fit",
 };
 
 export default function RootLayout({

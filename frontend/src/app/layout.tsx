@@ -9,8 +9,47 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Bene-Fit Wellness Solutions",
+  title: {
+    default: "Bene-Fit Wellness Solutions",
+    template: "%s | Bene-Fit Wellness Solutions"
+  },
   description: "Changing lives through wellness. Feel the Bene-Fit",
+  keywords: ["wellness", "fitness", "health", "nutrition", "coaching", "therapy"],
+  authors: [{ name: "Bene-Fit Wellness Solutions" }],
+  creator: "Bene-Fit Wellness Solutions",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: defaultUrl,
+    title: "Bene-Fit Wellness Solutions",
+    description: "Changing lives through wellness. Feel the Bene-Fit",
+    siteName: "Bene-Fit Wellness Solutions",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bene-Fit Wellness Solutions",
+    description: "Changing lives through wellness. Feel the Bene-Fit",
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
