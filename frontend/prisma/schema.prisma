@@ -58,7 +58,6 @@ model Client {
   firstName   String?
   lastName    String?
   birthDate   DateTime?  @db.Date
-  gender      Gender?
   current     Boolean    @default(false)
   disabled    Boolean    @default(true)
   avatarUrl   String?
@@ -67,6 +66,7 @@ model Client {
   updatedAt   DateTime?  @db.Timestamp(6)
   roles       UserRole[] @default([Client])
   authId      String     @unique(map: "client_auth_id_unique")
+  gender      Gender?
 }
 
 model Programme {
@@ -124,7 +124,6 @@ model SystemGmailConfig {
 
 enum UserRole {
   SystemAdmin
-  Owner
   Admin
   Client
 }

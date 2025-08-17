@@ -99,40 +99,40 @@ async function main() {
             lastName: 'Administrator',
             current: true,
             disabled: false,
-            roles: [UserRole.SystemAdmin, UserRole.Owner],
+            roles: [UserRole.SystemAdmin, UserRole.Admin],
             authId: 'admin_user_001',
         }
     })
 
     console.log('✅ Admin user created: System Administrator')
 
-    // Create a test owner user
-    const ownerUser = await prisma.user.create({
+    // Create brentedwards.nz@gmail.com user with SystemAdmin, Admin, and Client roles
+    const brentUser = await prisma.user.create({
         data: {
-            id: 'owner_user_001',
-            name: 'Business Owner',
-            email: 'owner@benefit.com',
+            id: 'brent_user_001',
+            name: 'Brent Edwards',
+            email: 'brentedwards.nz@gmail.com',
             emailVerified: new Date(),
         }
     })
 
-    const ownerClient = await prisma.client.create({
+    const brentClient = await prisma.client.create({
         data: {
-            id: 'owner_user_001',
-            firstName: 'Business',
-            lastName: 'Owner',
+            id: 'brent_user_001',
+            firstName: 'Brent',
+            lastName: 'Edwards',
             current: true,
             disabled: false,
-            roles: [UserRole.Owner, UserRole.Admin],
-            authId: 'owner_user_001',
+            roles: [UserRole.SystemAdmin, UserRole.Admin, UserRole.Client],
+            authId: 'brent_user_001',
         }
     })
 
-    console.log('✅ Owner user created: Business Owner')
+    console.log('✅ Brent Edwards user created: brentedwards.nz@gmail.com')
 
     console.log('\n🔑 Test Login Credentials:')
     console.log('Admin: admin@benefit.com')
-    console.log('Owner: owner@benefit.com')
+    console.log('Brent: brentedwards.nz@gmail.com')
     console.log('Note: These are seeded users - you may need to set up proper authentication')
 
     console.log('\n📊 Final Database Summary:')

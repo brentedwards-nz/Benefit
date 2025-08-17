@@ -118,7 +118,7 @@ export function ClientRoleExample() {
             id: '2',
             firstName: 'Jane',
             lastName: 'Smith',
-            roles: [UserRole.Admin, UserRole.Owner],
+            roles: [UserRole.Admin],
         },
     ])
 

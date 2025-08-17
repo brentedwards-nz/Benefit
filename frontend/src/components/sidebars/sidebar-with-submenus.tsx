@@ -34,6 +34,7 @@ export interface NavMainSection {
   url: string;
   items: NavItem[]; // An array of NavItem
   isActive?: boolean; // 'isActive' is optional
+  roles?: string[]; // Optional roles that can access this section
 }
 
 /**
@@ -89,14 +90,13 @@ export function processNavDataForActiveState(
 
   if (!foundMatch) {
     const newNavItem: NavItem = {
-      title: `${
-        cleanPathname === "/"
+      title: `${cleanPathname === "/"
           ? "Home"
           : (cleanPathname.split("/").pop() || "Unknown")
-              .charAt(0)
-              .toUpperCase() +
-            (cleanPathname.split("/").pop() || "Unknown").slice(1)
-      }`,
+            .charAt(0)
+            .toUpperCase() +
+          (cleanPathname.split("/").pop() || "Unknown").slice(1)
+        }`,
       url: currentPathname,
       isActive: true,
     };
@@ -143,6 +143,14 @@ export const AppSidebar = React.forwardRef<
       setMenuItems(newMenu);
     }
   }, [data]);
+
+  // Filter menu items based on user roles
+  const filterMenuByRoles = (menuData: NavData) => {
+    // For now, we'll show all menu items
+    // In a real implementation, you would get user roles from the session
+    // and filter based on those roles
+    return menuData;
+  };
 
   return (
     <Sidebar {...props}>

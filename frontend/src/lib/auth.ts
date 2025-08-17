@@ -43,6 +43,23 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }: { session: any; token: any }) {
             if (session.user && token.sub) {
                 session.user.id = token.sub;
+
+                // Fetch user roles from the database
+                try {
+                    const client = await prisma.client.findUnique({
+                        where: { authId: token.sub },
+                        select: { roles: true }
+                    });
+
+                    if (client) {
+                        session.user.roles = client.roles;
+                    } else {
+                        session.user.roles = [];
+                    }
+                } catch (error) {
+                    console.error('Error fetching user roles:', error);
+                    session.user.roles = [];
+                }
             }
             return session;
         },
@@ -50,6 +67,24 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id;
             }
+
+            // Fetch user roles and add them to the token
+            if (token.id) {
+                try {
+                    const client = await prisma.client.findUnique({
+                        where: { authId: token.id },
+                        select: { roles: true }
+                    });
+
+                    if (client) {
+                        token.roles = client.roles;
+                    }
+                } catch (error) {
+                    console.error('Error fetching user roles for JWT:', error);
+                    token.roles = [];
+                }
+            }
+
             return token;
         },
     },

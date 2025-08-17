@@ -2,9 +2,9 @@ import AppBreadcrumb from "@/components/breadcrumb/breadcrumb";
 
 import HomeButton from "@/components/buttons/HomeButton";
 import {
-  AppSidebar,
+  RoleBasedSidebar,
   NavData,
-} from "@/components/sidebars/sidebar-with-submenus";
+} from "@/components/sidebars/role-based-sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -26,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <SidebarProvider>
-      <AppSidebar data={mainMenu} />
+      <RoleBasedSidebar data={mainMenu} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b">
           <div className="flex items-center gap-2 px-3">

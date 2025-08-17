@@ -1,4 +1,5 @@
-import { NavData } from "@/components/sidebars/sidebar-with-submenus";
+import { NavData } from "@/components/sidebars/role-based-sidebar";
+import { UserRole } from "@prisma/client";
 
 const menuDefinition: NavData = {
   navMain: [
@@ -6,15 +7,13 @@ const menuDefinition: NavData = {
       title: "Home",
       url: "/dashboard",
       items: [],
+      roles: [UserRole.SystemAdmin, UserRole.Admin, UserRole.Client], // All authenticated users
     },
     {
       title: "Client",
       url: "/dashboard/client",
+      roles: [UserRole.SystemAdmin, UserRole.Admin, UserRole.Client], // All authenticated users
       items: [
-        {
-          title: "AI",
-          url: "/dashboard/client/ai",
-        },
         {
           title: "Profile",
           url: "/dashboard/client/profile",
@@ -24,6 +23,7 @@ const menuDefinition: NavData = {
     {
       title: "Admin",
       url: "/dashboard/admin",
+      roles: [UserRole.SystemAdmin, UserRole.Admin], // Only SystemAdmin and Admin
       items: [
         {
           title: "Email",
@@ -46,6 +46,7 @@ const menuDefinition: NavData = {
     {
       title: "AI",
       url: "/dashboard/ai",
+      roles: [UserRole.SystemAdmin], // Only SystemAdmin
       items: [
         {
           title: "Chatbot",
