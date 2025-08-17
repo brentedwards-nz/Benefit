@@ -58,7 +58,7 @@ const ClientSchema = z.object({
 export async function readClient(
   user_id: string
 ): Promise<ActionResult<Client>> {
-  console.log("Fetching client for auth_id:", user_id);
+
 
   if (typeof user_id !== "string" || user_id.trim() === "") {
     console.error("Invalid auth_id provided to getClient Server Action.");

@@ -47,7 +47,7 @@ export function ProfileCard({ auth_id }: ProfileCardProps) {
     fetchClient();
   }, [auth_id]);
 
-  // Test if avatar URL is accessible
+  // Test if avatar URL is accessible (only for HTTP URLs, not base64)
   useEffect(() => {
     if (client?.avatarUrl &&
       (client.avatarUrl.startsWith('http://') || client.avatarUrl.startsWith('https://'))) {
@@ -126,11 +126,13 @@ export function ProfileCard({ auth_id }: ProfileCardProps) {
   const isAvatarRateLimited = client?.avatarUrl &&
     (client.avatarUrl.includes('googleusercontent.com') || client.avatarUrl.includes('s96-c'));
 
-  // Validate avatar URL
+  // Validate avatar URL - support both HTTP URLs and base64 data URLs
   const isValidAvatarUrl = client?.avatarUrl &&
-    (client.avatarUrl.startsWith('http://') || client.avatarUrl.startsWith('https://'));
+    (client.avatarUrl.startsWith('http://') ||
+      client.avatarUrl.startsWith('https://') ||
+      client.avatarUrl.startsWith('data:'));
 
-  // Use fallback if avatar is rate limited or invalid
+  // Use fallback if avatar is invalid or rate limited
   const shouldUseFallback = !isValidAvatarUrl || isAvatarRateLimited;
 
   return (

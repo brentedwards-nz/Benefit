@@ -41,7 +41,7 @@ export async function getAuthenticatedGmailClient() {
 
     // Check if token needs refreshing
     if (systemConfig.expiresAt < new Date()) {
-        console.log('Access token expired, refreshing...');
+
 
         try {
             // Refresh the token
@@ -57,7 +57,7 @@ export async function getAuthenticatedGmailClient() {
                 },
             });
 
-            console.log('Access token refreshed successfully');
+
         } catch (error) {
             console.error('Failed to refresh access token:', error);
             throw new Error('Failed to refresh Gmail access token. Please re-connect Gmail in admin settings.');

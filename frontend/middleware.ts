@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    console.log("Middleware triggered for request:", req.url);
+
     return NextResponse.next();
   },
   {

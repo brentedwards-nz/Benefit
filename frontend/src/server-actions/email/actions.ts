@@ -18,7 +18,7 @@ import {
 export async function readConnectedGmailAccounts(): Promise<
   ActionResult<ConnectedGmailAccount[]>
 > {
-  console.log("Fetching Connected Accounts");
+
 
   try {
     // TODO: Implement NextAuth authentication check
@@ -243,7 +243,7 @@ export async function readEmail(
     // Now, use Promise.all to wait for all the promises to resolve
     const emails: Email[] = await Promise.all(ePromises);
 
-    console.log(`Successfully fetched ${emails.length} emails.`);
+
     return {
       success: true,
       data: emails,

@@ -647,3 +647,220 @@ export async function createProgrammeFromTemplate(
         };
     }
 }
+
+/**
+ * Programme Enrolment Server Actions
+ */
+
+export async function readProgrammeEnrolments(
+    programmeId: string
+): Promise<ActionResult<any[]>> {
+    try {
+        const enrolments = await prisma.programmeEnrolment.findMany({
+            where: { programId: programmeId },
+            include: {
+                programme: true,
+            }
+        });
+
+        // Get client details for each enrolment
+        const enrolmentsWithClients = await Promise.all(
+            enrolments.map(async (enrolment) => {
+                const client = await prisma.client.findUnique({
+                    where: { id: enrolment.clientId },
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        contactInfo: true,
+                    }
+                });
+
+                return {
+                    id: enrolment.id,
+                    clientId: enrolment.clientId,
+                    clientFirstName: client?.firstName || 'Unknown',
+                    clientLastName: client?.lastName || 'Unknown',
+                    contactInfo: client?.contactInfo || [],
+                    notes: enrolment.notes,
+                    createdAt: enrolment.createdAt,
+                    updatedAt: enrolment.updatedAt,
+                };
+            })
+        );
+
+        return {
+            success: true,
+            data: enrolmentsWithClients
+        };
+
+    } catch (err: any) {
+        console.error("Error reading programme enrolments:", err);
+
+        return {
+            success: false,
+            message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+            code: "UNEXPECTED_SERVER_ERROR",
+            details: process.env.NODE_ENV === "development"
+                ? { stack: err.stack }
+                : undefined,
+        };
+    }
+}
+
+export async function addClientToProgramme(
+    programmeId: string,
+    clientId: string,
+    notes?: string
+): Promise<ActionResult<any>> {
+    try {
+        // Check if client is already enrolled
+        const existingEnrolment = await prisma.programmeEnrolment.findFirst({
+            where: {
+                programId: programmeId,
+                clientId: clientId
+            }
+        });
+
+        if (existingEnrolment) {
+            return {
+                success: false,
+                message: "Client is already enrolled in this programme.",
+                code: "CLIENT_ALREADY_ENROLLED"
+            };
+        }
+
+        // Check programme capacity
+        const programme = await prisma.programme.findUnique({
+            where: { id: programmeId },
+            include: {
+                _count: {
+                    select: { enrolments: true }
+                }
+            }
+        });
+
+        if (!programme) {
+            return {
+                success: false,
+                message: "Programme not found.",
+                code: "PROGRAMME_NOT_FOUND"
+            };
+        }
+
+        if (programme._count.enrolments >= programme.maxClients) {
+            return {
+                success: false,
+                message: "Programme is at maximum capacity.",
+                code: "PROGRAMME_FULL"
+            };
+        }
+
+        // Create enrolment
+        const enrolment = await prisma.programmeEnrolment.create({
+            data: {
+                programId: programmeId,
+                clientId: clientId,
+                notes: notes || null,
+            }
+        });
+
+        revalidatePath("/dashboard/admin/programmes");
+
+        return {
+            success: true,
+            data: enrolment
+        };
+
+    } catch (err: any) {
+        console.error("Error adding client to programme:", err);
+
+        return {
+            success: false,
+            message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+            code: "UNEXPECTED_SERVER_ERROR",
+            details: process.env.NODE_ENV === "development"
+                ? { stack: err.stack }
+                : undefined,
+        };
+    }
+}
+
+export async function removeClientFromProgramme(
+    enrolmentId: string
+): Promise<ActionResult<any>> {
+    try {
+        const enrolment = await prisma.programmeEnrolment.delete({
+            where: { id: enrolmentId }
+        });
+
+        revalidatePath("/dashboard/admin/programmes");
+
+        return {
+            success: true,
+            data: enrolment
+        };
+
+    } catch (err: any) {
+        console.error("Error removing client from programme:", err);
+
+        return {
+            success: false,
+            message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+            code: "UNEXPECTED_SERVER_ERROR",
+            details: process.env.NODE_ENV === "development"
+                ? { stack: err.stack }
+                : undefined,
+        };
+    }
+}
+
+export async function searchClients(
+    searchTerm: string
+): Promise<ActionResult<any[]>> {
+    try {
+        if (!searchTerm || searchTerm.trim().length < 2) {
+            return {
+                success: true,
+                data: []
+            };
+        }
+
+        const clients = await prisma.client.findMany({
+            where: {
+                OR: [
+                    { firstName: { contains: searchTerm, mode: 'insensitive' } },
+                    { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                ]
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                contactInfo: true,
+            },
+            take: 10, // Limit results
+            orderBy: [
+                { firstName: 'asc' },
+                { lastName: 'asc' }
+            ]
+        });
+
+        return {
+            success: true,
+            data: clients
+        };
+
+    } catch (err: any) {
+        console.error("Error searching clients:", err);
+
+        return {
+            success: false,
+            message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+            code: "UNEXPECTED_SERVER_ERROR",
+            details: process.env.NODE_ENV === "development"
+                ? { stack: err.stack }
+                : undefined,
+        };
+    }
+}

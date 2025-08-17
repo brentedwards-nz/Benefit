@@ -311,7 +311,7 @@ const ProgrammeTemplates = () => {
                                 <Separator />
                                 {templates.map((template) => (
                                     <SelectItem key={template.id} value={template.id}>
-                                        {template.name}
+                                        ✏️ {template.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -429,8 +429,28 @@ const ProgrammeTemplates = () => {
                             ) : (
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     {templates.map((template) => (
-                                        <div key={template.id} className="bg-background border rounded-lg p-4 shadow-sm">
-                                            <h3 className="font-semibold text-lg mb-2">{template.name}</h3>
+                                        <div
+                                            key={template.id}
+                                            className={`bg-background border rounded-lg p-4 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:border-primary/50 hover:bg-muted/30 group active:scale-[0.98] ${selectedTemplateId === template.id ? 'ring-2 ring-primary ring-offset-2' : ''
+                                                }`}
+                                            onClick={() => handleTemplateSelect(template.id)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleTemplateSelect(template.id);
+                                                }
+                                            }}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                                                    {template.name}
+                                                </h3>
+                                                <span className="text-primary/70 group-hover:text-primary transition-colors">
+                                                    ✏️
+                                                </span>
+                                            </div>
                                             <div className="space-y-2 text-sm text-muted-foreground">
                                                 <p><strong>Max Clients:</strong> {template.maxClients}</p>
                                                 <p><strong>Cost:</strong> ${template.programmeCost.toString()}</p>

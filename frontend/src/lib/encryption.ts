@@ -20,8 +20,8 @@ export function encrypt(text: string): string {
     // Generate a random initialization vector
     const iv = crypto.randomBytes(16);
 
-    // Create cipher
-    const cipher = crypto.createCipher(algorithm, key);
+    // Create cipher with IV
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
     cipher.setAAD(Buffer.from('gmail-refresh-token', 'utf8'));
 
     // Encrypt the text
@@ -55,8 +55,8 @@ export function decrypt(encryptedText: string): string {
     const iv = Buffer.from(ivBase64, 'base64');
     const authTag = Buffer.from(authTagBase64, 'base64');
 
-    // Create decipher
-    const decipher = crypto.createDecipher(algorithm, key);
+    // Create decipher with IV
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
     decipher.setAAD(Buffer.from('gmail-refresh-token', 'utf8'));
     decipher.setAuthTag(authTag);
 

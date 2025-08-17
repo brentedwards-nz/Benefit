@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -52,6 +53,7 @@ import {
 } from "./schema";
 
 import { Client } from "@/server-actions/client/types";
+import { toast } from "sonner";
 
 interface ProfileEditFormProps {
   initialData: Client;
@@ -139,135 +141,232 @@ export function ProfileEditForm({
               Update your basic profile details.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormItem className="md:col-span-2">
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input
-                  value={`${form.watch("firstName")} ${form.watch(
-                    "lastName"
-                  )}`}
-                  readOnly
-                  disabled
-                />
-              </FormControl>
-              <FormDescription>
-                Your full name is derived from your first and last name.
-              </FormDescription>
-            </FormItem>
-
-            <FormField
-              control={form.control}
-              name="birthDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of Birth</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value || undefined}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || undefined}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                      <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="avatarUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avatar URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://example.com/avatar.jpg"
-                      {...field}
-                      value={field.value ?? ""}
+          <CardContent className="space-y-6">
+            {/* Avatar Preview Section */}
+            <div className="flex flex-col items-center space-y-4 pb-4 border-b">
+              <div className="relative">
+                <div
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+                    if (fileInput) fileInput.click();
+                  }}
+                >
+                  {form.watch("avatarUrl") ? (
+                    <img
+                      src={form.watch("avatarUrl") || ""}
+                      alt="Profile picture"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-border shadow-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
-                  </FormControl>
-                  <FormDescription>
-                    A URL to your profile picture.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-muted border-4 border-border flex items-center justify-center hover:bg-muted/80 transition-colors">
+                      <span className="text-2xl text-muted-foreground">
+                        {form.watch("firstName")?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {form.watch("avatarUrl") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full bg-background hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => form.setValue("avatarUrl", "")}
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium">
+                  {form.watch("firstName")} {form.watch("lastName")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {form.watch("avatarUrl") ? "Click to change" : "Click to upload"}
+                </p>
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    try {
+                      // Import and use image utilities
+                      const { validateImageFile, compressAndResizeImage } = await import('@/lib/imageUtils');
+
+                      // Validate file
+                      const validation = validateImageFile(file, 2);
+                      if (!validation.valid) {
+                        toast.error(validation.error || "Invalid image file");
+                        return;
+                      }
+
+                      // Compress and resize image
+                      const compressedImageUrl = await compressAndResizeImage(file, 200, 200, 0.8);
+                      form.setValue("avatarUrl", compressedImageUrl);
+                      toast.success("Profile picture uploaded successfully!");
+                    } catch (error) {
+                      console.error("Error processing image:", error);
+                      toast.error("Failed to process image. Please try again.");
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormItem className="md:col-span-2">
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input
+                    value={`${form.watch("firstName")} ${form.watch(
+                      "lastName"
+                    )}`}
+                    readOnly
+                    disabled
+                  />
+                </FormControl>
+                <FormDescription>
+                  Your full name is derived from your first and last name.
+                </FormDescription>
+              </FormItem>
+
+              <FormField
+                control={form.control}
+                name="birthDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of Birth</FormLabel>
+                    <div className="flex space-x-2">
+                      <FormControl>
+                        <Input
+                          type="date"
+                          value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                          onChange={(e) => {
+                            const date = e.target.value ? new Date(e.target.value) : null;
+                            field.onChange(date);
+                          }}
+                          max={format(new Date(), "yyyy-MM-dd")}
+                          min="1900-01-01"
+                          className="flex-1"
+                        />
+                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className="px-3"
+                          >
+                            <CalendarIcon className="h-4 w-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <div className="p-3 border-b">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">Quick Navigation</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020].map((year) => (
+                                <Button
+                                  key={year}
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentDate = field.value || new Date();
+                                    const newDate = new Date(currentDate);
+                                    newDate.setFullYear(year);
+                                    field.onChange(newDate);
+                                  }}
+                                  className="text-xs"
+                                >
+                                  {year}s
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                          <Calendar
+                            mode="single"
+                            selected={field.value || undefined}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            captionLayout="dropdown"
+                            fromYear={1900}
+                            toYear={new Date().getFullYear()}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
+            </div>
           </CardContent>
         </Card>
 

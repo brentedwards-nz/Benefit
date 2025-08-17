@@ -17,9 +17,7 @@ export default function Dashboard() {
     }
   }, [session]);
 
-  console.log("Dashboard page loaded - Session:", session);
-  console.log("Dashboard page loaded - Auth ID:", auth_id);
-  console.log("Dashboard page loaded - User:", session?.user);
+
 
   if (status === "loading") {
     return (

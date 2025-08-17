@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { readProgrammes, createProgramme, updateProgramme } from "@/server-actions/programme/actions";
+import { readProgrammes, createProgramme, updateProgramme, readProgrammeEnrolments, addClientToProgramme, removeClientFromProgramme, searchClients } from "@/server-actions/programme/actions";
 import { readProgramTemplates } from "@/server-actions/programme/actions";
 import { Programme as ProgrammeType, ProgrammeTemplate, ProgrammeCreateInput } from "@/server-actions/programme/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +23,12 @@ const Programme = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [enrolments, setEnrolments] = useState<any[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedClient, setSelectedClient] = useState<any>(null);
+    const [enrolmentNotes, setEnrolmentNotes] = useState("");
     const [formData, setFormData] = useState<Partial<ProgrammeType>>({
         name: "",
         startDate: new Date(),
@@ -65,7 +71,7 @@ const Programme = () => {
         fetchData();
     }, []);
 
-    const handleProgrammeSelect = (programmeId: string) => {
+    const handleProgrammeSelect = async (programmeId: string) => {
         setSelectedProgrammeId(programmeId);
 
         if (programmeId === "create-new") {
@@ -104,6 +110,12 @@ const Programme = () => {
                         schedule: []
                     }
                 });
+
+                // Load enrolments for this programme
+                const enrolmentsResult = await readProgrammeEnrolments(programmeId);
+                if (enrolmentsResult.success) {
+                    setEnrolments(enrolmentsResult.data);
+                }
             }
         }
         // Clear any previous errors when switching programmes
@@ -297,6 +309,76 @@ const Programme = () => {
             }
         });
         setError(null);
+        setEnrolments([]);
+        setSearchTerm("");
+        setSearchResults([]);
+        setSelectedClient(null);
+        setEnrolmentNotes("");
+    };
+
+    const handleClientSearch = async (searchTerm: string) => {
+        if (searchTerm.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const result = await searchClients(searchTerm);
+            if (result.success) {
+                setSearchResults(result.data);
+            }
+        } catch (error) {
+            console.error("Error searching clients:", error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleAddClientToProgramme = async () => {
+        if (!selectedClient || !selectedProgrammeId) return;
+
+        try {
+            const result = await addClientToProgramme(selectedProgrammeId, selectedClient.id, enrolmentNotes);
+            if (result.success) {
+                toast.success("Client added to programme successfully!");
+
+                // Refresh enrolments
+                const enrolmentsResult = await readProgrammeEnrolments(selectedProgrammeId);
+                if (enrolmentsResult.success) {
+                    setEnrolments(enrolmentsResult.data);
+                }
+
+                // Reset form
+                setSelectedClient(null);
+                setEnrolmentNotes("");
+                setSearchTerm("");
+                setSearchResults([]);
+            } else {
+                toast.error(result.message || "Failed to add client to programme");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred");
+        }
+    };
+
+    const handleRemoveClientFromProgramme = async (enrolmentId: string) => {
+        try {
+            const result = await removeClientFromProgramme(enrolmentId);
+            if (result.success) {
+                toast.success("Client removed from programme successfully!");
+
+                // Refresh enrolments
+                const enrolmentsResult = await readProgrammeEnrolments(selectedProgrammeId);
+                if (enrolmentsResult.success) {
+                    setEnrolments(enrolmentsResult.data);
+                }
+            } else {
+                toast.error(result.message || "Failed to remove client from programme");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred");
+        }
     };
 
     if (loading) {
@@ -330,7 +412,7 @@ const Programme = () => {
                                 <Separator />
                                 {programmes.map((programme) => (
                                     <SelectItem key={programme.id} value={programme.id}>
-                                        ✏️ Edit: {programme.name}
+                                        ✏️ {programme.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -466,6 +548,134 @@ const Programme = () => {
                                     </div>
                                 </div>
 
+                                {/* Client Enrollment Section - Only show when editing */}
+                                {isEditing && selectedProgrammeId && (
+                                    <div className="space-y-4 pt-6 border-t">
+                                        <Label className="text-base font-medium">Client Enrollment</Label>
+
+                                        {/* Add Client Section */}
+                                        <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label htmlFor="client-search">Search Clients</Label>
+                                                    <Input
+                                                        id="client-search"
+                                                        value={searchTerm}
+                                                        onChange={(e) => {
+                                                            setSearchTerm(e.target.value);
+                                                            if (e.target.value.length >= 2) {
+                                                                handleClientSearch(e.target.value);
+                                                            } else {
+                                                                setSearchResults([]);
+                                                            }
+                                                        }}
+                                                        placeholder="Type to search clients..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="enrolment-notes">Enrollment Notes (Optional)</Label>
+                                                    <Input
+                                                        id="enrolment-notes"
+                                                        value={enrolmentNotes}
+                                                        onChange={(e) => setEnrolmentNotes(e.target.value)}
+                                                        placeholder="Add notes about this enrollment..."
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Search Results */}
+                                            {searchResults.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium">Select Client:</Label>
+                                                    <div className="grid gap-2">
+                                                        {searchResults.map((client) => (
+                                                            <div
+                                                                key={client.id}
+                                                                className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedClient?.id === client.id
+                                                                        ? 'border-primary bg-primary/10'
+                                                                        : 'border-border hover:border-primary/50'
+                                                                    }`}
+                                                                onClick={() => setSelectedClient(client)}
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <div>
+                                                                        <p className="font-medium">
+                                                                            {client.firstName} {client.lastName}
+                                                                        </p>
+                                                                        {client.contactInfo && Array.isArray(client.contactInfo) && (
+                                                                            <p className="text-sm text-muted-foreground">
+                                                                                {client.contactInfo.find((c: any) => c.primary)?.value || 'No contact info'}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                    {selectedClient?.id === client.id && (
+                                                                        <span className="text-primary">✓</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Add Client Button */}
+                                            {selectedClient && (
+                                                <Button
+                                                    onClick={handleAddClientToProgramme}
+                                                    className="w-full"
+                                                    disabled={isSearching}
+                                                >
+                                                    Add {selectedClient.firstName} {selectedClient.lastName} to Programme
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {/* Current Enrolments */}
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-medium">
+                                                Enrolled Clients ({enrolments.length}/{formData.maxClients || 0})
+                                            </Label>
+
+                                            {enrolments.length === 0 ? (
+                                                <p className="text-muted-foreground text-sm">No clients enrolled yet.</p>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {enrolments.map((enrolment) => (
+                                                        <div
+                                                            key={enrolment.id}
+                                                            className="flex items-center justify-between p-3 border rounded-lg bg-background"
+                                                        >
+                                                            <div className="flex-1">
+                                                                <p className="font-medium">
+                                                                    {enrolment.clientFirstName} {enrolment.clientLastName}
+                                                                </p>
+                                                                {enrolment.contactInfo && Array.isArray(enrolment.contactInfo) && (
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {enrolment.contactInfo.find((c: any) => c.primary)?.value || 'No contact info'}
+                                                                    </p>
+                                                                )}
+                                                                {enrolment.notes && (
+                                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                                        Notes: {enrolment.notes}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleRemoveClientFromProgramme(enrolment.id)}
+                                                                className="ml-4"
+                                                            >
+                                                                Remove
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex gap-2 pt-4">
                                     <Button
                                         onClick={handleSubmit}
@@ -487,32 +697,55 @@ const Programme = () => {
                             {programmes.length === 0 ? (
                                 <p className="text-muted-foreground">No programmes found. Create your first programme to get started.</p>
                             ) : (
-                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {programmes.map((programme) => (
-                                        <div key={programme.id} className="bg-background border rounded-lg p-4 shadow-sm">
-                                            <h3 className="font-semibold text-lg mb-2">{programme.name}</h3>
-                                            <div className="space-y-2 text-sm text-muted-foreground">
-                                                <p><strong>ID:</strong> {programme.humanReadableId}</p>
-                                                <p><strong>Start Date:</strong> {programme.startDate.toLocaleDateString()}</p>
-                                                <p><strong>Max Clients:</strong> {programme.maxClients}</p>
-                                                <p><strong>Cost:</strong> ${programme.programmeCost.toString()}</p>
-                                                {programme.notes && (
-                                                    <p><strong>Notes:</strong> {programme.notes}</p>
-                                                )}
-                                                {programme.sessionsDescription && (
-                                                    <div>
-                                                        <strong>Sessions:</strong>
-                                                        <p className="ml-2">
-                                                            {programme.sessionsDescription.totalWeeks} weeks,
-                                                            {programme.sessionsDescription.sessionsPerWeek} per week
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                <p><strong>Created:</strong> {programme.createdAt?.toLocaleDateString()}</p>
+                                <>
+
+                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                        {programmes.map((programme) => (
+                                            <div
+                                                key={programme.id}
+                                                className={`bg-background border rounded-lg p-4 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:border-primary/50 hover:bg-muted/30 group active:scale-[0.98] ${selectedProgrammeId === programme.id ? 'ring-2 ring-primary ring-offset-2' : ''
+                                                    }`}
+                                                onClick={() => handleProgrammeSelect(programme.id)}
+                                                role="button"
+                                                tabIndex={0}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        handleProgrammeSelect(programme.id);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                                                        {programme.name}
+                                                    </h3>
+                                                    <span className="text-primary/70 group-hover:text-primary transition-colors">
+                                                        ✏️
+                                                    </span>
+                                                </div>
+                                                <div className="space-y-2 text-sm text-muted-foreground">
+                                                    <p><strong>ID:</strong> {programme.humanReadableId}</p>
+                                                    <p><strong>Start Date:</strong> {programme.startDate.toLocaleDateString()}</p>
+                                                    <p><strong>Max Clients:</strong> {programme.maxClients}</p>
+                                                    <p><strong>Cost:</strong> ${programme.programmeCost.toString()}</p>
+                                                    {programme.notes && (
+                                                        <p><strong>Notes:</strong> {programme.notes}</p>
+                                                    )}
+                                                    {programme.sessionsDescription && (
+                                                        <div>
+                                                            <strong>Sessions:</strong>
+                                                            <p className="ml-2">
+                                                                {programme.sessionsDescription.totalWeeks} weeks,
+                                                                {programme.sessionsDescription.sessionsPerWeek} per week
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    <p><strong>Created:</strong> {programme.createdAt?.toLocaleDateString()}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </>
                     )}

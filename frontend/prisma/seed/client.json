@@ -1,0 +1,1562 @@
+[
+    {
+        "id": null,
+        "firstName": "Michael",
+        "lastName": "Smith",
+        "birthDate": "1985-05-15T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "michael.smith@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0219876543",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Emily",
+        "lastName": "Johnson",
+        "birthDate": "1992-09-21T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "emily.johnson@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0211234567",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "David",
+        "lastName": "Williams",
+        "birthDate": "1978-02-10T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "david.williams@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0212345678",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Olivia",
+        "lastName": "Brown",
+        "birthDate": "1995-11-29T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "olivia.brown@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0213456789",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Daniel",
+        "lastName": "Jones",
+        "birthDate": "1982-07-03T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "daniel.jones@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0214567890",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Sophia",
+        "lastName": "Garcia",
+        "birthDate": "1998-04-12T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "sophia.garcia@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0215678901",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Matthew",
+        "lastName": "Rodriguez",
+        "birthDate": "1975-08-25T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "matthew.rodriguez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0216789012",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Isabella",
+        "lastName": "Martinez",
+        "birthDate": "2000-01-08T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "isabella.martinez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0217890123",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Christopher",
+        "lastName": "Hernandez",
+        "birthDate": "1960-03-30T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "christopher.hernandez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0218901234",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Mia",
+        "lastName": "Lopez",
+        "birthDate": "1988-12-05T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "mia.lopez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0219012345",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Andrew",
+        "lastName": "Perez",
+        "birthDate": "1994-06-18T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "andrew.perez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0210123456",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Charlotte",
+        "lastName": "Gonzalez",
+        "birthDate": "1973-09-02T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "charlotte.gonzalez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0211234567",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Joseph",
+        "lastName": "Wilson",
+        "birthDate": "1980-05-20T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "joseph.wilson@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0212345678",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Amelia",
+        "lastName": "Anderson",
+        "birthDate": "1997-02-14T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "amelia.anderson@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0213456789",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Thomas",
+        "lastName": "Taylor",
+        "birthDate": "1968-10-27T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "thomas.taylor@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0214567890",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Ella",
+        "lastName": "Thomas",
+        "birthDate": "1999-03-09T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "ella.thomas@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0215678901",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "James",
+        "lastName": "Moore",
+        "birthDate": "1970-12-01T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "james.moore@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0216789012",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Chloe",
+        "lastName": "White",
+        "birthDate": "1983-07-22T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "chloe.white@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0217890123",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Robert",
+        "lastName": "Clark",
+        "birthDate": "1965-04-16T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "robert.clark@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0218901234",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Sophie",
+        "lastName": "Lewis",
+        "birthDate": "1990-11-25T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "sophie.lewis@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0219012345",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "William",
+        "lastName": "Hall",
+        "birthDate": "1972-01-07T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "william.hall@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0210123456",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Zoe",
+        "lastName": "Young",
+        "birthDate": "1987-08-19T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "zoe.young@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0211234567",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Richard",
+        "lastName": "King",
+        "birthDate": "1996-06-23T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "richard.king@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0212345678",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Lily",
+        "lastName": "Scott",
+        "birthDate": "1979-04-04T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "lily.scott@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0213456789",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Paul",
+        "lastName": "Green",
+        "birthDate": "1962-09-17T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "paul.green@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0214567890",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Hannah",
+        "lastName": "Adams",
+        "birthDate": "1991-05-11T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "hannah.adams@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0215678901",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Steven",
+        "lastName": "Baker",
+        "birthDate": "1986-02-28T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "steven.baker@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0216789012",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Grace",
+        "lastName": "Nelson",
+        "birthDate": "1993-06-06T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "grace.nelson@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0217890123",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Kevin",
+        "lastName": "Carter",
+        "birthDate": "1977-03-13T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "kevin.carter@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0218901234",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Victoria",
+        "lastName": "Mitchell",
+        "birthDate": "1995-10-10T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "victoria.mitchell@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0219012345",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Justin",
+        "lastName": "Roberts",
+        "birthDate": "1984-01-20T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "justin.roberts@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0210123456",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Megan",
+        "lastName": "Parker",
+        "birthDate": "1992-07-28T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "megan.parker@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0211234567",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Scott",
+        "lastName": "Davis",
+        "birthDate": "1976-11-04T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "scott.davis@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0212345678",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Lauren",
+        "lastName": "Collins",
+        "birthDate": "1998-09-29T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "lauren.collins@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0213456789",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Ryan",
+        "lastName": "Stewart",
+        "birthDate": "1989-02-08T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "ryan.stewart@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0214567890",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Julia",
+        "lastName": "Morris",
+        "birthDate": "1974-05-23T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "julia.morris@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0215678901",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Nicholas",
+        "lastName": "Rogers",
+        "birthDate": "1997-12-19T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "nicholas.rogers@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0216789012",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Natalie",
+        "lastName": "Evans",
+        "birthDate": "1981-06-03T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "natalie.evans@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0217890123",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Jason",
+        "lastName": "Cooper",
+        "birthDate": "1969-08-11T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "jason.cooper@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0218901234",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Samantha",
+        "lastName": "Peterson",
+        "birthDate": "1994-04-26T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "samantha.peterson@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0219012345",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Kevin",
+        "lastName": "Ramirez",
+        "birthDate": "1983-03-01T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "kevin.ramirez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0210123456",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Ashley",
+        "lastName": "Cox",
+        "birthDate": "1996-01-15T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "ashley.cox@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0211234567",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Joshua",
+        "lastName": "Ward",
+        "birthDate": "1971-07-27T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "joshua.ward@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0212345678",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Kayla",
+        "lastName": "Phillips",
+        "birthDate": "1999-11-13T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "kayla.phillips@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0213456789",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Mark",
+        "lastName": "Bell",
+        "birthDate": "1964-09-08T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "mark.bell@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0214567890",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Jessica",
+        "lastName": "Ramirez",
+        "birthDate": "1988-03-20T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "jessica.ramirez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0215678901",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Brian",
+        "lastName": "Flores",
+        "birthDate": "1975-01-05T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "brian.flores@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0216789012",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Nicole",
+        "lastName": "Rivera",
+        "birthDate": "1990-10-02T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "nicole.rivera@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0217890123",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Timothy",
+        "lastName": "Morris",
+        "birthDate": "1968-04-21T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "timothy.morris@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0218901234",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Stephanie",
+        "lastName": "Sanchez",
+        "birthDate": "1993-08-18T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "stephanie.sanchez@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0219012345",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Patrick",
+        "lastName": "Hughes",
+        "birthDate": "1985-06-25T00:00:00.000Z",
+        "gender": "Male",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "patrick.hughes@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0210123456",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    },
+    {
+        "id": null,
+        "firstName": "Melissa",
+        "lastName": "Reed",
+        "birthDate": "1977-11-09T00:00:00.000Z",
+        "gender": "Female",
+        "current": true,
+        "disabled": false,
+        "avatarUrl": null,
+        "contactInfo": [
+            {
+                "type": "email",
+                "label": "Primary Email",
+                "value": "melissa.reed@email.com",
+                "primary": true
+            },
+            {
+                "type": "phone",
+                "label": "Primary Phone",
+                "value": "0211234567",
+                "primary": true
+            }
+        ],
+        "createdAt": "2025-08-17T10:37:25.000Z",
+        "updatedAt": "2025-08-17T10:37:25.000Z",
+        "roles": [
+            "Client"
+        ],
+        "authId": null
+    }
+]
