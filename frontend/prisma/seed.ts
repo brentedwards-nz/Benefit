@@ -7,6 +7,7 @@ async function main() {
 
     // Clear existing data
     console.log('🧹 Clearing existing data...')
+    await prisma.programmeHabit.deleteMany({})
     await prisma.programmeEnrolment.deleteMany({})
     await prisma.programme.deleteMany({})
     await prisma.programmeTemplate.deleteMany({})
@@ -281,6 +282,8 @@ async function main() {
         }
     })
 
+
+
     // Create programme enrolment
     console.log('\n📝 Creating programme enrolment...')
 
@@ -381,6 +384,64 @@ async function main() {
         createdHabits.push(habit)
     }
 
+    // Create programme habits
+    console.log('\n🎯 Creating programme habits...')
+
+    // Assign some habits to the wellness programme
+    const wellnessHabitTitles = [
+        'Physical Activity',
+        'Balanced Nutrition',
+        'Adequate Sleep',
+        'Hydration',
+        'Stress Management and Mindfulness'
+    ]
+
+    for (let i = 0; i < wellnessHabitTitles.length; i++) {
+        const habit = createdHabits.find(h => h.title === wellnessHabitTitles[i])
+        if (habit) {
+            await prisma.programmeHabit.create({
+                data: {
+                    programmeId: wellnessProgramme.id,
+                    habitId: habit.id,
+                    title: habit.title,
+                    notes: `Programme-specific version of ${habit.title}`,
+                    frequencyPerWeek: { per_week: 5, per_day: null },
+                    frequencyPerDay: null,
+                    current: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            })
+        }
+    }
+
+    // Assign some habits to the fitness programme
+    const fitnessHabitTitles = [
+        'Strength Training',
+        'Physical Activity',
+        'Regular Stretching and Flexibility',
+        'Conscious Eating'
+    ]
+
+    for (let i = 0; i < fitnessHabitTitles.length; i++) {
+        const habit = createdHabits.find(h => h.title === fitnessHabitTitles[i])
+        if (habit) {
+            await prisma.programmeHabit.create({
+                data: {
+                    programmeId: fitnessProgramme.id,
+                    habitId: habit.id,
+                    title: habit.title,
+                    notes: `Programme-specific version of ${habit.title}`,
+                    frequencyPerWeek: { per_week: 3, per_day: null },
+                    frequencyPerDay: null,
+                    current: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            })
+        }
+    }
+
     console.log('\n🎉 Seeding completed!')
     console.log(`✅ Successfully seeded: ${successCount} regular clients`)
     console.log('✅ Special users created:')
@@ -389,6 +450,7 @@ async function main() {
     console.log('  - Brent Edwards (SystemAdmin, Admin, Client)')
     console.log('✅ Programme templates created: 2')
     console.log('✅ Programmes created: 2')
+    console.log('✅ Programme habits created: 9')
     console.log('✅ Programme enrolment created: 1')
 
     console.log(`✅ Wellness habits created: ${createdHabits.length}`)
@@ -405,6 +467,7 @@ async function main() {
     const totalProgrammes = await prisma.programme.count()
     const totalTemplates = await prisma.programmeTemplate.count()
     const totalEnrolments = await prisma.programmeEnrolment.count()
+    const totalProgrammeHabits = await prisma.programmeHabit.count()
 
     const totalHabits = await prisma.habit.count()
 
@@ -413,6 +476,7 @@ async function main() {
     console.log(`Total Programmes: ${totalProgrammes}`)
     console.log(`Total Templates: ${totalTemplates}`)
     console.log(`Total Enrolments: ${totalEnrolments}`)
+    console.log(`Total Programme Habits: ${totalProgrammeHabits}`)
 
     console.log(`Total Habits: ${totalHabits}`)
 }

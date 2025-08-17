@@ -67,6 +67,9 @@ model Client {
   roles       UserRole[] @default([Client])
   authId      String     @unique(map: "client_auth_id_unique")
   gender      Gender?
+
+  // Relationships
+  programmeEnrolments ProgrammeEnrolment[]
 }
 
 model Programme {
@@ -84,6 +87,7 @@ model Programme {
   sessionsDescription Json?
   ProgrammeTemplate   ProgrammeTemplate    @relation(fields: [programmeTemplateId], references: [id])
   enrolments          ProgrammeEnrolment[]
+  programmeHabits     ProgrammeHabit[]
 }
 
 model ProgrammeTemplate {
@@ -109,6 +113,7 @@ model ProgrammeEnrolment {
   programmeTemplateId String?
   programme           Programme          @relation(fields: [programId], references: [id], onDelete: Cascade)
   ProgrammeTemplate   ProgrammeTemplate? @relation(fields: [programmeTemplateId], references: [id])
+  client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model SystemGmailConfig {
@@ -131,6 +136,28 @@ model Habit {
   current          Boolean  @default(true)
   createdAt        DateTime @default(now()) @db.Timestamp(6)
   updatedAt        DateTime @default(now()) @db.Timestamp(6)
+
+  // Relationships
+  programmeHabits ProgrammeHabit[]
+}
+
+model ProgrammeHabit {
+  id               String   @id @default(cuid())
+  programmeId      String
+  habitId          String
+  title            String
+  notes            String?
+  frequencyPerWeek Json // Could be specific days, or # Per week, or every day
+  frequencyPerDay  Int? // Number of times per day
+  current          Boolean  @default(true)
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+
+  // Relationships
+  programme Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  habit     Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([programmeId, habitId])
 }
 
 enum UserRole {
