@@ -130,6 +130,19 @@ export async function readEmail(
   usAi: boolean = false
 ): Promise<ActionResult<Email[]>> {
   try {
+    // Check if there are any Gmail configurations first
+    const gmailConfigs = await prisma.systemGmailConfig.findMany({
+      select: { id: true, connectedEmail: true }
+    });
+
+    if (gmailConfigs.length === 0) {
+      return {
+        success: false,
+        message: "No Gmail accounts configured. Please connect Gmail in admin settings.",
+        code: "NO_GMAIL_CONFIG",
+      };
+    }
+
     // Use the authenticated Gmail client utility
     const { gmail, connectedEmail } = await getAuthenticatedGmailClient();
 

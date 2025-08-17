@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/utils/prisma/client";
 
 const redirectToSignIn = () => {
   revalidatePath("/auth/signin");
@@ -16,6 +17,28 @@ const redirectToSignIn = () => {
 
 export default async function Index() {
   const session = await getServerSession(authOptions);
+
+  // Get user's display name (first name or email)
+  let displayName = "there";
+  if (session?.user?.id) {
+    try {
+      const client = await prisma.client.findUnique({
+        where: { authId: session.user.id },
+        select: { firstName: true }
+      });
+
+      if (client?.firstName) {
+        displayName = client.firstName;
+      } else if (session.user.email) {
+        displayName = session.user.email.split("@")[0];
+      }
+    } catch (error) {
+      // Fallback to email if there's an error fetching client data
+      if (session.user.email) {
+        displayName = session.user.email.split("@")[0];
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-foreground bg-background relative overflow-hidden">
@@ -39,7 +62,7 @@ export default async function Index() {
             <div className="mt-8">
               <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30 rounded-xl border border-green-200/50 dark:border-green-800/50 shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
                 <p className="text-xl font-semibold text-foreground">
-                  Welcome back, <span className="text-green-700 dark:text-green-400 font-bold">{session.user.email?.split("@")[0]}</span>!
+                  Welcome back, <span className="text-green-700 dark:text-green-400 font-bold">{displayName}</span>!
                 </p>
               </div>
               <Link

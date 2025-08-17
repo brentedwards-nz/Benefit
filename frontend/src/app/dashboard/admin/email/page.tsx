@@ -33,30 +33,49 @@ export default async function EmailPage() {
         error = "Invalid data format received from server.";
       }
     } else {
-      error = emailResult.message || "Failed to fetch clubs.";
+      error = emailResult.message || "Failed to fetch emails.";
       console.error("Failed to fetch emails:", emailResult.message);
     }
   } catch (err: any) {
-    console.error("Error fetching clubs:", err);
-    error = err.message || "An unexpected error occurred while loading clubs.";
+    console.error("Error fetching emails:", err);
+
+    // Handle specific Gmail configuration errors gracefully
+    if (err.message && err.message.includes('Gmail configuration')) {
+      error = "Gmail is not configured. Please connect Gmail in admin settings to view emails.";
+    } else if (err.message && err.message.includes('Invalid encrypted text format')) {
+      error = "Gmail configuration is invalid. Please re-connect Gmail in admin settings.";
+    } else {
+      error = err.message || "An unexpected error occurred while loading emails.";
+    }
   }
 
   if (error) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-4">
-        <div className="text-lg text-red-600">Error: {error}</div>
-        {/* No client-side retry for now, as it's a Server Component */}
-        <p className="mt-2 text-sm text-gray-500">
-          Please try refreshing the page.
+        <div className="text-lg text-red-600">Gmail Configuration Required</div>
+        <div className="mt-2 text-sm text-gray-600 max-w-md text-center">{error}</div>
+        <div className="mt-4">
+          <a
+            href="/dashboard/admin/email_auth"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Connect Gmail Account
+          </a>
+        </div>
+        <p className="mt-4 text-xs text-gray-500">
+          You need to connect a Gmail account to view emails.
         </p>
       </div>
     );
   }
 
-  if (emails.length === 0) {
+  if (emails.length === 0 && !error) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-4">
         <div className="text-lg text-gray-600">No emails found.</div>
+        <p className="mt-2 text-sm text-gray-500">
+          {error ? error : "Connect Gmail in admin settings to start fetching emails."}
+        </p>
       </div>
     );
   }

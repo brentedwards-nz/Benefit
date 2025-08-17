@@ -22,8 +22,19 @@ export async function getAuthenticatedGmailClient() {
         throw new Error('No refresh token found. Please re-connect Gmail in admin settings.');
     }
 
-    // Decrypt the refresh token
-    const refreshToken = decrypt(systemConfig.encryptedRefreshToken);
+    // Validate the encrypted text format before attempting decryption
+    if (!systemConfig.encryptedRefreshToken.includes(':')) {
+        throw new Error('Invalid encrypted refresh token format. Please re-connect Gmail in admin settings.');
+    }
+
+    let refreshToken: string;
+    try {
+        // Decrypt the refresh token
+        refreshToken = decrypt(systemConfig.encryptedRefreshToken);
+    } catch (error) {
+        console.error('Failed to decrypt refresh token:', error);
+        throw new Error('Failed to decrypt Gmail refresh token. Please re-connect Gmail in admin settings.');
+    }
 
     // Initialize OAuth2 client
     const oauth2Client = new google.auth.OAuth2(

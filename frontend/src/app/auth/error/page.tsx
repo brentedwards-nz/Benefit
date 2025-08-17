@@ -19,6 +19,8 @@ function AuthErrorContent() {
                 return "You do not have permission to sign in.";
             case "Verification":
                 return "The verification link has expired or has already been used.";
+            case "OAuthAccountNotLinked":
+                return "An account with this email already exists. Please sign in using the original authentication method or contact support to link your accounts.";
             case "Default":
             default:
                 return "An error occurred during authentication.";

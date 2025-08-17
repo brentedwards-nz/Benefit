@@ -122,6 +122,17 @@ model SystemGmailConfig {
   encryptedRefreshToken String?
 }
 
+model Habit {
+  id               String   @id @default(cuid())
+  title            String
+  notes            String?
+  frequencyPerWeek Json // Could be specific days, or # Per week, or every day
+  frequencyPerDay  Int? // Number of times per day
+  current          Boolean  @default(true)
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+}
+
 enum UserRole {
   SystemAdmin
   Admin

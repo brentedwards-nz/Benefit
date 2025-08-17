@@ -53,17 +53,20 @@ export function ProtectedRoute({
                     // No specific roles required, allow access
                     setIsAuthorized(true);
                 }
-
-                if (!isAuthorized && redirectTo) {
-                    router.push(redirectTo);
-                }
             }
 
             setIsLoading(false);
         };
 
         checkAccess();
-    }, [session, status, requiredRoles, redirectTo, router, isAuthorized]);
+    }, [session, status, requiredRoles, redirectTo, router]);
+
+    // Handle redirect after authorization state is determined
+    useEffect(() => {
+        if (!isLoading && !isAuthorized && redirectTo) {
+            router.push(redirectTo);
+        }
+    }, [isLoading, isAuthorized, redirectTo, router]);
 
     if (isLoading) {
         return (
