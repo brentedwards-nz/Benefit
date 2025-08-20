@@ -35,18 +35,12 @@ export async function PUT(
         }
 
         const body = await request.json()
-        const { title, notes, frequencyPerWeek, frequencyPerDay, current } = body
-
-        // Validation
-        if (!title) {
-            return NextResponse.json({ error: 'Title is required' }, { status: 400 })
-        }
+        const { notes, frequencyPerWeek, frequencyPerDay, current } = body
 
         // Update programme habit
         const updatedProgrammeHabit = await prisma.programmeHabit.update({
             where: { id },
             data: {
-                title,
                 notes,
                 frequencyPerWeek,
                 frequencyPerDay,

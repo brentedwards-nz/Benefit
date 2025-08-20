@@ -285,6 +285,7 @@ export async function readProgrammes(
             humanReadableId: programme.humanReadableId,
             name: programme.name,
             startDate: programme.startDate,
+            endDate: programme.endDate,
             maxClients: programme.maxClients,
             sessionsDescription: programme.sessionsDescription as any,
             programmeCost: programme.programmeCost.toNumber(),
@@ -338,6 +339,7 @@ export async function readProgrammeById(
             humanReadableId: programme.humanReadableId,
             name: programme.name,
             startDate: programme.startDate,
+            endDate: programme.endDate,
             maxClients: programme.maxClients,
             sessionsDescription: programme.sessionsDescription as any,
             programmeCost: programme.programmeCost.toNumber(),
@@ -376,6 +378,7 @@ export async function createProgramme(
                 humanReadableId: data.humanReadableId,
                 name: data.name,
                 startDate: data.startDate,
+                endDate: (data as any).endDate || undefined,
                 maxClients: data.maxClients,
                 sessionsDescription: data.sessionsDescription || undefined,
                 programmeCost: new Prisma.Decimal(data.programmeCost),
@@ -390,6 +393,7 @@ export async function createProgramme(
             humanReadableId: programme.humanReadableId,
             name: programme.name,
             startDate: programme.startDate,
+            endDate: programme.endDate,
             maxClients: programme.maxClients,
             sessionsDescription: programme.sessionsDescription as any,
             programmeCost: programme.programmeCost.toNumber(),
@@ -432,6 +436,7 @@ export async function updateProgramme(
         if (data.humanReadableId !== undefined) updateData.humanReadableId = data.humanReadableId;
         if (data.name !== undefined) updateData.name = data.name;
         if (data.startDate !== undefined) updateData.startDate = data.startDate;
+        if (data.endDate !== undefined) updateData.endDate = data.endDate;
         if (data.maxClients !== undefined) updateData.maxClients = data.maxClients;
         if (data.sessionsDescription !== undefined) updateData.sessionsDescription = data.sessionsDescription;
         if (data.programmeCost !== undefined) updateData.programmeCost = new Prisma.Decimal(data.programmeCost);
@@ -449,6 +454,7 @@ export async function updateProgramme(
             humanReadableId: programme.humanReadableId,
             name: programme.name,
             startDate: programme.startDate,
+            endDate: programme.endDate,
             maxClients: programme.maxClients,
             sessionsDescription: programme.sessionsDescription as any,
             programmeCost: programme.programmeCost.toNumber(),
@@ -711,6 +717,8 @@ export async function readProgrammeEnrolments(
 export async function addClientToProgramme(
     programmeId: string,
     clientId: string,
+    startDate: Date,
+    numberOfWeeks: number,
     notes?: string
 ): Promise<ActionResult<any>> {
     try {

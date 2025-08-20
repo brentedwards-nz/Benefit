@@ -255,6 +255,7 @@ async function main() {
             humanReadableId: 'WELL-2024-001',
             name: 'Wellness Program 2024',
             startDate: new Date('2024-01-15'),
+            endDate: new Date('2024-04-15'),
             maxClients: 20,
             programmeCost: 299.99,
             notes: 'Spring 2024 wellness program',
@@ -272,6 +273,7 @@ async function main() {
             humanReadableId: 'FIT-2024-001',
             name: 'Fitness & Strength Training 2024',
             startDate: new Date('2024-02-01'),
+            endDate: new Date('2024-05-01'),
             maxClients: 15,
             programmeCost: 399.99,
             notes: 'Winter 2024 fitness program',
@@ -403,7 +405,6 @@ async function main() {
                 data: {
                     programmeId: wellnessProgramme.id,
                     habitId: habit.id,
-                    title: habit.title,
                     notes: `Programme-specific version of ${habit.title}`,
                     frequencyPerWeek: { per_week: 5, per_day: null },
                     frequencyPerDay: null,
@@ -430,7 +431,6 @@ async function main() {
                 data: {
                     programmeId: fitnessProgramme.id,
                     habitId: habit.id,
-                    title: habit.title,
                     notes: `Programme-specific version of ${habit.title}`,
                     frequencyPerWeek: { per_week: 3, per_day: null },
                     frequencyPerDay: null,

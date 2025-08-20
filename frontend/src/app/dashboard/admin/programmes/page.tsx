@@ -27,6 +27,7 @@ const Programme = () => {
     const [formData, setFormData] = useState<Partial<ProgrammeType>>({
         name: "",
         startDate: new Date(),
+        endDate: undefined,
         maxClients: 0,
         programmeCost: 0,
         notes: "",
@@ -96,6 +97,7 @@ const Programme = () => {
                 setFormData({
                     name: programme.name,
                     startDate: programme.startDate,
+                    endDate: programme.endDate,
                     maxClients: programme.maxClients,
                     programmeCost: programme.programmeCost,
                     notes: programme.notes || "",
@@ -196,6 +198,7 @@ const Programme = () => {
                     humanReadableId: `PROGRAMME_${Date.now()}`,
                     name: formData.name,
                     startDate: formData.startDate!,
+                    endDate: formData.endDate,
                     maxClients: formData.maxClients,
                     programmeCost: formData.programmeCost || 0,
                     notes: formData.notes || undefined,
@@ -218,6 +221,7 @@ const Programme = () => {
                     setFormData({
                         name: "",
                         startDate: new Date(),
+                        endDate: undefined,
                         maxClients: 0,
                         programmeCost: 0,
                         notes: "",
@@ -237,6 +241,7 @@ const Programme = () => {
                 const updateData = {
                     name: formData.name,
                     startDate: formData.startDate,
+                    endDate: formData.endDate,
                     maxClients: formData.maxClients,
                     programmeCost: formData.programmeCost || 0,
                     notes: formData.notes,
@@ -258,6 +263,7 @@ const Programme = () => {
                     setFormData({
                         name: "",
                         startDate: new Date(),
+                        endDate: undefined,
                         maxClients: 0,
                         programmeCost: 0,
                         notes: "",
@@ -301,12 +307,6 @@ const Programme = () => {
         });
         setError(null);
     };
-
-
-
-
-
-
 
     if (loading) {
         return (
@@ -411,6 +411,15 @@ const Programme = () => {
                                             type="date"
                                             value={formData.startDate ? new Date(formData.startDate).toISOString().split('T')[0] : ""}
                                             onChange={(e) => handleInputChange("startDate", new Date(e.target.value))}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="endDate">End Date</Label>
+                                        <Input
+                                            id="endDate"
+                                            type="date"
+                                            value={formData.endDate ? new Date(formData.endDate).toISOString().split('T')[0] : ""}
+                                            onChange={(e) => handleInputChange("endDate", e.target.value ? new Date(e.target.value) : undefined)}
                                         />
                                     </div>
                                     <div>
@@ -535,6 +544,9 @@ const Programme = () => {
                                                 <div className="space-y-2 text-sm text-muted-foreground">
                                                     <p><strong>ID:</strong> {programme.humanReadableId}</p>
                                                     <p><strong>Start Date:</strong> {programme.startDate.toLocaleDateString()}</p>
+                                                    {programme.endDate && (
+                                                        <p><strong>End Date:</strong> {programme.endDate.toLocaleDateString()}</p>
+                                                    )}
                                                     <p><strong>Max Clients:</strong> {programme.maxClients}</p>
                                                     <p><strong>Cost:</strong> ${programme.programmeCost.toString()}</p>
                                                     {programme.notes && (

@@ -26,6 +26,8 @@ export interface NavItem {
     title: string;
     url: string;
     isActive?: boolean;
+    // items: NavItem[];
+    // roles?: UserRole[]; // Roles that can access this section
 }
 
 /**
@@ -66,7 +68,8 @@ export function processNavDataForActiveState(
                     ? item.url.slice(0, -1)
                     : item.url;
 
-            const isActive = cleanPathname === cleanItemUrl;
+            // Check if current path starts with the item URL (for nested routes)
+            const isActive = cleanPathname === cleanItemUrl || cleanPathname.startsWith(cleanItemUrl + "/");
             if (isActive) {
                 foundMatch = true;
             }
@@ -78,7 +81,8 @@ export function processNavDataForActiveState(
                 ? mainSection.url.slice(0, -1)
                 : mainSection.url;
 
-        const mainSectionIsActive = cleanPathname === cleanMainSectionUrl;
+        // Check if current path starts with the main section URL (for nested routes)
+        const mainSectionIsActive = cleanPathname === cleanMainSectionUrl || cleanPathname.startsWith(cleanMainSectionUrl + "/");
         if (mainSectionIsActive) {
             foundMatch = true;
         }
@@ -93,11 +97,11 @@ export function processNavDataForActiveState(
     if (!foundMatch) {
         const newNavItem: NavItem = {
             title: `${cleanPathname === "/"
-                    ? "Home"
-                    : (cleanPathname.split("/").pop() || "Unknown")
-                        .charAt(0)
-                        .toUpperCase() +
-                    (cleanPathname.split("/").pop() || "Unknown").slice(1)
+                ? "Home"
+                : (cleanPathname.split("/").pop() || "Unknown")
+                    .charAt(0)
+                    .toUpperCase() +
+                (cleanPathname.split("/").pop() || "Unknown").slice(1)
                 }`,
             url: currentPathname,
             isActive: true,
@@ -182,7 +186,7 @@ export const RoleBasedSidebar = React.forwardRef<
             const filteredMenu = filterMenuByRoles(processedMenu, userRoles);
             setMenuItems(filteredMenu);
         }
-    }, [data, userRoles]);
+    }, [data, session?.user?.roles]);
 
     return (
         <Sidebar {...props} ref={ref}>

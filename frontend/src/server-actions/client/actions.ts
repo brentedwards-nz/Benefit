@@ -50,11 +50,6 @@ const ClientSchema = z.object({
   authId: z.string().optional(),
 });
 
-// console.log(
-//   "⚡ Server Action (actions.tsx): 'prisma' variable state after import:",
-//   prisma ? "DEFINED" : "UNDEFINED"
-// );
-
 export async function readClient(
   user_id: string
 ): Promise<ActionResult<Client>> {

@@ -18,6 +18,14 @@ const menuDefinition: NavData = {
           title: "Profile",
           url: "/dashboard/client/profile",
         },
+        {
+          title: "Habits",
+          url: "/dashboard/client/habits",
+        },
+        {
+          title: "Weekly View",
+          url: "/dashboard/client/habits/weekly",
+        },
       ],
     },
     {

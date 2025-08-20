@@ -1,5 +1,5 @@
-// app/clubs/page.tsx (assuming this is your file structure)
-// NO "use client" directive here
+// Force dynamic rendering to prevent build-time email fetching
+export const dynamic = 'force-dynamic';
 
 import Emails, { EmailProps } from "@/components/club/email-list";
 import { readEmail } from "@/server-actions/email/actions";

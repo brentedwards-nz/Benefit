@@ -70,6 +70,7 @@ model Client {
 
   // Relationships
   programmeEnrolments ProgrammeEnrolment[]
+  habitCompletions    ClientHabits[]
 }
 
 model Programme {
@@ -78,6 +79,7 @@ model Programme {
   humanReadableId     String               @unique
   name                String
   startDate           DateTime
+  endDate             DateTime?
   maxClients          Int
   programmeCost       Decimal              @db.Decimal(10, 2)
   notes               String?
@@ -145,7 +147,6 @@ model ProgrammeHabit {
   id               String   @id @default(cuid())
   programmeId      String
   habitId          String
-  title            String
   notes            String?
   frequencyPerWeek Json // Could be specific days, or # Per week, or every day
   frequencyPerDay  Int? // Number of times per day
@@ -154,10 +155,29 @@ model ProgrammeHabit {
   updatedAt        DateTime @default(now()) @db.Timestamp(6)
 
   // Relationships
-  programme Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
-  habit     Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  programme   Programme      @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  habit       Habit          @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  completions ClientHabits[] // Track daily completions
 
   @@unique([programmeId, habitId])
+}
+
+model ClientHabits {
+  id               String   @id @default(cuid())
+  programmeHabitId String
+  clientId         String
+  completionDate   DateTime @db.Date
+  completed        Boolean  @default(false)
+  timesDone        Int      @default(0)
+  notes            String?
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+
+  // Relationships
+  programmeHabit ProgrammeHabit @relation(fields: [programmeHabitId], references: [id], onDelete: Cascade)
+  client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([programmeHabitId, clientId, completionDate]) // One completion per habit per client per day
 }
 
 enum UserRole {

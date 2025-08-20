@@ -130,6 +130,15 @@ export async function readEmail(
   usAi: boolean = false
 ): Promise<ActionResult<Email[]>> {
   try {
+    // Skip during build time
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+      return {
+        success: false,
+        message: "Email service not available during build time",
+        code: "BUILD_TIME_ERROR",
+      };
+    }
+
     // Check if there are any Gmail configurations first
     const gmailConfigs = await prisma.systemGmailConfig.findMany({
       select: { id: true, connectedEmail: true }

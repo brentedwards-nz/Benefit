@@ -18,7 +18,6 @@ interface ProgrammeHabit {
     id: string
     programmeId: string
     habitId: string
-    title: string
     notes: string | null
     frequencyPerWeek: any
     frequencyPerDay: number | null
@@ -55,13 +54,11 @@ function ProgrammeHabitManagementContent() {
 
     const [programmeHabits, setProgrammeHabits] = useState<ProgrammeHabit[]>([])
     const [availableHabits, setAvailableHabits] = useState<Habit[]>([])
-    const [programmes, setProgrammes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState({
         programmeId: programmeId || '',
         habitId: '',
-        title: '',
         notes: '',
         frequencyPerWeek: { per_week: 5 as number | string, per_day: null },
         frequencyPerDay: null as number | null,
@@ -93,13 +90,6 @@ function ProgrammeHabitManagementContent() {
                 const habitsData = await habitsResponse.json()
                 setAvailableHabits(habitsData)
             }
-
-            // Fetch programmes
-            const programmesResponse = await fetch('/api/admin/programmes')
-            if (programmesResponse.ok) {
-                const programmesData = await programmesResponse.json()
-                setProgrammes(programmesData)
-            }
         } catch (error) {
             console.error('Error fetching data:', error)
         } finally {
@@ -112,7 +102,6 @@ function ProgrammeHabitManagementContent() {
         setFormData({
             programmeId: programmeHabit.programmeId,
             habitId: programmeHabit.habitId,
-            title: programmeHabit.title,
             notes: programmeHabit.notes || '',
             frequencyPerWeek: programmeHabit.frequencyPerWeek,
             frequencyPerDay: programmeHabit.frequencyPerDay,
@@ -122,6 +111,19 @@ function ProgrammeHabitManagementContent() {
 
     const handleSave = async () => {
         try {
+            // Validate required fields
+            if (!formData.habitId) {
+                alert('Please select a base habit')
+                return
+            }
+
+            // Ensure programmeId is set (either from URL or form)
+            const finalProgrammeId = programmeId || formData.programmeId
+            if (!finalProgrammeId) {
+                alert('Please select a programme')
+                return
+            }
+
             if (editingId) {
                 // Update existing programme habit
                 const response = await fetch(`/api/admin/programme-habits/${editingId}`, {
@@ -139,7 +141,10 @@ function ProgrammeHabitManagementContent() {
                 const response = await fetch('/api/admin/programme-habits', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        ...formData,
+                        programmeId: finalProgrammeId
+                    })
                 })
 
                 if (response.ok) {
@@ -171,9 +176,8 @@ function ProgrammeHabitManagementContent() {
 
     const resetForm = () => {
         setFormData({
-            programmeId: '',
+            programmeId: programmeId || '', // Preserve programmeId from URL
             habitId: '',
-            title: '',
             notes: '',
             frequencyPerWeek: { per_week: 5, per_day: null },
             frequencyPerDay: null,
@@ -185,6 +189,10 @@ function ProgrammeHabitManagementContent() {
         setIsAdding(true)
         setEditingId(null)
         resetForm()
+        // Ensure programmeId is set from URL if available
+        if (programmeId) {
+            setFormData(prev => ({ ...prev, programmeId }))
+        }
     }
 
     const handleCancel = () => {
@@ -193,14 +201,31 @@ function ProgrammeHabitManagementContent() {
         resetForm()
     }
 
-    const getProgrammeName = (programmeId: string) => {
-        const programme = programmes.find(p => p.id === programmeId)
-        return programme ? programme.name : 'Unknown Programme'
-    }
-
     const getHabitTitle = (habitId: string) => {
         const habit = availableHabits.find(h => h.id === habitId)
         return habit ? habit.title : 'Unknown Habit'
+    }
+
+    const formatFrequency = (frequencyPerWeek: any, frequencyPerDay: number | null) => {
+        let frequency = ''
+
+        if (frequencyPerWeek && typeof frequencyPerWeek === 'object') {
+            if (frequencyPerWeek.per_week) {
+                if (frequencyPerWeek.per_week === 'Every day' || frequencyPerWeek.per_week === 7) {
+                    frequency = 'Every day'
+                } else if (frequencyPerWeek.per_week === 1) {
+                    frequency = 'Once per week'
+                } else {
+                    frequency = `${frequencyPerWeek.per_week} times per week`
+                }
+            }
+        }
+
+        if (frequencyPerDay && frequencyPerDay > 1) {
+            frequency += `, ${frequencyPerDay} times per day`
+        }
+
+        return frequency || 'Not specified'
     }
 
     if (loading) {
@@ -245,9 +270,14 @@ function ProgrammeHabitManagementContent() {
                     <Card className="mb-6">
                         <CardHeader>
                             <CardTitle>Add New Programme Habit</CardTitle>
+                            {programmeId && (
+                                <CardDescription>
+                                    Programme: <strong>{programmeName}</strong>
+                                </CardDescription>
+                            )}
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {!programmeId && (
                                 <div>
                                     <Label htmlFor="programmeId">Programme</Label>
                                     <select
@@ -264,33 +294,26 @@ function ProgrammeHabitManagementContent() {
                                         ))}
                                     </select>
                                 </div>
-                                <div>
-                                    <Label htmlFor="habitId">Base Habit</Label>
-                                    <select
-                                        id="habitId"
-                                        value={formData.habitId}
-                                        onChange={(e) => setFormData({ ...formData, habitId: e.target.value })}
-                                        className="w-full p-2 border rounded-md"
-                                    >
-                                        <option value="">Select Habit</option>
-                                        {availableHabits.map((habit) => (
-                                            <option key={habit.id} value={habit.id}>
-                                                {habit.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                            )}
 
                             <div>
-                                <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="Programme-specific habit title"
-                                />
+                                <Label htmlFor="habitId">Base Habit</Label>
+                                <select
+                                    id="habitId"
+                                    value={formData.habitId}
+                                    onChange={(e) => setFormData({ ...formData, habitId: e.target.value })}
+                                    className="w-full p-2 border rounded-md"
+                                >
+                                    <option value="">Select Habit</option>
+                                    {availableHabits.map((habit) => (
+                                        <option key={habit.id} value={habit.id}>
+                                            {habit.title}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
+
+
 
                             <div>
                                 <Label htmlFor="notes">Notes</Label>
@@ -305,27 +328,37 @@ function ProgrammeHabitManagementContent() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="frequencyPerWeek">Frequency per Week</Label>
-                                    <Input
+                                    <select
                                         id="frequencyPerWeek"
                                         value={formData.frequencyPerWeek.per_week}
                                         onChange={(e) => setFormData({
                                             ...formData,
                                             frequencyPerWeek: { ...formData.frequencyPerWeek, per_week: e.target.value }
                                         })}
-                                        placeholder="e.g., 5 or 'Every day'"
-                                    />
+                                        className="w-full p-2 border rounded-md"
+                                    >
+                                        <option value="1">Once per week</option>
+                                        <option value="2">2 times per week</option>
+                                        <option value="3">3 times per week</option>
+                                        <option value="4">4 times per week</option>
+                                        <option value="5">5 times per week</option>
+                                        <option value="6">6 times per week</option>
+                                        <option value="7">Every day</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <Label htmlFor="frequencyPerDay">Frequency per Day</Label>
+                                    <Label htmlFor="frequencyPerDay">Times per Day</Label>
                                     <Input
                                         id="frequencyPerDay"
                                         type="number"
+                                        min="1"
+                                        max="10"
                                         value={formData.frequencyPerDay || ''}
                                         onChange={(e) => setFormData({
                                             ...formData,
                                             frequencyPerDay: e.target.value ? parseInt(e.target.value) : null
                                         })}
-                                        placeholder="Number of times per day"
+                                        placeholder="1"
                                     />
                                 </div>
                             </div>
@@ -372,14 +405,7 @@ function ProgrammeHabitManagementContent() {
                             <CardContent className="p-6">
                                 {editingId === programmeHabit.id ? (
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>Title</Label>
-                                                <Input
-                                                    value={formData.title}
-                                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                                />
-                                            </div>
+                                        <div>
                                             <div>
                                                 <Label>Notes</Label>
                                                 <Input
@@ -392,23 +418,35 @@ function ProgrammeHabitManagementContent() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <Label>Frequency per Week</Label>
-                                                <Input
+                                                <select
                                                     value={formData.frequencyPerWeek.per_week}
                                                     onChange={(e) => setFormData({
                                                         ...formData,
                                                         frequencyPerWeek: { ...formData.frequencyPerWeek, per_week: e.target.value }
                                                     })}
-                                                />
+                                                    className="w-full p-2 border rounded-md"
+                                                >
+                                                    <option value="1">Once per week</option>
+                                                    <option value="2">2 times per week</option>
+                                                    <option value="3">3 times per week</option>
+                                                    <option value="4">4 times per week</option>
+                                                    <option value="5">5 times per week</option>
+                                                    <option value="6">6 times per week</option>
+                                                    <option value="7">Every day</option>
+                                                </select>
                                             </div>
                                             <div>
-                                                <Label>Frequency per Day</Label>
+                                                <Label>Times per Day</Label>
                                                 <Input
                                                     type="number"
+                                                    min="1"
+                                                    max="10"
                                                     value={formData.frequencyPerDay || ''}
                                                     onChange={(e) => setFormData({
                                                         ...formData,
                                                         frequencyPerDay: e.target.value ? parseInt(e.target.value) : null
                                                     })}
+                                                    placeholder="1"
                                                 />
                                             </div>
                                         </div>
@@ -436,20 +474,15 @@ function ProgrammeHabitManagementContent() {
                                     <div className="flex justify-between items-start">
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-semibold">{programmeHabit.title}</h3>
+                                                <h3 className="text-lg font-semibold">{getHabitTitle(programmeHabit.habitId)}</h3>
                                                 <Badge variant={programmeHabit.current ? "default" : "secondary"}>
                                                     {programmeHabit.current ? "Active" : "Inactive"}
                                                 </Badge>
                                             </div>
 
                                             <div className="text-sm text-muted-foreground space-y-1">
-                                                <p><strong>Programme:</strong> {getProgrammeName(programmeHabit.programmeId)}</p>
-                                                <p><strong>Base Habit:</strong> {getHabitTitle(programmeHabit.habitId)}</p>
                                                 {programmeHabit.notes && <p><strong>Notes:</strong> {programmeHabit.notes}</p>}
-                                                <p><strong>Frequency:</strong> {JSON.stringify(programmeHabit.frequencyPerWeek)} per week</p>
-                                                {programmeHabit.frequencyPerDay && (
-                                                    <p><strong>Per Day:</strong> {programmeHabit.frequencyPerDay} times</p>
-                                                )}
+                                                <p><strong>Frequency:</strong> {formatFrequency(programmeHabit.frequencyPerWeek, programmeHabit.frequencyPerDay)}</p>
                                             </div>
                                         </div>
 

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
             },
             orderBy: [
                 { programme: { name: 'asc' } },
-                { title: 'asc' }
+                { habit: { title: 'asc' } }
             ]
         })
 
@@ -82,12 +82,12 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { programmeId, habitId, title, notes, frequencyPerWeek, frequencyPerDay, current } = body
+        const { programmeId, habitId, notes, frequencyPerWeek, frequencyPerDay, current } = body
 
         // Validation
-        if (!programmeId || !habitId || !title) {
+        if (!programmeId || !habitId) {
             return NextResponse.json(
-                { error: 'Programme ID, Habit ID, and Title are required' },
+                { error: 'Programme ID and Habit ID are required' },
                 { status: 400 }
             )
         }
@@ -129,7 +129,6 @@ export async function POST(request: NextRequest) {
             data: {
                 programmeId,
                 habitId,
-                title,
                 notes,
                 frequencyPerWeek,
                 frequencyPerDay,

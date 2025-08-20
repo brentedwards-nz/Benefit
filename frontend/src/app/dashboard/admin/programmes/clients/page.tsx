@@ -103,13 +103,18 @@ function ProgrammeClientsManagementContent() {
     }
 
     const handleSave = async () => {
+
+
         try {
             if (editingId) {
                 // Update existing enrolment
                 const response = await fetch(`/api/admin/programme-enrolments/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        notes: formData.notes,
+                        adhocData: formData.adhocData
+                    })
                 })
 
                 if (response.ok) {
@@ -307,6 +312,8 @@ function ProgrammeClientsManagementContent() {
                                 </div>
                             )}
 
+
+
                             <div>
                                 <Label htmlFor="notes">Enrolment Notes</Label>
                                 <Textarea
@@ -360,6 +367,8 @@ function ProgrammeClientsManagementContent() {
                                                 {getClientName(enrolment.clientId)}
                                             </div>
                                         </div>
+
+
 
                                         <div>
                                             <Label>Notes</Label>

@@ -21,6 +21,7 @@ export type Programme = {
     humanReadableId: string;
     name: string;
     startDate: Date;
+    endDate?: Date | null;
     maxClients: number;
     sessionsDescription?: SessionsDescription | null;
     programmeCost: number; // Changed from Prisma.Decimal to number for client-side compatibility

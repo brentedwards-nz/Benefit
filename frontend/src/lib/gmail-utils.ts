@@ -7,6 +7,11 @@ import { google } from 'googleapis';
  * @returns Gmail client and connected email
  */
 export async function getAuthenticatedGmailClient() {
+    // Skip during build time
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+        throw new Error('Gmail client not available during build time');
+    }
+
     // Get the system Gmail configuration
     const systemConfig = await prisma.systemGmailConfig.findFirst({
         orderBy: {
