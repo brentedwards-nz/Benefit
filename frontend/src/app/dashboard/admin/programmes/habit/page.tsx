@@ -54,6 +54,7 @@ function ProgrammeHabitManagementContent() {
 
     const [programmeHabits, setProgrammeHabits] = useState<ProgrammeHabit[]>([])
     const [availableHabits, setAvailableHabits] = useState<Habit[]>([])
+    const [programmes, setProgrammes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState({
@@ -90,6 +91,15 @@ function ProgrammeHabitManagementContent() {
                 const habitsData = await habitsResponse.json()
                 setAvailableHabits(habitsData)
             }
+
+
+            // Fetch programmes
+            const programmesResponse = await fetch('/api/admin/programmes')
+            if (programmesResponse.ok) {
+                const programmesData = await programmesResponse.json()
+                setProgrammes(programmesData)
+            }
+
         } catch (error) {
             console.error('Error fetching data:', error)
         } finally {
