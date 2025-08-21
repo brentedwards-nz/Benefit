@@ -80,6 +80,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Programme habit ID and completion date are required' }, { status: 400 })
         }
 
+        const completionDateObj = new Date(completionDate);
+        const dayOfWeek = completionDateObj.getDay(); // 0 for Sunday, 1 for Monday, etc.
+        const dayFrequencyMap: Record<number, 'monFrequency' | 'tueFrequency' | 'wedFrequency' | 'thuFrequency' | 'friFrequency' | 'satFrequency' | 'sunFrequency'> = {
+            1: 'monFrequency',
+            2: 'tueFrequency',
+            3: 'wedFrequency',
+            4: 'thuFrequency',
+            5: 'friFrequency',
+            6: 'satFrequency',
+            0: 'sunFrequency', // Sunday is 0
+        };
+        const currentDayFrequencyKey = dayFrequencyMap[dayOfWeek];
+
         // Check if the client is enrolled in the programme for this date
         const programmeHabit = await prisma.programmeHabit.findUnique({
             where: { id: programmeHabitId },
@@ -114,14 +127,23 @@ export async function POST(request: NextRequest) {
         });
 
         let completion;
-        try {
-            // Determine required per day for this habit
-            const programmeHabitDetails = await prisma.programmeHabit.findUnique({
-                where: { id: programmeHabitId },
-                select: { frequencyPerDay: true }
-            });
-            const requiredPerDay = Math.max(1, programmeHabitDetails?.frequencyPerDay ?? 1);
 
+        const programmeHabitDetails = await prisma.programmeHabit.findUnique({
+            where: { id: programmeHabitId },
+            select: {
+                monFrequency: true,
+                tueFrequency: true,
+                wedFrequency: true,
+                thuFrequency: true,
+                friFrequency: true,
+                satFrequency: true,
+                sunFrequency: true,
+            }
+        });
+
+        const requiredPerDay = Math.max(1, programmeHabitDetails?.[currentDayFrequencyKey as keyof typeof programmeHabitDetails] ?? 1);
+
+        try {
             const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
             const MAX_PER_DAY = 20; // safety upper bound
 
@@ -146,7 +168,13 @@ export async function POST(request: NextRequest) {
                                 id: true,
                                 programme: { select: { id: true, name: true } },
                                 habit: { select: { id: true, title: true } },
-                                frequencyPerDay: true
+                                monFrequency: true,
+                                tueFrequency: true,
+                                wedFrequency: true,
+                                thuFrequency: true,
+                                friFrequency: true,
+                                satFrequency: true,
+                                sunFrequency: true,
                             }
                         }
                     }
@@ -169,7 +197,13 @@ export async function POST(request: NextRequest) {
                                 id: true,
                                 programme: { select: { id: true, name: true } },
                                 habit: { select: { id: true, title: true } },
-                                frequencyPerDay: true
+                                monFrequency: true,
+                                tueFrequency: true,
+                                wedFrequency: true,
+                                thuFrequency: true,
+                                friFrequency: true,
+                                satFrequency: true,
+                                sunFrequency: true,
                             }
                         }
                     }
@@ -183,7 +217,7 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        return NextResponse.json({ ...completion, requiredPerDay: completion.programmeHabit?.frequencyPerDay ?? 1 })
+        return NextResponse.json({ ...completion, requiredPerDay: completion.programmeHabit?.[currentDayFrequencyKey as keyof typeof completion.programmeHabit] ?? 1 })
     } catch (error: any) {
         console.error('Error updating habit completion:', error)
         console.error('Error details:', {

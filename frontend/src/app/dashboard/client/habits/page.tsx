@@ -316,11 +316,7 @@ const ClientHabitsPage = () => {
             <Loading
                 title="Loading Habits"
                 description="Setting up your habit tracker..."
-                steps={[
-                    "Fetching your programme habits",
-                    "Loading completion data",
-                    "Preparing calendar view"
-                ]}
+                steps={[]}
                 size="lg"
             />
         );
@@ -460,7 +456,7 @@ const ClientHabitsPage = () => {
 
                                             const withinProgramme = isWithinProgramme(day.date);
                                             const isToday = day.date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-                                            const circleBase = 'w-10 h-10 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200';
+                                            const circleBase = 'w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200';
                                             const circleEnabled = `${getDayColor(completionRate)} text-white hover:scale-110 cursor-pointer`;
                                             const circleDisabled = 'bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed';
                                             const todayRing = withinProgramme && isToday ? ' ring-2 ring-blue-500 ring-offset-2' : '';

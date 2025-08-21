@@ -10,27 +10,91 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Check, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Search, ArrowUp, ArrowDown } from "lucide-react";
 
 
 interface Habit {
     id: string;
     title: string;
     notes: string | null;
-    frequencyPerWeek: any;
-    frequencyPerDay: number | null;
+    monFrequency: number;
+    tueFrequency: number;
+    wedFrequency: number;
+    thuFrequency: number;
+    friFrequency: number;
+    satFrequency: number;
+    sunFrequency: number;
     current: boolean;
     createdAt: string;
     updatedAt: string;
 }
 
+const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const frequencyOptions = Array.from({ length: 10 }, (_, i) => ({
+    value: i.toString(),
+    label: i.toString(),
+}));
+
+interface FrequencyComboboxProps {
+    value: number;
+    onChange: (newValue: number) => void;
+    options: { value: string; label: string }[];
+}
+
+function FrequencyCombobox({ value, onChange, options }: FrequencyComboboxProps) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between"
+                >
+                    {value !== null ? value : "Select..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                    <CommandInput placeholder="Search frequency..." />
+                    <CommandEmpty>No number found.</CommandEmpty>
+                    <CommandGroup>
+                        {options.map((option) => (
+                            <CommandItem
+                                key={option.value}
+                                value={option.value}
+                                onSelect={(currentValue) => {
+                                    onChange(parseInt(currentValue));
+                                    setOpen(false);
+                                }}
+                            >
+                                {option.label}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
 interface HabitFormData {
     title: string;
     notes: string;
-    frequencyPerWeek: {
-        per_week: string | number;
-        per_day: number | null;
-    };
-    frequencyPerDay: number | null;
+    monFrequency: number;
+    tueFrequency: number;
+    wedFrequency: number;
+    thuFrequency: number;
+    friFrequency: number;
+    satFrequency: number;
+    sunFrequency: number;
     current: boolean;
 }
 
@@ -42,10 +106,20 @@ export default function HabitsManagementPage() {
     const [formData, setFormData] = useState<HabitFormData>({
         title: "",
         notes: "",
-        frequencyPerWeek: { per_week: "", per_day: null },
-        frequencyPerDay: null,
+        monFrequency: 0,
+        tueFrequency: 0,
+        wedFrequency: 0,
+        thuFrequency: 0,
+        friFrequency: 0,
+        satFrequency: 0,
+        sunFrequency: 0,
         current: true,
     });
+
+    type FrequencyKey = 'monFrequency' | 'tueFrequency' | 'wedFrequency' | 'thuFrequency' | 'friFrequency' | 'satFrequency' | 'sunFrequency';
+    const frequencyKeys: FrequencyKey[] = [
+        'monFrequency', 'tueFrequency', 'wedFrequency', 'thuFrequency', 'friFrequency', 'satFrequency', 'sunFrequency'
+    ];
 
     useEffect(() => {
         fetchHabits();
@@ -80,7 +154,18 @@ export default function HabitsManagementPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    title: formData.title,
+                    notes: formData.notes,
+                    monFrequency: formData.monFrequency,
+                    tueFrequency: formData.tueFrequency,
+                    wedFrequency: formData.wedFrequency,
+                    thuFrequency: formData.thuFrequency,
+                    friFrequency: formData.friFrequency,
+                    satFrequency: formData.satFrequency,
+                    sunFrequency: formData.sunFrequency,
+                    current: formData.current,
+                }),
             });
 
             if (response.ok) {
@@ -99,8 +184,13 @@ export default function HabitsManagementPage() {
         setFormData({
             title: habit.title,
             notes: habit.notes || "",
-            frequencyPerWeek: habit.frequencyPerWeek,
-            frequencyPerDay: habit.frequencyPerDay,
+            monFrequency: habit.monFrequency || 0,
+            tueFrequency: habit.tueFrequency || 0,
+            wedFrequency: habit.wedFrequency || 0,
+            thuFrequency: habit.thuFrequency || 0,
+            friFrequency: habit.friFrequency || 0,
+            satFrequency: habit.satFrequency || 0,
+            sunFrequency: habit.sunFrequency || 0,
             current: habit.current,
         });
         setShowAddForm(true);
@@ -122,21 +212,39 @@ export default function HabitsManagementPage() {
         }
     };
 
+    const handleIncrementAll = () => {
+        setFormData(prevFormData => {
+            const newFormData: HabitFormData = { ...prevFormData };
+            frequencyKeys.forEach(key => {
+                newFormData[key] = Math.min(newFormData[key] + 1, 9);
+            });
+            return newFormData;
+        });
+    };
+
+    const handleDecrementAll = () => {
+        setFormData(prevFormData => {
+            const newFormData: HabitFormData = { ...prevFormData };
+            frequencyKeys.forEach(key => {
+                newFormData[key] = Math.max(newFormData[key] - 1, 0);
+            });
+            return newFormData;
+        });
+    };
+
     const resetForm = () => {
         setFormData({
             title: "",
             notes: "",
-            frequencyPerWeek: { per_week: "", per_day: null },
-            frequencyPerDay: null,
+            monFrequency: 0,
+            tueFrequency: 0,
+            wedFrequency: 0,
+            thuFrequency: 0,
+            friFrequency: 0,
+            satFrequency: 0,
+            sunFrequency: 0,
             current: true,
         });
-    };
-
-    const formatFrequency = (frequency: any) => {
-        if (typeof frequency.per_week === "number") {
-            return `${frequency.per_week} times per week`;
-        }
-        return frequency.per_week;
     };
 
     if (loading) {
@@ -210,40 +318,51 @@ export default function HabitsManagementPage() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="frequencyPerWeek">Frequency Per Week</Label>
-                                        <Input
-                                            id="frequencyPerWeek"
-                                            value={formData.frequencyPerWeek.per_week}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                frequencyPerWeek: {
-                                                    ...formData.frequencyPerWeek,
-                                                    per_week: e.target.value
-                                                }
-                                            })}
-                                            placeholder="e.g., 5 or 'Every day'"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="frequencyPerDay">Frequency Per Day (Optional)</Label>
-                                        <Input
-                                            id="frequencyPerDay"
-                                            type="number"
-                                            value={formData.frequencyPerDay || ""}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                frequencyPerDay: e.target.value ? parseInt(e.target.value) : null
-                                            })}
-                                            placeholder="e.g., 3"
-                                            min="1"
-                                        />
-                                    </div>
+                                <div className="grid grid-cols-7 gap-2 mb-4 text-center font-medium">
+                                    {daysOfWeek.map((day) => (
+                                        <div key={day}>{day}</div>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-[auto_repeat(7,minmax(0,1fr))_auto] gap-2 items-center">
+                                    {editingHabit && (
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleDecrementAll}
+                                            className="h-auto px-2 py-1"
+                                        >
+                                            <ArrowDown className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                    {daysOfWeek.map((day, index) => {
+                                        const frequencyKey = `${day.toLowerCase()}Frequency` as keyof HabitFormData;
+                                        return (
+                                            <FrequencyCombobox
+                                                key={day}
+                                                value={formData[frequencyKey] as number}
+                                                onChange={(newValue) => setFormData(prev => ({
+                                                    ...prev,
+                                                    [frequencyKey]: newValue
+                                                }))}
+                                                options={frequencyOptions}
+                                            />
+                                        )
+                                    })}
+                                    {editingHabit && (
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleIncrementAll}
+                                            className="h-auto px-2 py-1"
+                                        >
+                                            <ArrowUp className="h-4 w-4" />
+                                        </Button>
+                                    )}
                                 </div>
 
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-2 mt-4">
                                     <input
                                         type="checkbox"
                                         id="current"
@@ -254,7 +373,7 @@ export default function HabitsManagementPage() {
                                     <Label htmlFor="current">Currently Active</Label>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 mt-4">
                                     <Button type="submit">
                                         {editingHabit ? "Update Habit" : "Create Habit"}
                                     </Button>
@@ -270,6 +389,7 @@ export default function HabitsManagementPage() {
                                         Cancel
                                     </Button>
                                 </div>
+
                             </form>
                         </CardContent>
                     </Card>
@@ -294,10 +414,14 @@ export default function HabitsManagementPage() {
                                         )}
 
                                         <div className="flex flex-wrap gap-2 text-sm text-gray-500">
-                                            <span>Frequency: {formatFrequency(habit.frequencyPerWeek)}</span>
-                                            {habit.frequencyPerDay && (
-                                                <span>• {habit.frequencyPerDay} times per day</span>
-                                            )}
+                                            {daysOfWeek.map((day, index) => {
+                                                const frequencyKey = `${day.toLowerCase()}Frequency` as keyof Habit;
+                                                return (
+                                                    <span key={day}>
+                                                        {day}: {habit[frequencyKey] || 0}
+                                                    </span>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 

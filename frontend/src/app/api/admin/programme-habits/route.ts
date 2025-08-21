@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { programmeId, habitId, notes, frequencyPerWeek, frequencyPerDay, current } = body
+        const { programmeId, habitId, notes, monFrequency, tueFrequency, wedFrequency, thuFrequency, friFrequency, satFrequency, sunFrequency, current } = body
 
         // Validation
         if (!programmeId || !habitId) {
@@ -130,8 +130,13 @@ export async function POST(request: NextRequest) {
                 programmeId,
                 habitId,
                 notes,
-                frequencyPerWeek,
-                frequencyPerDay,
+                monFrequency: monFrequency ?? 0,
+                tueFrequency: tueFrequency ?? 0,
+                wedFrequency: wedFrequency ?? 0,
+                thuFrequency: thuFrequency ?? 0,
+                friFrequency: friFrequency ?? 0,
+                satFrequency: satFrequency ?? 0,
+                sunFrequency: sunFrequency ?? 0,
                 current
             },
             include: {

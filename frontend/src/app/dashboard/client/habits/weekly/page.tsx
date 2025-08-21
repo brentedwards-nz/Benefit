@@ -314,17 +314,11 @@ const WeeklyHabitsPageContent = () => {
             <Loading
                 title="Loading Weekly Habits"
                 description="Setting up your weekly habit tracker..."
-                steps={[
-                    "Fetching your programme habits",
-                    "Loading completion data",
-                    "Preparing weekly view"
-                ]}
+                steps={[]}
                 size="lg"
             />
         );
     }
-
-
 
     // Week view component
     if (selectedWeek && selectedDate) {

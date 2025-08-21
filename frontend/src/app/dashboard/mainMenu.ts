@@ -29,6 +29,21 @@ const menuDefinition: NavData = {
       ],
     },
     {
+      title: "Trainer",
+      url: "/dashboard/trainer",
+      roles: [UserRole.SystemAdmin, UserRole.Admin],
+      items: [
+        {
+          title: "Clients",
+          url: "/dashboard/client",
+        },
+        {
+          title: "Programmes",
+          url: "/dashboard/programmes",
+        },
+      ],
+    },
+    {
       title: "Admin",
       url: "/dashboard/admin",
       roles: [UserRole.SystemAdmin, UserRole.Admin], // Only SystemAdmin and Admin

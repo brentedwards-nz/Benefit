@@ -130,29 +130,39 @@ model SystemGmailConfig {
 }
 
 model Habit {
-  id               String   @id @default(cuid())
-  title            String
-  notes            String?
-  frequencyPerWeek Json // Could be specific days, or # Per week, or every day
-  frequencyPerDay  Int? // Number of times per day
-  current          Boolean  @default(true)
-  createdAt        DateTime @default(now()) @db.Timestamp(6)
-  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+  id           String   @id @default(cuid())
+  title        String
+  notes        String?
+  monFrequency Int      @default(0)
+  tueFrequency Int      @default(0)
+  wedFrequency Int      @default(0)
+  thuFrequency Int      @default(0)
+  friFrequency Int      @default(0)
+  satFrequency Int      @default(0)
+  sunFrequency Int      @default(0)
+  current      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @db.Timestamp(6)
 
   // Relationships
   programmeHabits ProgrammeHabit[]
 }
 
 model ProgrammeHabit {
-  id               String   @id @default(cuid())
-  programmeId      String
-  habitId          String
-  notes            String?
-  frequencyPerWeek Json // Could be specific days, or # Per week, or every day
-  frequencyPerDay  Int? // Number of times per day
-  current          Boolean  @default(true)
-  createdAt        DateTime @default(now()) @db.Timestamp(6)
-  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+  id           String   @id @default(cuid())
+  programmeId  String
+  habitId      String
+  notes        String?
+  monFrequency Int      @default(0)
+  tueFrequency Int      @default(0)
+  wedFrequency Int      @default(0)
+  thuFrequency Int      @default(0)
+  friFrequency Int      @default(0)
+  satFrequency Int      @default(0)
+  sunFrequency Int      @default(0)
+  current      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @db.Timestamp(6)
 
   // Relationships
   programme   Programme      @relation(fields: [programmeId], references: [id], onDelete: Cascade)

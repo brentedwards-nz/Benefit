@@ -17,11 +17,22 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { title, notes, frequencyPerWeek, frequencyPerDay, current } = body;
+        const {
+            title,
+            notes,
+            monFrequency,
+            tueFrequency,
+            wedFrequency,
+            thuFrequency,
+            friFrequency,
+            satFrequency,
+            sunFrequency,
+            current
+        } = body;
 
         // Validate required fields
-        if (!title || !frequencyPerWeek) {
-            return new Response("Title and frequency are required", { status: 400 });
+        if (!title) {
+            return new Response("Title is required", { status: 400 });
         }
 
         // Check if habit exists
@@ -38,8 +49,13 @@ export async function PUT(
             data: {
                 title,
                 notes: notes || null,
-                frequencyPerWeek,
-                frequencyPerDay: frequencyPerDay || null,
+                monFrequency: monFrequency || 0,
+                tueFrequency: tueFrequency || 0,
+                wedFrequency: wedFrequency || 0,
+                thuFrequency: thuFrequency || 0,
+                friFrequency: friFrequency || 0,
+                satFrequency: satFrequency || 0,
+                sunFrequency: sunFrequency || 0,
                 current: current !== undefined ? current : true,
                 updatedAt: new Date(),
             }

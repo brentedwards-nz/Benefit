@@ -35,15 +35,20 @@ export async function PUT(
         }
 
         const body = await request.json()
-        const { notes, frequencyPerWeek, frequencyPerDay, current } = body
+        const { notes, monFrequency, tueFrequency, wedFrequency, thuFrequency, friFrequency, satFrequency, sunFrequency, current } = body
 
         // Update programme habit
         const updatedProgrammeHabit = await prisma.programmeHabit.update({
             where: { id },
             data: {
                 notes,
-                frequencyPerWeek,
-                frequencyPerDay,
+                monFrequency,
+                tueFrequency,
+                wedFrequency,
+                thuFrequency,
+                friFrequency,
+                satFrequency,
+                sunFrequency,
                 current
             },
             include: {

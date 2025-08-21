@@ -13,14 +13,24 @@ import { Switch } from '@/components/ui/switch'
 import { ArrowLeft, Plus, Edit, Trash2, Save, X } from 'lucide-react'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { UserRole } from '@prisma/client'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 interface ProgrammeHabit {
     id: string
     programmeId: string
     habitId: string
     notes: string | null
-    frequencyPerWeek: any
-    frequencyPerDay: number | null
+    monFrequency: number
+    tueFrequency: number
+    wedFrequency: number
+    thuFrequency: number
+    friFrequency: number
+    satFrequency: number
+    sunFrequency: number
     current: boolean
     createdAt: string
     updatedAt: string
@@ -40,9 +50,74 @@ interface Habit {
     id: string
     title: string
     notes: string | null
-    frequencyPerWeek: any
-    frequencyPerDay: number | null
+    monFrequency: number
+    tueFrequency: number
+    wedFrequency: number
+    thuFrequency: number
+    friFrequency: number
+    satFrequency: number
+    sunFrequency: number
     current: boolean
+}
+
+interface FrequencyComboboxProps {
+    value: number | null;
+    onChange: (value: number) => void;
+    options: { value: string; label: string }[];
+}
+
+function FrequencyCombobox({ value, onChange, options }: FrequencyComboboxProps) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between"
+                >
+                    {value !== null ? value : "Select..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                    <CommandInput placeholder="Search frequency..." />
+                    <CommandEmpty>No number found.</CommandEmpty>
+                    <CommandGroup>
+                        {options.map((option) => (
+                            <CommandItem
+                                key={option.value}
+                                value={option.value}
+                                onSelect={(currentValue) => {
+                                    onChange(parseInt(currentValue));
+                                    setOpen(false);
+                                }}
+                            >
+                                {option.label}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+interface ProgrammeHabitFormData {
+    programmeId: string;
+    habitId: string;
+    notes: string;
+    monFrequency: number;
+    tueFrequency: number;
+    wedFrequency: number;
+    thuFrequency: number;
+    friFrequency: number;
+    satFrequency: number;
+    sunFrequency: number;
+    current: boolean;
 }
 
 function ProgrammeHabitManagementContent() {
@@ -57,15 +132,25 @@ function ProgrammeHabitManagementContent() {
     const [programmes, setProgrammes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [editingId, setEditingId] = useState<string | null>(null)
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<ProgrammeHabitFormData>({
         programmeId: programmeId || '',
         habitId: '',
         notes: '',
-        frequencyPerWeek: { per_week: 5 as number | string, per_day: null },
-        frequencyPerDay: null as number | null,
+        monFrequency: 0,
+        tueFrequency: 0,
+        wedFrequency: 0,
+        thuFrequency: 0,
+        friFrequency: 0,
+        satFrequency: 0,
+        sunFrequency: 0,
         current: true
     })
     const [isAdding, setIsAdding] = useState(false)
+
+    type FrequencyKey = 'monFrequency' | 'tueFrequency' | 'wedFrequency' | 'thuFrequency' | 'friFrequency' | 'satFrequency' | 'sunFrequency';
+    const frequencyKeys: FrequencyKey[] = [
+        'monFrequency', 'tueFrequency', 'wedFrequency', 'thuFrequency', 'friFrequency', 'satFrequency', 'sunFrequency'
+    ];
 
     useEffect(() => {
         fetchData()
@@ -113,8 +198,13 @@ function ProgrammeHabitManagementContent() {
             programmeId: programmeHabit.programmeId,
             habitId: programmeHabit.habitId,
             notes: programmeHabit.notes || '',
-            frequencyPerWeek: programmeHabit.frequencyPerWeek,
-            frequencyPerDay: programmeHabit.frequencyPerDay,
+            monFrequency: programmeHabit.monFrequency,
+            tueFrequency: programmeHabit.tueFrequency,
+            wedFrequency: programmeHabit.wedFrequency,
+            thuFrequency: programmeHabit.thuFrequency,
+            friFrequency: programmeHabit.friFrequency,
+            satFrequency: programmeHabit.satFrequency,
+            sunFrequency: programmeHabit.sunFrequency,
             current: programmeHabit.current
         })
     }
@@ -189,8 +279,13 @@ function ProgrammeHabitManagementContent() {
             programmeId: programmeId || '', // Preserve programmeId from URL
             habitId: '',
             notes: '',
-            frequencyPerWeek: { per_week: 5, per_day: null },
-            frequencyPerDay: null,
+            monFrequency: 0,
+            tueFrequency: 0,
+            wedFrequency: 0,
+            thuFrequency: 0,
+            friFrequency: 0,
+            satFrequency: 0,
+            sunFrequency: 0,
             current: true
         })
     }
@@ -216,27 +311,52 @@ function ProgrammeHabitManagementContent() {
         return habit ? habit.title : 'Unknown Habit'
     }
 
-    const formatFrequency = (frequencyPerWeek: any, frequencyPerDay: number | null) => {
-        let frequency = ''
+    const formatFrequency = (
+        monFrequency: number,
+        tueFrequency: number,
+        wedFrequency: number,
+        thuFrequency: number,
+        friFrequency: number,
+        satFrequency: number,
+        sunFrequency: number
+    ) => {
+        const frequencies: string[] = [];
+        if (monFrequency > 0) frequencies.push(`Mon: ${monFrequency}`);
+        if (tueFrequency > 0) frequencies.push(`Tue: ${tueFrequency}`);
+        if (wedFrequency > 0) frequencies.push(`Wed: ${wedFrequency}`);
+        if (thuFrequency > 0) frequencies.push(`Thu: ${thuFrequency}`);
+        if (friFrequency > 0) frequencies.push(`Fri: ${friFrequency}`);
+        if (satFrequency > 0) frequencies.push(`Sat: ${satFrequency}`);
+        if (sunFrequency > 0) frequencies.push(`Sun: ${sunFrequency}`);
 
-        if (frequencyPerWeek && typeof frequencyPerWeek === 'object') {
-            if (frequencyPerWeek.per_week) {
-                if (frequencyPerWeek.per_week === 'Every day' || frequencyPerWeek.per_week === 7) {
-                    frequency = 'Every day'
-                } else if (frequencyPerWeek.per_week === 1) {
-                    frequency = 'Once per week'
-                } else {
-                    frequency = `${frequencyPerWeek.per_week} times per week`
-                }
-            }
-        }
-
-        if (frequencyPerDay && frequencyPerDay > 1) {
-            frequency += `, ${frequencyPerDay} times per day`
-        }
-
-        return frequency || 'Not specified'
+        return frequencies.length > 0 ? frequencies.join(', ') : 'Not specified';
     }
+
+    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const frequencyOptions = Array.from({ length: 11 }, (_, i) => ({
+        value: i.toString(),
+        label: i.toString(),
+    }));
+
+    const handleIncrementAll = () => {
+        setFormData(prevFormData => {
+            const newFormData: ProgrammeHabitFormData = { ...prevFormData };
+            frequencyKeys.forEach(key => {
+                newFormData[key] = Math.min(newFormData[key] + 1, 9);
+            });
+            return newFormData;
+        });
+    };
+
+    const handleDecrementAll = () => {
+        setFormData(prevFormData => {
+            const newFormData: ProgrammeHabitFormData = { ...prevFormData };
+            frequencyKeys.forEach(key => {
+                newFormData[key] = Math.max(newFormData[key] - 1, 0);
+            });
+            return newFormData;
+        });
+    };
 
     if (loading) {
         return (
@@ -287,111 +407,119 @@ function ProgrammeHabitManagementContent() {
                             )}
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {!programmeId && (
+                            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
+                                {!programmeId && (
+                                    <div>
+                                        <Label htmlFor="programmeId">Programme</Label>
+                                        <select
+                                            id="programmeId"
+                                            value={formData.programmeId}
+                                            onChange={(e) => setFormData({ ...formData, programmeId: e.target.value })}
+                                            className="w-full p-2 border rounded-md"
+                                        >
+                                            <option value="">Select Programme</option>
+                                            {programmes.map((programme) => (
+                                                <option key={programme.id} value={programme.id}>
+                                                    {programme.name} ({programme.humanReadableId})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
                                 <div>
-                                    <Label htmlFor="programmeId">Programme</Label>
+                                    <Label htmlFor="habitId">Base Habit</Label>
                                     <select
-                                        id="programmeId"
-                                        value={formData.programmeId}
-                                        onChange={(e) => setFormData({ ...formData, programmeId: e.target.value })}
+                                        id="habitId"
+                                        value={formData.habitId}
+                                        onChange={(e) => setFormData({ ...formData, habitId: e.target.value })}
                                         className="w-full p-2 border rounded-md"
                                     >
-                                        <option value="">Select Programme</option>
-                                        {programmes.map((programme) => (
-                                            <option key={programme.id} value={programme.id}>
-                                                {programme.name} ({programme.humanReadableId})
+                                        <option value="">Select Habit</option>
+                                        {availableHabits.map((habit) => (
+                                            <option key={habit.id} value={habit.id}>
+                                                {habit.title}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
-                            )}
 
-                            <div>
-                                <Label htmlFor="habitId">Base Habit</Label>
-                                <select
-                                    id="habitId"
-                                    value={formData.habitId}
-                                    onChange={(e) => setFormData({ ...formData, habitId: e.target.value })}
-                                    className="w-full p-2 border rounded-md"
-                                >
-                                    <option value="">Select Habit</option>
-                                    {availableHabits.map((habit) => (
-                                        <option key={habit.id} value={habit.id}>
-                                            {habit.title}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-
-
-                            <div>
-                                <Label htmlFor="notes">Notes</Label>
-                                <Textarea
-                                    id="notes"
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    placeholder="Programme-specific notes"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <Label htmlFor="frequencyPerWeek">Frequency per Week</Label>
-                                    <select
-                                        id="frequencyPerWeek"
-                                        value={formData.frequencyPerWeek.per_week}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            frequencyPerWeek: { ...formData.frequencyPerWeek, per_week: e.target.value }
-                                        })}
-                                        className="w-full p-2 border rounded-md"
-                                    >
-                                        <option value="1">Once per week</option>
-                                        <option value="2">2 times per week</option>
-                                        <option value="3">3 times per week</option>
-                                        <option value="4">4 times per week</option>
-                                        <option value="5">5 times per week</option>
-                                        <option value="6">6 times per week</option>
-                                        <option value="7">Every day</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="frequencyPerDay">Times per Day</Label>
-                                    <Input
-                                        id="frequencyPerDay"
-                                        type="number"
-                                        min="1"
-                                        max="10"
-                                        value={formData.frequencyPerDay || ''}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            frequencyPerDay: e.target.value ? parseInt(e.target.value) : null
-                                        })}
-                                        placeholder="1"
+                                    <Label htmlFor="notes">Notes</Label>
+                                    <Textarea
+                                        id="notes"
+                                        value={formData.notes}
+                                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                        placeholder="Programme-specific notes"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="flex items-center space-x-2">
-                                <Switch
-                                    id="current"
-                                    checked={formData.current}
-                                    onCheckedChange={(checked) => setFormData({ ...formData, current: checked })}
-                                />
-                                <Label htmlFor="current">Currently Active</Label>
-                            </div>
+                                <div className="grid grid-cols-7 gap-2 mb-4 text-center font-medium">
+                                    {daysOfWeek.map((day) => (
+                                        <div key={day}>{day}</div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {isAdding && (
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleDecrementAll}
+                                            className="h-auto px-2 py-1"
+                                        >
+                                            <ArrowDown className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                    <div className="grid grid-cols-7 gap-2 flex-1">
+                                        {daysOfWeek.map((day) => {
+                                            const frequencyKey = `${day.toLowerCase()}Frequency` as keyof typeof formData;
+                                            return (
+                                                <FrequencyCombobox
+                                                    key={day}
+                                                    value={formData[frequencyKey] as number}
+                                                    onChange={(newValue) => setFormData(prev => ({
+                                                        ...prev,
+                                                        [frequencyKey]: newValue
+                                                    }))}
+                                                    options={frequencyOptions}
+                                                />
+                                            )
+                                        })}
+                                    </div>
+                                    {isAdding && (
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleIncrementAll}
+                                            className="h-auto px-2 py-1"
+                                        >
+                                            <ArrowUp className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
 
-                            <div className="flex gap-2">
-                                <Button onClick={handleSave} className="flex items-center gap-2">
-                                    <Save className="h-4 w-4" />
-                                    Save
-                                </Button>
-                                <Button variant="outline" onClick={handleCancel}>
-                                    <X className="h-4 w-4" />
-                                    Cancel
-                                </Button>
-                            </div>
+                                <div className="flex items-center space-x-2 mt-4">
+                                    <Switch
+                                        id="current"
+                                        checked={formData.current}
+                                        onCheckedChange={(checked) => setFormData({ ...formData, current: checked })}
+                                    />
+                                    <Label htmlFor="current">Currently Active</Label>
+                                </div>
+
+                                <div className="flex gap-2 mt-4">
+                                    <Button type="submit" className="flex items-center gap-2">
+                                        <Save className="h-4 w-4" />
+                                        Save
+                                    </Button>
+                                    <Button variant="outline" onClick={handleCancel}>
+                                        <X className="h-4 w-4" />
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
                         </CardContent>
                     </Card>
                 )}
@@ -414,55 +542,66 @@ function ProgrammeHabitManagementContent() {
                         <Card key={programmeHabit.id}>
                             <CardContent className="p-6">
                                 {editingId === programmeHabit.id ? (
-                                    <div className="space-y-4">
+                                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
                                         <div>
-                                            <div>
-                                                <Label>Notes</Label>
-                                                <Input
-                                                    value={formData.notes}
-                                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                                />
-                                            </div>
+                                            <Label htmlFor="notes">Notes</Label>
+                                            <Textarea
+                                                id="notes"
+                                                value={formData.notes}
+                                                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                                placeholder="Programme-specific notes"
+                                            />
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>Frequency per Week</Label>
-                                                <select
-                                                    value={formData.frequencyPerWeek.per_week}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        frequencyPerWeek: { ...formData.frequencyPerWeek, per_week: e.target.value }
-                                                    })}
-                                                    className="w-full p-2 border rounded-md"
+                                        <div className="grid grid-cols-7 gap-2 mb-4 text-center font-medium">
+                                            {daysOfWeek.map((day) => (
+                                                <div key={day}>{day}</div>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {editingId && (
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    onClick={handleDecrementAll}
+                                                    className="h-auto px-2 py-1"
                                                 >
-                                                    <option value="1">Once per week</option>
-                                                    <option value="2">2 times per week</option>
-                                                    <option value="3">3 times per week</option>
-                                                    <option value="4">4 times per week</option>
-                                                    <option value="5">5 times per week</option>
-                                                    <option value="6">6 times per week</option>
-                                                    <option value="7">Every day</option>
-                                                </select>
+                                                    <ArrowDown className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            <div className="grid grid-cols-7 gap-2 flex-1">
+                                                {daysOfWeek.map((day) => {
+                                                    const frequencyKey = `${day.toLowerCase()}Frequency` as keyof typeof formData;
+                                                    return (
+                                                        <FrequencyCombobox
+                                                            key={day}
+                                                            value={formData[frequencyKey] as number}
+                                                            onChange={(newValue) => setFormData(prev => ({
+                                                                ...prev,
+                                                                [frequencyKey]: newValue
+                                                            }))}
+                                                            options={frequencyOptions}
+                                                        />
+                                                    )
+                                                })}
                                             </div>
-                                            <div>
-                                                <Label>Times per Day</Label>
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    max="10"
-                                                    value={formData.frequencyPerDay || ''}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        frequencyPerDay: e.target.value ? parseInt(e.target.value) : null
-                                                    })}
-                                                    placeholder="1"
-                                                />
-                                            </div>
+                                            {editingId && (
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    onClick={handleIncrementAll}
+                                                    className="h-auto px-2 py-1"
+                                                >
+                                                    <ArrowUp className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center space-x-2">
                                             <Switch
+                                                id="current"
                                                 checked={formData.current}
                                                 onCheckedChange={(checked) => setFormData({ ...formData, current: checked })}
                                             />
@@ -479,7 +618,7 @@ function ProgrammeHabitManagementContent() {
                                                 Cancel
                                             </Button>
                                         </div>
-                                    </div>
+                                    </form>
                                 ) : (
                                     <div className="flex justify-between items-start">
                                         <div className="space-y-2">
@@ -492,7 +631,15 @@ function ProgrammeHabitManagementContent() {
 
                                             <div className="text-sm text-muted-foreground space-y-1">
                                                 {programmeHabit.notes && <p><strong>Notes:</strong> {programmeHabit.notes}</p>}
-                                                <p><strong>Frequency:</strong> {formatFrequency(programmeHabit.frequencyPerWeek, programmeHabit.frequencyPerDay)}</p>
+                                                <p><strong>Frequency:</strong> {formatFrequency(
+                                                    programmeHabit.monFrequency,
+                                                    programmeHabit.tueFrequency,
+                                                    programmeHabit.wedFrequency,
+                                                    programmeHabit.thuFrequency,
+                                                    programmeHabit.friFrequency,
+                                                    programmeHabit.satFrequency,
+                                                    programmeHabit.sunFrequency
+                                                )}</p>
                                             </div>
                                         </div>
 
