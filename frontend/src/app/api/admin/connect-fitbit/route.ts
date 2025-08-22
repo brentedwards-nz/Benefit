@@ -22,10 +22,12 @@ const SCOPES = [
 ];
 
 export async function GET() {
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
   if (!FITBIT_CLIENT_ID || !FITBIT_REDIRECT_URI) {
     const redirectUrl = new URL(
       "/dashboard/admin/oauth-settings",
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      BASE_URL
     );
     redirectUrl.searchParams.set("error", "server_config_error");
     redirectUrl.searchParams.set("details", "Missing Fitbit OAuth credentials");
@@ -44,7 +46,7 @@ export async function GET() {
     console.error("Error generating Fitbit OAuth URL:", error);
     const redirectUrl = new URL(
       "/dashboard/admin/oauth-settings",
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      BASE_URL
     );
     redirectUrl.searchParams.set("error", "fitbit_auth_failed");
     redirectUrl.searchParams.set("details", (error as Error).message);
