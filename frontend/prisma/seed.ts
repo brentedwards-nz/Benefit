@@ -17,6 +17,7 @@ async function main() {
     await prisma.session.deleteMany({})
     await prisma.account.deleteMany({})
     await prisma.verificationToken.deleteMany({})
+    await prisma.oAuthServices.deleteMany({})
 
 
     console.log('✅ Existing data cleared')
@@ -505,6 +506,22 @@ async function main() {
     console.log('✅ Programme enrolment created: 1')
 
     console.log(`✅ Wellness habits created: ${createdHabits.length}`)
+
+    // Create OAuthServices entry for Gmail
+    console.log('\n📧 Creating OAuthServices entry for Gmail...')
+    await prisma.oAuthServices.create({
+        data: {
+            name: 'gmail',
+            properties: {
+                connectedEmail: 'brentedwards.nz@gmail.com',
+                accessToken: 'mock_access_token',
+                expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(), // 1 hour from now
+                scopes: 'https://www.googleapis.com/auth/gmail.send',
+                encryptedRefreshToken: 'mock_encrypted_refresh_token',
+            }
+        }
+    })
+    console.log('✅ OAuthServices entry for Gmail created')
 
     console.log('\n🔑 Test Login Credentials:')
     console.log('System Admin: brentedwards.nz@gmail.com')

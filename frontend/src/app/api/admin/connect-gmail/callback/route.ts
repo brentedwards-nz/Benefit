@@ -1,8 +1,9 @@
 // app/api/admin/connect-gmail/callback/route.ts
-import { google } from "googleapis";
-import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma/client";
-import { encrypt } from "@/lib/encryption";
+import { encrypt } from '@/lib/encryption';
+import prisma from '@/utils/prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
+import { google } from 'googleapis';
+import { OAuthServices } from '@prisma/client';
 
 // Ensure these environment variables are correctly set.
 // Use the exact names from your .env.local file.
@@ -110,27 +111,33 @@ export async function GET(request: Request) {
       // Encrypt the refresh token before storing
       const encryptedRefreshToken = encrypt(refreshToken);
 
-      const result = await prisma.systemGmailConfig.upsert({
+      const result = await prisma.oAuthServices.upsert({
         where: {
-          connectedEmail: connectedEmailAddress,
+          name: 'gmail',
         },
         update: {
-          accessToken: accessToken!,
-          expiresAt: new Date(expiryDate!),
-          scopes: scopesGranted!,
-          encryptedRefreshToken: encryptedRefreshToken,
+          properties: {
+            connectedEmail: connectedEmailAddress,
+            accessToken: accessToken!,
+            expiresAt: new Date(expiryDate!),
+            scopes: scopesGranted!,
+            encryptedRefreshToken: encryptedRefreshToken,
+          },
           updatedAt: new Date(),
         },
         create: {
-          connectedEmail: connectedEmailAddress,
-          accessToken: accessToken!,
-          expiresAt: new Date(expiryDate!),
-          scopes: scopesGranted!,
-          encryptedRefreshToken: encryptedRefreshToken,
+          name: 'gmail',
+          properties: {
+            connectedEmail: connectedEmailAddress,
+            accessToken: accessToken!,
+            expiresAt: new Date(expiryDate!),
+            scopes: scopesGranted!,
+            encryptedRefreshToken: encryptedRefreshToken,
+          },
         },
       });
 
-      console.log("Gmail config stored successfully:", result.connectedEmail);
+      console.log("Gmail config stored successfully:", connectedEmailAddress);
     } catch (configError: unknown) {
       console.error("Error storing Gmail config in database:", configError);
       const errorMessage = configError instanceof Error ? configError.message : String(configError);
@@ -141,7 +148,7 @@ export async function GET(request: Request) {
     }
 
     const baseUrl = getBaseUrl(request);
-    const successUrl = new URL("/dashboard/admin/email_auth", baseUrl);
+    const successUrl = new URL("/dashboard/admin/oauth-settings", baseUrl);
     successUrl.searchParams.set("success", "gmail_connected");
     return NextResponse.redirect(successUrl.toString());
   } catch (error: unknown) {

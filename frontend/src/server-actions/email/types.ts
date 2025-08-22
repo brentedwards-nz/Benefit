@@ -9,9 +9,10 @@ export type Email = {
   body: string;
 };
 
-export type ConnectedGmailAccount = {
-  id: bigint;
+export type ConnectedOAuthAccount = {
+  id: string;
   connected_email: string;
+  account_type: string;
   access_token: string;
   expires_at: Date;
   scopes: string;

@@ -69,8 +69,8 @@ const menuDefinition: NavData = {
       roles: [UserRole.SystemAdmin, UserRole.Admin], // Only SystemAdmin
       items: [
         {
-          title: "Email Authentication",
-          url: "/dashboard/admin/email_auth",
+          title: "OAuth Settings",
+          url: "/dashboard/admin/oauth-settings",
         },
       ],
     },

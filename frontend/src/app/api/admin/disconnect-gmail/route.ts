@@ -14,9 +14,9 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  let accountId: bigint;
+  let accountId: string;
   try {
-    accountId = BigInt(accountIdString);
+    accountId = accountIdString;
   } catch (error) {
     return NextResponse.json(
       { success: false, message: "Invalid account ID provided." },
@@ -47,12 +47,12 @@ export async function DELETE(request: NextRequest) {
   // }
 
   try {
-    const accountToDelete = await prisma.systemGmailConfig.findUnique({
+    const accountToDelete = await prisma.oAuthServices.findUnique({
       where: {
         id: accountId,
       },
       select: {
-        encryptedRefreshToken: true,
+        properties: true,
       },
     });
 
@@ -66,8 +66,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const encryptedRefreshToken = accountToDelete.encryptedRefreshToken;
-    if (!encryptedRefreshToken) {
+    if (!accountToDelete.properties) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Properties for account with ID ${accountId} not found.`,
+        },
+        { status: 404 }
+      );
+    }
+
+    const properties = accountToDelete.properties as Record<string, any>;
+
+    if (!properties.encryptedRefreshToken) {
       return NextResponse.json(
         {
           success: false,
@@ -76,9 +87,10 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
+    const encryptedRefreshToken = properties.encryptedRefreshToken as string;
 
     await prisma.$transaction([
-      prisma.systemGmailConfig.delete({
+      prisma.oAuthServices.delete({
         where: { id: accountId },
       }),
 

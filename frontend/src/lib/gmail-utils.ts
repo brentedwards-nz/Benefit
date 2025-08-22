@@ -1,6 +1,7 @@
 import { decrypt } from './encryption';
 import prisma from '@/utils/prisma/client';
 import { google } from 'googleapis';
+import { OAuthServices } from '@prisma/client';
 
 /**
  * Gets a Gmail client with valid access token, refreshing if necessary
@@ -13,15 +14,18 @@ export async function getAuthenticatedGmailClient() {
     }
 
     // Get the system Gmail configuration
-    const systemConfig = await prisma.systemGmailConfig.findFirst({
+    const gmailService = await prisma.oAuthServices.findFirst({
+        where: { name: 'gmail' },
         orderBy: {
             createdAt: 'asc',
         },
     });
 
-    if (!systemConfig) {
+    if (!gmailService) {
         throw new Error('No Gmail configuration found. Please connect Gmail in admin settings.');
     }
+
+    const systemConfig = gmailService.properties as any;
 
     if (!systemConfig.encryptedRefreshToken) {
         throw new Error('No refresh token found. Please re-connect Gmail in admin settings.');
@@ -52,7 +56,7 @@ export async function getAuthenticatedGmailClient() {
     oauth2Client.setCredentials({
         access_token: systemConfig.accessToken,
         refresh_token: refreshToken,
-        expiry_date: systemConfig.expiresAt.getTime(),
+        expiry_date: systemConfig.expiresAt,
     });
 
     // Check if token needs refreshing
@@ -64,11 +68,14 @@ export async function getAuthenticatedGmailClient() {
             const { credentials } = await oauth2Client.refreshAccessToken();
 
             // Update the database with new access token
-            await prisma.systemGmailConfig.update({
-                where: { id: systemConfig.id },
+            await prisma.oAuthServices.update({
+                where: { id: gmailService.id },
                 data: {
-                    accessToken: credentials.access_token!,
-                    expiresAt: new Date(credentials.expiry_date!),
+                    properties: {
+                        ...systemConfig,
+                        accessToken: credentials.access_token!,
+                        expiresAt: new Date(credentials.expiry_date!),
+                    },
                     updatedAt: new Date(),
                 },
             });

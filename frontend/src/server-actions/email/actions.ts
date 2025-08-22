@@ -4,7 +4,7 @@
 // import { createClient } from "@/utils/supabase/server";
 import { ActionResult } from "@/types/server-action-results";
 import prisma from "@/utils/prisma/client";
-import { ConnectedGmailAccount, Email, From } from "./types";
+import { ConnectedOAuthAccount, Email, From } from "./types";
 import { google } from "googleapis";
 import { agentQuery } from "@/utils/ai/agent/agent";
 import { getAuthenticatedGmailClient } from "@/lib/gmail-utils";
@@ -15,8 +15,8 @@ import {
   LLMType,
 } from "@/utils/ai/agent/agentTypes";
 
-export async function readConnectedGmailAccounts(): Promise<
-  ActionResult<ConnectedGmailAccount[]>
+export async function readConnectedOAuthAccounts(): Promise<
+  ActionResult<ConnectedOAuthAccount[]>
 > {
 
 
@@ -30,40 +30,45 @@ export async function readConnectedGmailAccounts(): Promise<
     //   throw new Error("Unauthorized: You must be logged in.");
     // }
 
-    const gmailAccounts = await prisma.systemGmailConfig.findMany({
+    const oauthAccounts = await prisma.oAuthServices.findMany({
       select: {
         id: true,
-        connectedEmail: true,
-        accessToken: true,
-        expiresAt: true,
-        scopes: true,
-        encryptedRefreshToken: true,
+        name: true, // Select the name field to determine account type
+        properties: true, // Select the entire properties JSON
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    if (!gmailAccounts) {
+    if (!oauthAccounts) {
       console.warn(
-        `ReadConnectedGmailAccounts: Could not find connected gmail accounts`
+        `readConnectedOAuthAccounts: Could not find connected OAuth accounts`
       );
       throw new Error(
-        `ReadConnectedGmailAccounts: Could not find connected gmail accounts`
+        `readConnectedOAuthAccounts: Could not find connected OAuth accounts`
       );
     }
 
-    const accountsResult: ConnectedGmailAccount[] = gmailAccounts.map(
-      (account) =>
-      ({
-        id: account.id,
-        connected_email: account.connectedEmail,
-        access_token: account.accessToken,
-        expires_at: account.expiresAt,
-        scopes: account.scopes,
-        encrypted_refresh_token: account.encryptedRefreshToken,
-        created_at: account.createdAt,
-        updated_at: account.updatedAt,
-      } as ConnectedGmailAccount)
+    const accountsResult: ConnectedOAuthAccount[] = oauthAccounts.map(
+      (account) => {
+        const connectedEmail = (account.properties as any)?.connectedEmail;
+        const accessToken = (account.properties as any)?.accessToken;
+        const expiresAt = (account.properties as any)?.expiresAt;
+        const scopes = (account.properties as any)?.scopes;
+        const encryptedRefreshToken = (account.properties as any)?.encryptedRefreshToken;
+
+        return {
+          id: account.id,
+          connected_email: connectedEmail,
+          account_type: account.name === "gmail" ? "Gmail" : (account.name === "fitbit" ? "Fitbit" : "Unknown"), // Dynamically set account type
+          access_token: accessToken,
+          expires_at: expiresAt ? new Date(expiresAt) : undefined,
+          scopes: scopes,
+          encrypted_refresh_token: encryptedRefreshToken,
+          created_at: account.createdAt,
+          updated_at: account.updatedAt,
+        } as ConnectedOAuthAccount;
+      }
     );
 
     return {
@@ -72,7 +77,7 @@ export async function readConnectedGmailAccounts(): Promise<
     };
   } catch (err: any) {
     console.error("Error:");
-    console.error(` - Function: readConnectedGmailAccounts`);
+    console.error(` - Function: readConnectedOAuthAccounts`);
     console.error(err);
 
     return {
@@ -140,9 +145,11 @@ export async function readEmail(
     }
 
     // Check if there are any Gmail configurations first
-    const gmailConfigs = await prisma.systemGmailConfig.findMany({
-      select: { id: true, connectedEmail: true }
+    const gmailConfigs = await prisma.oAuthServices.findMany({
+      select: { id: true, properties: true }
     });
+
+    console.log(JSON.stringify(gmailConfigs,null,2));
 
     if (gmailConfigs.length === 0) {
       return {
@@ -151,6 +158,8 @@ export async function readEmail(
         code: "NO_GMAIL_CONFIG",
       };
     }
+
+    
 
     // Use the authenticated Gmail client utility
     const { gmail, connectedEmail } = await getAuthenticatedGmailClient();
