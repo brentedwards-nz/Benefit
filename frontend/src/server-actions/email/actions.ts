@@ -52,6 +52,7 @@ export async function readConnectedOAuthAccounts(): Promise<
     const accountsResult: ConnectedOAuthAccount[] = oauthAccounts.map(
       (account) => {
         const connectedEmail = (account.properties as any)?.connectedEmail;
+        const displayName = (account.properties as any)?.displayName;
         const accessToken = (account.properties as any)?.accessToken;
         const expiresAt = (account.properties as any)?.expiresAt;
         const scopes = (account.properties as any)?.scopes;
@@ -59,7 +60,9 @@ export async function readConnectedOAuthAccounts(): Promise<
 
         return {
           id: account.id,
+          name: account.name === "gmail" ? connectedEmail! : displayName!, // Set the 'name' for display purposes
           connected_email: connectedEmail,
+          displayName: displayName,
           account_type: account.name === "gmail" ? "Gmail" : (account.name === "fitbit" ? "Fitbit" : "Unknown"), // Dynamically set account type
           access_token: accessToken,
           expires_at: expiresAt ? new Date(expiresAt) : undefined,

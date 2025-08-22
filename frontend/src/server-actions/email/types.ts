@@ -11,7 +11,9 @@ export type Email = {
 
 export type ConnectedOAuthAccount = {
   id: string;
-  connected_email: string;
+  name: string; // Required for display purposes
+  connected_email?: string; // Optional for Fitbit
+  displayName?: string; // Optional for Gmail
   account_type: string;
   access_token: string;
   expires_at: Date;

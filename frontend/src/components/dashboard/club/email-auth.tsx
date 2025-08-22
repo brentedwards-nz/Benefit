@@ -42,13 +42,9 @@ const errorMessages = {
   fitbit_token_exchange_failed: "Fitbit token exchange failed.",
   server_config_error:
     "Server configuration missing for Google Gmail connector.",
-};
-
-// Define the type for a connected account based on your table schema
-type ConnectedAccount = {
-  id: string;
-  connected_email: string;
-  account_type: string;
+  no_refresh_token_issued_fitbit: "Authentication failed: No refresh token issued from Fitbit.",
+  fitbit_profile_fetch_failed: "Failed to fetch Fitbit profile.",
+  db_config_failed_fitbit: "Failed to save Fitbit OAuth configuration in the database.",
 };
 
 const EmailAuth = () => {
@@ -60,9 +56,9 @@ const EmailAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, startTransition] = useTransition();
 
-  const fetchConnectedAccounts = () => {
-    // No longer needs to be async
+  useEffect(() => {
     startTransition(async () => {
+      setIsLoading(true);
       try {
         const response = await readConnectedOAuthAccounts();
 
@@ -70,19 +66,24 @@ const EmailAuth = () => {
           throw new Error("Failed to fetch connected accounts");
         }
 
-      const data = response.data;
-      console.log("Fetched connected accounts data:", data);
-      setConnectedAccounts(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load accounts", {
-        description: "Could not fetch the list of connected accounts.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  });
-  };
+        const data: ConnectedOAuthAccount[] = response.data.map(account => ({
+          ...account,
+          // Set 'name' for display purposes based on account_type
+          name: account.account_type === "Gmail" ? account.connected_email! : account.displayName!,
+        }));
+
+        console.log("Fetched connected accounts data:", data);
+        setConnectedAccounts(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load accounts", {
+          description: "Could not fetch the list of connected accounts.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    });
+  }, []); // Run once on mount
 
   // Function to handle the disconnection
   const handleDisconnect = async (account: ConnectedOAuthAccount) => {
@@ -90,16 +91,15 @@ const EmailAuth = () => {
     if (typeof window === "undefined") return;
 
     const confirmation = window.confirm(
-      `Are you sure you want to disconnect the account "${account.connected_email}"?`
+      `Are you sure you want to disconnect the ${account.account_type} account "${account.name}"?`
     );
     if (!confirmation) {
       return;
     }
 
     try {
-      // Replace with your actual API endpoint for disconnection
-      const response = await fetch(
-        `/api/admin/disconnect-${account.account_type.toLowerCase()}?id=${account.id}`,
+      const endpoint = `/api/admin/disconnect-${account.account_type.toLowerCase()}?id=${account.id}`;
+      const response = await fetch(endpoint,
         {
           method: "DELETE",
         }
@@ -117,7 +117,7 @@ const EmailAuth = () => {
       );
 
       toast.success("Account Disconnected", {
-        description: `Successfully unlinked ${account.connected_email}.`,
+        description: `Successfully unlinked ${account.name} (${account.account_type}).`,
       });
     } catch (error) {
       console.error("Disconnection error:", error);
@@ -137,8 +137,28 @@ const EmailAuth = () => {
       toast.success("Gmail Account Connected!", {
         description: "Your Gmail account has been successfully linked.",
       });
-      fetchConnectedAccounts(); // Refresh the list of accounts
-      // Remove success param from URL
+      // No longer needs to be async
+      startTransition(async () => {
+        setIsLoading(true);
+        try {
+          const response = await readConnectedOAuthAccounts();
+          if (!response.success) {
+            throw new Error("Failed to fetch connected accounts");
+          }
+          const data: ConnectedOAuthAccount[] = response.data.map(account => ({
+            ...account,
+            name: account.account_type === "Gmail" ? account.connected_email! : account.displayName!,
+          }));
+          setConnectedAccounts(data);
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to refresh accounts", {
+            description: "Could not refresh the list of connected accounts.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      });
       const newUrlGmail = new URL(window.location.href);
       newUrlGmail.searchParams.delete("success");
       router.replace(newUrlGmail.toString());
@@ -146,8 +166,28 @@ const EmailAuth = () => {
       toast.success("Fitbit Account Connected!", {
         description: "Your Fitbit account has been successfully linked.",
       });
-      fetchConnectedAccounts(); // Refresh the list of accounts
-      // Remove success param from URL
+      // No longer needs to be async
+      startTransition(async () => {
+        setIsLoading(true);
+        try {
+          const response = await readConnectedOAuthAccounts();
+          if (!response.success) {
+            throw new Error("Failed to fetch connected accounts");
+          }
+          const data: ConnectedOAuthAccount[] = response.data.map(account => ({
+            ...account,
+            name: account.account_type === "Gmail" ? account.connected_email! : account.displayName!,
+          }));
+          setConnectedAccounts(data);
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to refresh accounts", {
+            description: "Could not refresh the list of connected accounts.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      });
       const newUrlFitbit = new URL(window.location.href);
       newUrlFitbit.searchParams.delete("success");
       router.replace(newUrlFitbit.toString());
@@ -166,12 +206,13 @@ const EmailAuth = () => {
       newUrlError.searchParams.delete("details");
       router.replace(newUrlError.toString());
     }
-  }, [searchParams, router]); // Add router to dependencies
+  }, [searchParams, router, startTransition, setIsLoading]); // Add new dependencies
 
   // This useEffect fetches the accounts on the initial page load
-  useEffect(() => {
-    fetchConnectedAccounts();
-  }, []); // Empty dependency array means this runs once on mount
+  // This useEffect is now redundant as fetchConnectedAccounts is called in the first useEffect
+  // useEffect(() => {
+  //   fetchConnectedAccounts();
+  // }, []); // Empty dependency array means this runs once on mount
 
   return (
     <div className="container mx-auto p-6">
@@ -226,7 +267,7 @@ const EmailAuth = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Account Type</TableHead>
-                  <TableHead>Email Address</TableHead>
+                  <TableHead>Account Identifier</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -237,7 +278,7 @@ const EmailAuth = () => {
                       {account.account_type}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {account.connected_email}
+                      {account.account_type === "Gmail" ? account.connected_email : account.displayName}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
