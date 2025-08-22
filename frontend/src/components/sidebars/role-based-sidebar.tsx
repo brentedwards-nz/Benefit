@@ -26,8 +26,7 @@ export interface NavItem {
     title: string;
     url: string;
     isActive?: boolean;
-    // items: NavItem[];
-    // roles?: UserRole[]; // Roles that can access this section
+    isDisabled?: boolean;
 }
 
 /**
@@ -39,6 +38,7 @@ export interface NavMainSection {
     items: NavItem[];
     isActive?: boolean;
     roles?: UserRole[]; // Roles that can access this section
+    isDisabled?: boolean;
 }
 
 /**
@@ -157,6 +157,30 @@ function filterMenuByRoles(menuData: NavData, userRoles: UserRole[]): NavData {
     return { navMain: filteredNavMain };
 }
 
+function filterMenuByEnabled(menuData: NavData): NavData {
+    // Filter sections based on enabled state
+    const filteredNavMain = menuData.navMain.filter(section => {
+        // Skip disabled sections
+        if (section.isDisabled) {
+            return false;
+        }
+        
+        // Filter out disabled items within the section
+        const enabledItems = section.items.filter(item => !item.isDisabled);
+        
+        // Only include sections that have at least one enabled item
+        if (enabledItems.length === 0) {
+            return false;
+        }
+        
+        // Update the section with only enabled items
+        section.items = enabledItems;
+        return true;
+    });
+
+    return { navMain: filteredNavMain };
+}
+
 type AppSidebarProps = React.ComponentPropsWithoutRef<typeof Sidebar> & {
     data: NavData;
 };
@@ -184,7 +208,8 @@ export const RoleBasedSidebar = React.forwardRef<
             );
 
             const filteredMenu = filterMenuByRoles(processedMenu, userRoles);
-            setMenuItems(filteredMenu);
+            const enabledMenu = filterMenuByEnabled(filteredMenu)
+            setMenuItems(enabledMenu);
         }
     }, [data, session?.user?.roles]);
 

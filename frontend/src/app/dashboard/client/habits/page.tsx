@@ -415,9 +415,9 @@ const ClientHabitsPage = () => {
                 <div className="space-y-3">
                     {/* Calendar Grid - Centered with 10px gaps and aligned headers */}
                     <div className="flex justify-center">
-                        <div>
+                        <div className="w-full max-w-xl">
                             {/* Week day headers as transparent circles */}
-                            <div className="grid grid-cols-7 gap-2.5 justify-items-center">
+                            <div className="grid grid-cols-7 gap-2 justify-items-center">
                                 {weekDays.map((day) => (
                                     <div
                                         key={day}
@@ -432,7 +432,7 @@ const ClientHabitsPage = () => {
                             {/* Calendar weeks */}
                             <div className="mt-2.5 space-y-2.5">
                                 {weeks.map((week, weekIndex) => (
-                                    <div key={weekIndex} className="grid grid-cols-7 gap-2.5 justify-items-center">
+                                    <div key={weekIndex} className="grid grid-cols-7 gap-2 justify-items-center">
                                         {week.days.map((day, dayIndex) => {
                                             // Calculate completion rate on the fly like the weekly view
                                             const dateString = day.date.toISOString().split('T')[0];

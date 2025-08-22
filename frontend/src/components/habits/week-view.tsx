@@ -157,7 +157,7 @@ export const WeekView = ({
 
             {/* Week day selector - 7 circles across the top */}
             <div className="mb-6 flex justify-center">
-                <div className="grid grid-cols-7 gap-2 w-full max-w-2xl">
+                <div className="grid grid-cols-7 gap-2 w-full max-w-xl">
                     {selectedWeek.days.map((day, dayIndex) => {
                         const isSelected = selectedDay && day.date.toDateString() === selectedDay.toDateString();
                         const dateString = day.date.toISOString().split('T')[0];
@@ -192,7 +192,7 @@ export const WeekView = ({
                                 </div>
 
                                 {/* Day circle */}
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${withinProgramme ? `${getDayColor(completionRate)} text-white` : 'bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-400'} ${isSelected && withinProgramme ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+                                <div className={`w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${withinProgramme ? `${getDayColor(completionRate)} text-white` : 'bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-400'} ${isSelected && withinProgramme ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
                                     }`}>
                                     {withinProgramme ? (
                                         <>{day.date.getDate()}</>

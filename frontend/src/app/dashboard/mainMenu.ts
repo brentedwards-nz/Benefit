@@ -25,6 +25,7 @@ const menuDefinition: NavData = {
         {
           title: "Weekly View",
           url: "/dashboard/client/habits/weekly",
+          isDisabled: true,
         },
       ],
     },
@@ -35,11 +36,11 @@ const menuDefinition: NavData = {
       items: [
         {
           title: "Clients",
-          url: "/dashboard/client",
+          url: "/dashboard/trainer/clients",
         },
         {
           title: "Programmes",
-          url: "/dashboard/programmes",
+          url: "/dashboard/trainer/programmes",
         },
       ],
     },
@@ -53,16 +54,8 @@ const menuDefinition: NavData = {
           url: "/dashboard/admin/email",
         },
         {
-          title: "Email Auth",
-          url: "/dashboard/admin/email_auth",
-        },
-        {
-          title: "Programmes",
-          url: "/dashboard/admin/programmes",
-        },
-        {
           title: "Templates",
-          url: "/dashboard/admin/programmes/templates",
+          url: "/dashboard/admin/programme-templates",
         },
         {
           title: "Habits",
@@ -71,13 +64,24 @@ const menuDefinition: NavData = {
       ],
     },
     {
-      title: "AI",
-      url: "/dashboard/ai",
+      title: "Settings",
+      url: "/dashboard/settings",
+      roles: [UserRole.SystemAdmin, UserRole.Admin], // Only SystemAdmin
+      items: [
+        {
+          title: "Email Authentication",
+          url: "/dashboard/admin/email_auth",
+        },
+      ],
+    },
+    {
+      title: "Experimental",
+      url: "/dashboard/experimental",
       roles: [UserRole.SystemAdmin], // Only SystemAdmin
       items: [
         {
           title: "Chatbot",
-          url: "/dashboard/ai/chatbot",
+          url: "/dashboard/experimental/chatbot",
         },
       ],
     },
