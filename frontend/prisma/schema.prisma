@@ -120,7 +120,7 @@ model ProgrammeEnrolment {
 
 model OAuthServices {
   id          String    @id @default(cuid())
-  name        String    @unique
+  name        String
   properties  Json
   createdAt   DateTime? @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime? @default(now()) @db.Timestamptz(6)

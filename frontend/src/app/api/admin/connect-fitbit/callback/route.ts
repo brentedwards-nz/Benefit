@@ -114,33 +114,51 @@ export async function GET(request: NextRequest) {
     try {
       const encryptedRefreshToken = encrypt(refreshToken);
 
-      await prisma.oAuthServices.upsert({
+      // Check if an OAuth service entry already exists for this Fitbit account
+      let existingOAuthService = await prisma.oAuthServices.findFirst({
         where: {
-          name: 'fitbit',
-        },
-        update: {
+          name: "fitbit",
           properties: {
-            userId: userId,
-            displayName: fitbitUserDisplayName,
-            accessToken: accessToken,
-            expiresAt: new Date(Date.now() + expiresIn * 1000),
-            scopes: scopesGranted,
-            encryptedRefreshToken: encryptedRefreshToken,
-          },
-          updatedAt: new Date(),
-        },
-        create: {
-          name: 'fitbit',
-          properties: {
-            userId: userId,
-            displayName: fitbitUserDisplayName,
-            accessToken: accessToken,
-            expiresAt: new Date(Date.now() + expiresIn * 1000),
-            scopes: scopesGranted,
-            encryptedRefreshToken: encryptedRefreshToken,
+            path: ["userId"],
+            equals: userId,
           },
         },
       });
+
+      if (existingOAuthService) {
+        // Update the existing entry
+        await prisma.oAuthServices.update({
+          where: {
+            id: existingOAuthService.id,
+          },
+          data: {
+            properties: {
+              userId: userId,
+              displayName: fitbitUserDisplayName,
+              accessToken: accessToken,
+              expiresAt: new Date(Date.now() + expiresIn * 1000),
+              scopes: scopesGranted,
+              encryptedRefreshToken: encryptedRefreshToken,
+            },
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Create a new entry if no existing one is found for this user
+        await prisma.oAuthServices.create({
+          data: {
+            name: "fitbit",
+            properties: {
+              userId: userId,
+              displayName: fitbitUserDisplayName,
+              accessToken: accessToken,
+              expiresAt: new Date(Date.now() + expiresIn * 1000),
+              scopes: scopesGranted,
+              encryptedRefreshToken: encryptedRefreshToken,
+            },
+          },
+        });
+      }
 
       console.log("Fitbit config stored successfully for user:", userId);
     } catch (configError: unknown) {

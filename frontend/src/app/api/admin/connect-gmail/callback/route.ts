@@ -111,31 +111,49 @@ export async function GET(request: Request) {
       // Encrypt the refresh token before storing
       const encryptedRefreshToken = encrypt(refreshToken);
 
-      const result = await prisma.oAuthServices.upsert({
+      // Check if an OAuth service entry already exists for this Gmail account
+      let existingOAuthService = await prisma.oAuthServices.findFirst({
         where: {
-          name: 'gmail',
-        },
-        update: {
+          name: "gmail",
           properties: {
-            connectedEmail: connectedEmailAddress,
-            accessToken: accessToken!,
-            expiresAt: new Date(expiryDate!),
-            scopes: scopesGranted!,
-            encryptedRefreshToken: encryptedRefreshToken,
-          },
-          updatedAt: new Date(),
-        },
-        create: {
-          name: 'gmail',
-          properties: {
-            connectedEmail: connectedEmailAddress,
-            accessToken: accessToken!,
-            expiresAt: new Date(expiryDate!),
-            scopes: scopesGranted!,
-            encryptedRefreshToken: encryptedRefreshToken,
+            path: ["connectedEmail"],
+            equals: connectedEmailAddress,
           },
         },
       });
+
+      if (existingOAuthService) {
+        // Update the existing entry
+        await prisma.oAuthServices.update({
+          where: {
+            id: existingOAuthService.id,
+          },
+          data: {
+            properties: {
+              connectedEmail: connectedEmailAddress,
+              accessToken: accessToken!,
+              expiresAt: new Date(expiryDate!),
+              scopes: scopesGranted!,
+              encryptedRefreshToken: encryptedRefreshToken,
+            },
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Create a new entry if no existing one is found for this email
+        await prisma.oAuthServices.create({
+          data: {
+            name: "gmail",
+            properties: {
+              connectedEmail: connectedEmailAddress,
+              accessToken: accessToken!,
+              expiresAt: new Date(expiryDate!),
+              scopes: scopesGranted!,
+              encryptedRefreshToken: encryptedRefreshToken,
+            },
+          },
+        });
+      }
 
       console.log("Gmail config stored successfully:", connectedEmailAddress);
     } catch (configError: unknown) {
