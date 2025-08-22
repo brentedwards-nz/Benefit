@@ -30,7 +30,7 @@ export const roleUtils = {
     getHighestRole: (client: ClientWithRoles): UserRole => {
         const rolePriority = {
             [UserRole.SystemAdmin]: 4,
-
+            [UserRole.Trainer]: 3,
             [UserRole.Admin]: 2,
             [UserRole.Client]: 1,
         }
@@ -57,7 +57,7 @@ export const roleUtils = {
     getRoleDisplayName: (role: UserRole): string => {
         const displayNames = {
             [UserRole.SystemAdmin]: 'System Administrator',
-
+            [UserRole.Trainer]: 'Trainer',
             [UserRole.Admin]: 'Administrator',
             [UserRole.Client]: 'Client',
         }

@@ -77,7 +77,8 @@ export function getHighestRole(user: UserWithRoles | null): UserRole | null {
   }
 
   const rolePriority = {
-    [UserRole.SystemAdmin]: 3,
+    [UserRole.SystemAdmin]: 4,
+    [UserRole.Trainer]: 3,
     [UserRole.Admin]: 2,
     [UserRole.Client]: 1,
   };

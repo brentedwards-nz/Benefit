@@ -44,7 +44,8 @@ export function useAuthorization() {
         if (!user?.roles.length) return null;
 
         const rolePriority: Record<UserRole, number> = {
-            [UserRole.SystemAdmin]: 3,
+            [UserRole.SystemAdmin]: 4,
+            [UserRole.Trainer]: 3,
             [UserRole.Admin]: 2,
             [UserRole.Client]: 1,
         };

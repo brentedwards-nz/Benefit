@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { encode } from 'next-auth/jwt';
+import { UserRole } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,7 @@ export interface TestUser {
   email: string;
   firstName: string;
   lastName?: string;
-  roles: string[];
+  roles: UserRole[];
   authId?: string;
 }
 
@@ -50,7 +51,7 @@ export async function createTestUser(userData: Partial<TestUser> = {}): Promise<
         lastName: testUser.lastName,
         current: true,
         disabled: false,
-        roles: testUser.roles,
+        roles: testUser.roles.map((role) => Object.values(UserRole).find((enumValue) => enumValue === role)).filter((role): role is UserRole => role !== undefined),
         contactInfo: [
           {
             type: "email",
@@ -126,6 +127,7 @@ export async function createSessionToken(user: TestUser): Promise<string> {
   // Create a proper NextAuth JWT token
   const token = await encode({
     token: {
+      id: user.authId,
       sub: user.authId,
       email: user.email,
       name: `${user.firstName} ${user.lastName || ''}`.trim(),
@@ -257,10 +259,10 @@ export async function setupAuthenticatedUser(
  * Creates a test user with specific roles for different test scenarios
  */
 export const TestUserRoles = {
-  client: () => ({ roles: ['Client'] }),
-  admin: () => ({ roles: ['Admin', 'Client'] }),
-  systemAdmin: () => ({ roles: ['SystemAdmin', 'Admin', 'Client'] }),
-  trainer: () => ({ roles: ['Trainer', 'Client'] }),
+  client: () => ({ roles: [UserRole.Client] }),
+  admin: () => ({ roles: [UserRole.Admin, UserRole.Client] }),
+  systemAdmin: () => ({ roles: [UserRole.SystemAdmin, UserRole.Admin, UserRole.Client] }),
+  trainer: () => ({ roles: [UserRole.Trainer, UserRole.Client] }),
 } as const;
 
 /**
@@ -279,7 +281,9 @@ export async function cleanupAllTestUsers(): Promise<void> {
     });
 
     for (const user of testUsers) {
-      await cleanupTestUser(user.email);
+      if (user.email) {
+        await cleanupTestUser(user.email);
+      }
     }
 
     console.log(`Cleaned up ${testUsers.length} test users`);
