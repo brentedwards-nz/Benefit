@@ -23,6 +23,10 @@ const menuDefinition: NavData = {
           url: "/dashboard/client/habits",
         },
         {
+          title: "Settings",
+          url: "/dashboard/client/settings",
+        },
+        {
           title: "Weekly View",
           url: "/dashboard/client/habits/weekly",
           isDisabled: true,

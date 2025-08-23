@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { mainMenu } from "./mainMenu";
+import { Suspense } from "react"; // Import Suspense
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for fallback
 
 export const metadata = {
   title: "Dashboard",
@@ -40,9 +42,9 @@ export default function RootLayout({
           </div>
         </header>
         <main className="flex-1 flex flex-col">
-          {/* {children}{" "} */}
-          {children}
-          {/* This is where your page content will be rendered */}
+          <Suspense fallback={<Skeleton className="h-full w-full" />}> {/* Wrap children with Suspense */}
+            {children}
+          </Suspense>
         </main>
         <Toaster richColors />
       </SidebarInset>
