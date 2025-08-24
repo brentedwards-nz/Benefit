@@ -234,21 +234,6 @@ const EmailAuth = () => {
         </CardContent>
       </Card>
 
-      {/* Fitbit Connection Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-2xl">Fitbit Account Integration</CardTitle>
-          <CardDescription>
-            Connect a Fitbit account to integrate health and activity data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/api/admin/connect-fitbit" passHref>
-            <Button>Connect New Fitbit Account</Button>
-          </Link>
-        </CardContent>
-      </Card>
-
       {/* Connected Accounts Section */}
       <Card>
         <CardHeader>
