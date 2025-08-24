@@ -60,7 +60,9 @@ export async function initiateFitbitOAuth() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // This should remain NEXT_PUBLIC for client-side redirection
 
   try {
-    const authorizeUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${BASE_URL}/api/client/connect-fitbit/callback&scope=${SCOPES.join(" ")}&prompt=consent&state=${state}`;
+    // Normalize the redirect URI to remove any double slashes
+    const normalizedRedirectUri = FITBIT_REDIRECT_URI.replace(/([^:]\/)\/+/g, "$1");
+    const authorizeUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${normalizedRedirectUri}&scope=${SCOPES.join(" ")}&prompt=consent&state=${state}`;
     console.log("Fitbit Authorize URL being sent:", authorizeUrl); // Add this line
     return { success: true, authorizeUrl };
   } catch (error) {
