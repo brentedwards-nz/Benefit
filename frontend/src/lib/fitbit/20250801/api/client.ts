@@ -322,7 +322,17 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<void, void>({
+      this.request<
+        {
+          access_token: string;
+          expires_in: number;
+          refresh_token: string;
+          scope: string;
+          token_type: string;
+          user_id: string;
+        },
+        void
+      >({
         path: `/oauth2/token`,
         method: "POST",
         query: query,
@@ -557,7 +567,23 @@ export class Api<
      * @secure
      */
     getActivitiesByDate: (date: string, params: RequestParams = {}) =>
-      this.request<void, void>({
+      this.request<
+        {
+          activities: any[];
+          goals: any;
+          summary: {
+            caloriesOut: number;
+            distances: any[];
+            fairlyActiveMinutes: number;
+            lightlyActiveMinutes: number;
+            marginalCalories: number;
+            sedentaryMinutes: number;
+            steps: number;
+            veryActiveMinutes: number;
+          };
+        },
+        void
+      >({
         path: `/1/user/-/activities/date/${date}.json`,
         method: "GET",
         secure: true,
@@ -898,7 +924,51 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<void, void>({
+      this.request<
+        {
+          activities: [
+            {
+              activityId: number;
+              activityType: {
+                id: number;
+                name: string;
+                trackingType: string;
+                hasStartTime: boolean;
+                hasDuration: boolean;
+                hasSteps: boolean;
+                hasDistance: boolean;
+                hasElevation: boolean;
+                hasCalories: boolean;
+                hasSpeed: boolean;
+                hasActiveZoneMinutes: boolean;
+                isFavorite: boolean;
+                isFrequent: boolean;
+                isMeasured: boolean;
+                isRecommended: boolean;
+              };
+              activeZoneMinutes: number;
+              calories: number;
+              duration: number;
+              logId: number;
+              originalDuration: number;
+              originalStartTime: string;
+              activityName: string;
+              distance: number;
+              distanceUnit: string;
+              steps: number;
+              startTime: string;
+            },
+          ];
+          pagination: {
+            beforeDate: string;
+            afterDate: string;
+            limit: number;
+            offset: number;
+            sort: string;
+          };
+        },
+        void
+      >({
         path: `/1/user/-/activities/list.json`,
         method: "GET",
         query: query,
@@ -1425,7 +1495,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns average breathing rate data for a single date. Breathing Rate data applies specifically to a user’s “main sleep,” which is the longest single period of time during which they were asleep on a given date.
+     * @description This endpoint returns average breathing rate data for a single date. Breathing Rate data applies specifically to a user's "main sleep," which is the longest single period of time during which they were asleep on a given date.
      *
      * @tags Breathing Rate
      * @name GetBreathingRateSummaryByDate
@@ -1442,7 +1512,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns average breathing rate data for a date range. Breathing Rate data applies specifically to a user’s “main sleep,” which is the longest single period of time during which they were asleep on a given date.
+     * @description This endpoint returns average breathing rate data for a date range. Breathing Rate data applies specifically to a user's "main sleep," which is the longest single period of time during which they were asleep on a given date.
      *
      * @tags Breathing Rate
      * @name GetBreathingRateSummaryByInterval
@@ -1837,7 +1907,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the Heart Rate Variability (HRV) data for a single date. HRV data applies specifically to a user’s “main sleep,” which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the Heart Rate Variability (HRV) data for a single date. HRV data applies specifically to a user's "main sleep," which is the longest single period of time asleep on a given date.
      *
      * @tags Heart Rate Variability
      * @name GetHrvSummaryDate
@@ -1854,7 +1924,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the Heart Rate Variability (HRV) data for a date range. HRV data applies specifically to a user’s “main sleep,” which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the Heart Rate Variability (HRV) data for a date range. HRV data applies specifically to a user's "main sleep," which is the longest single period of time asleep on a given date.
      *
      * @tags Heart Rate Variability
      * @name GetHrvSummaryInterval
@@ -1875,7 +1945,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the Heart Rate Variability (HRV) intraday data for a single date. HRV data applies specifically to a user’s “main sleep,” which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the Heart Rate Variability (HRV) intraday data for a single date. HRV data applies specifically to a user's "main sleep," which is the longest single period of time asleep on a given date.
      *
      * @tags Heart Rate Variability Intraday
      * @name GetHrvIntradayByDate
@@ -1892,7 +1962,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the Heart Rate Variability (HRV) intraday data for a single date. HRV data applies specifically to a user’s “main sleep,” which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the Heart Rate Variability (HRV) intraday data for a single date. HRV data applies specifically to a user's "main sleep," which is the longest single period of time asleep on a given date.
      *
      * @tags Heart Rate Variability Intraday
      * @name GetHrvIntradayByInterval
@@ -1954,7 +2024,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the user state for Irregular Rhythm Notifications (IRN). The user state contains most information about the user’s current engagement with the feature, including onboarding progress and algorithm processing state.
+     * @description This endpoint returns the user state for Irregular Rhythm Notifications (IRN). The user state contains most information about the user's current engagement with the feature, including onboarding progress and algorithm processing state.
      *
      * @tags Irregular Rhythm Notifications
      * @name GetIrnProfile
@@ -2584,7 +2654,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the SpO2 summary data for a single date. SpO2 applies specifically to a user’s “main sleep”, which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the SpO2 summary data for a single date. SpO2 applies specifically to a user's "main sleep", which is the longest single period of time asleep on a given date.
      *
      * @tags SpO2
      * @name GetSpO2SummaryByDate
@@ -2601,7 +2671,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the SpO2 summary data for a date range. SpO2 applies specifically to a user’s “main sleep”, which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the SpO2 summary data for a date range. SpO2 applies specifically to a user's "main sleep", which is the longest single period of time asleep on a given date.
      *
      * @tags SpO2
      * @name GetSpO2SummaryByInterval
@@ -2622,7 +2692,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the SpO2 intraday data for a single date. SpO2 applies specifically to a user’s “main sleep”, which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the SpO2 intraday data for a single date. SpO2 applies specifically to a user's "main sleep", which is the longest single period of time asleep on a given date.
      *
      * @tags SpO2 Intraday
      * @name GetSpO2IntradayByDate
@@ -2639,7 +2709,7 @@ export class Api<
       }),
 
     /**
-     * @description This endpoint returns the SpO2 intraday data for a specified date range. SpO2 applies specifically to a user’s “main sleep”, which is the longest single period of time asleep on a given date.
+     * @description This endpoint returns the SpO2 intraday data for a specified date range. SpO2 applies specifically to a user's "main sleep", which is the longest single period of time asleep on a given date.
      *
      * @tags SpO2 Intraday
      * @name GetSpO2IntradayByInterval
@@ -2760,7 +2830,7 @@ export class Api<
       }),
 
     /**
-     * @description Returns the Temperature (Skin) data for a single date. Temperature (Skin) data applies specifically to a user’s “main sleep”, which is the longest single period of time asleep on a given date.
+     * @description Returns the Temperature (Skin) data for a single date. Temperature (Skin) data applies specifically to a user's "main sleep", which is the longest single period of time asleep on a given date.
      *
      * @tags Temperature
      * @name GetTempSkinSummaryDate

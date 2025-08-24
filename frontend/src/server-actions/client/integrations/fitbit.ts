@@ -25,10 +25,9 @@ export async function initiateFitbitOAuth() {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user || !session.user.email) {
-    redirect("/auth/signin"); // Redirect unauthenticated users
+    redirect("/auth/signin");
   }
 
-  // Fetch the client to get their ID
   const client = await prisma.client.findUnique({
     where: {
       authId: session.user.id,
@@ -39,13 +38,8 @@ export async function initiateFitbitOAuth() {
   });
 
   if (!client) {
-    // Handle case where authenticated user is not a client
-    redirect("/dashboard/admin/error?error=client_not_found"); // Or a more appropriate error page
+    redirect("/dashboard/admin/error?error=client_not_found");
   }
-
-  console.log("Debugging Fitbit OAuth Env Vars:");
-  console.log("FITBIT_CLIENT_ID:", FITBIT_CLIENT_ID);
-  console.log("FITBIT_REDIRECT_URI:", FITBIT_REDIRECT_URI);
 
   if (!FITBIT_CLIENT_ID || !FITBIT_REDIRECT_URI) {
     console.error("Missing Fitbit OAuth environment variables");
@@ -54,16 +48,12 @@ export async function initiateFitbitOAuth() {
     );
   }
 
-  // Generate a unique state parameter to prevent CSRF attacks
-  // This state should ideally be stored in the session or a secure cookie and validated on callback
   const state = `${client.id}:${Math.random().toString(36).substring(2)}`;
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // This should remain NEXT_PUBLIC for client-side redirection
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
   try {
-    // Normalize the redirect URI to remove any double slashes
     const normalizedRedirectUri = FITBIT_REDIRECT_URI.replace(/([^:]\/)\/+/g, "$1");
     const authorizeUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${normalizedRedirectUri}&scope=${SCOPES.join(" ")}&prompt=consent&state=${state}`;
-    console.log("Fitbit Authorize URL being sent:", authorizeUrl); // Add this line
     return { success: true, authorizeUrl };
   } catch (error) {
     console.error("Error generating Fitbit OAuth URL:", error);
@@ -105,21 +95,17 @@ export async function readClientSettings() {
   }
 
   const rawSettings = Array.isArray(client.settings) ? client.settings : [];
-  console.log("Raw settings retrieved from DB:", rawSettings);
 
   const processedSettings: ClientSetting[] = [];
 
-  // Ensure rawSettings is an array before iterating
   const settingsArray = Array.isArray(rawSettings) ? rawSettings : [];
 
   for (const item of settingsArray) {
-    // First, ensure it's an object and not null
     if (typeof item !== 'object' || item === null) {
       console.warn("Skipping invalid setting (not an object or null):", item);
       continue;
     }
 
-    // Then, check for required properties and their types
     if (
       !('id' in item) || typeof (item as any).id !== 'string' ||
       !('type' in item) || typeof (item as any).type !== 'string' ||
@@ -129,7 +115,6 @@ export async function readClientSettings() {
       continue;
     }
 
-    // Explicitly construct ClientSetting from the validated item
     const setting: ClientSetting = {
       id: (item as any).id as string,
       type: (item as any).type as string,
@@ -139,9 +124,9 @@ export async function readClientSettings() {
     const processedProperties: SettingProperty[] = setting.properties.map((prop) => {
       let displayValue = prop.value;
       if (prop.encrypted) {
-        displayValue = "********"; // Mask encrypted values
+        displayValue = "********";
       } else if (prop.name === "expiresAt") {
-        displayValue = prop.value; // Pass original value for client-side formatting
+        displayValue = prop.value;
       }
       return { ...prop, value: displayValue };
     });
@@ -173,14 +158,13 @@ export async function deleteClientSetting(settingId: string) {
     return { success: false, error: "Client not found." };
   }
 
-  // Robustly ensure currentSettingsArray is an array of ClientSetting objects
   let currentSettingsArray: ClientSetting[] = [];
   if (Array.isArray(client.settings)) {
     for (const item of client.settings) {
       if (
         typeof item === 'object' && item !== null &&
         'id' in item && typeof (item as any).id === 'string' &&
-        'type' in item && typeof (item as any).type === 'string' &&
+        'type' in item && typeof (item as any).type !== 'string' &&
         'properties' in item && Array.isArray((item as any).properties)
       ) {
         currentSettingsArray.push({
@@ -205,10 +189,9 @@ export async function deleteClientSetting(settingId: string) {
     await prisma.client.update({
       where: { id: client.id },
       data: {
-        settings: currentSettingsArray as any, // Explicitly cast to 'any' for Prisma's Json type
+        settings: currentSettingsArray as any,
       },
     });
-    console.log(`Setting ${settingId} deleted for client ${client.id}`);
     return { success: true, message: `Setting ${settingId} deleted successfully.` };
   } catch (error) {
     console.error("Error deleting client setting:", error);
@@ -241,14 +224,13 @@ export async function createManualClientSetting(
     return { success: false, error: "Client not found." };
   }
 
-  // Robustly ensure currentSettingsArray is an array of ClientSetting objects
   let currentSettingsArray: ClientSetting[] = [];
   if (Array.isArray(client.settings)) {
     for (const item of client.settings) {
       if (
         typeof item === 'object' && item !== null &&
         'id' in item && typeof (item as any).id === 'string' &&
-        'type' in item && typeof (item as any).type === 'string' &&
+        'type' in item && typeof (item as any).type !== 'string' &&
         'properties' in item && Array.isArray((item as any).properties)
       ) {
         currentSettingsArray.push({
@@ -285,10 +267,9 @@ export async function createManualClientSetting(
     await prisma.client.update({
       where: { id: client.id },
       data: {
-        settings: currentSettingsArray as any, // Explicitly cast to 'any' for Prisma's Json type
+        settings: currentSettingsArray as any,
       },
     });
-    console.log(`Manual setting '${settingId}' created for client ${client.id}`);
     return { success: true, message: `Setting '${settingId}' created successfully.` };
   } catch (error) {
     console.error("Error creating manual client setting:", error);

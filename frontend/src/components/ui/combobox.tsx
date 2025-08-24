@@ -25,6 +25,7 @@ interface ComboboxProps {
   placeholder?: string;
   searchPlaceholder?: string;
   noResultsText?: string;
+  onSearchChange?: (search: string) => void; // Add this prop
 }
 
 export function Combobox({
@@ -34,6 +35,7 @@ export function Combobox({
   placeholder = "Select option...",
   searchPlaceholder = "Search options...",
   noResultsText = "No option found.",
+  onSearchChange, // Destructure the new prop
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -54,7 +56,12 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput
+            placeholder={searchPlaceholder}
+            onValueChange={(currentValue) => {
+              onSearchChange?.(currentValue); // Call onSearchChange with the input value
+            }}
+          />
           <CommandEmpty>{noResultsText}</CommandEmpty>
           <CommandGroup>
             {options.map((option) => (
