@@ -47,22 +47,19 @@ export default async function Index() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_50%)]"></div>
       <div className="relative z-10">
         <div className="text-center max-w-2xl px-4">
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 animate-gradient-x drop-shadow-sm">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 animate-gradient-x drop-shadow-sm">
             Bene-Fit Wellness Solutions
           </h1>
           <p className="text-lg md:text-xl text-foreground/80 mb-8 leading-relaxed max-w-3xl mx-auto">
-            We are a group of fitness professionals who provide body and mind
-            packages to groups, corporates, and individuals. As a health
-            collective, we assist you by providing plans which incorporate
-            nutrition, workout, breath therapy, coaching, and more.
+            We are fitness professionals providing body and mind packages to groups, corporates, and individuals. We assist you with plans incorporating nutrition, workouts, breath therapy, and coaching.
           </p>
 
           {session?.user ? (
             // User is logged in
             <div className="mt-8">
-              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30 rounded-xl border border-green-200/50 dark:border-green-800/50 shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="mb-6 p-4">
                 <p className="text-xl font-semibold text-foreground">
-                  Welcome back, <span className="text-green-700 dark:text-green-400 font-bold">{displayName}</span>!
+                  Welcome back, <span className="text-foreground font-bold">{displayName}</span>!
                 </p>
               </div>
               <Link

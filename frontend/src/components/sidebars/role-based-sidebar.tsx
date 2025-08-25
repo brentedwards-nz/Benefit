@@ -240,7 +240,7 @@ export const RoleBasedSidebar = React.forwardRef<
                                 <SidebarMenuButton
                                     asChild
                                     isActive={item.isActive}
-                                    className="data-[active=true]:bg-gray-200"
+                                    className="data-[active=true]:bg-accent dark:data-[active=true]:text-sidebar-primary-foreground"
                                 >
                                     <a href={item.url} className="font-medium">
                                         {item.title}
@@ -253,7 +253,7 @@ export const RoleBasedSidebar = React.forwardRef<
                                                 <SidebarMenuSubButton
                                                     asChild
                                                     isActive={subItem.isActive}
-                                                    className="data-[active=true]:bg-gray-200"
+                                                    className="data-[active=true]:bg-accent dark:data-[active=true]:text-sidebar-primary-foreground"
                                                 >
                                                     <a href={subItem.url}>{subItem.title}</a>
                                                 </SidebarMenuSubButton>

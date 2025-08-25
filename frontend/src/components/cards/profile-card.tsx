@@ -83,7 +83,7 @@ export function ProfileCard({ auth_id }: ProfileCardProps) {
 
   if (!auth_id || auth_id === "UNDEFINED") {
     return (
-      <Card className="w-full max-w-sm bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="w-full max-w-sm bg-card shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="flex flex-col items-center">
           <Avatar className="h-24 w-24 mb-4">
             <AvatarFallback>CN</AvatarFallback>
@@ -97,7 +97,7 @@ export function ProfileCard({ auth_id }: ProfileCardProps) {
 
   if (error || !client) {
     return (
-      <Card className="w-full max-w-sm bg-white shadow-lg hover:shadow-xl">
+      <Card className="w-full max-w-sm bg-card shadow-lg hover:shadow-xl">
         <CardHeader className="flex flex-col items-center">
           <Avatar className="h-24 w-24 mb-4">
             <AvatarFallback>CN</AvatarFallback>
@@ -136,7 +136,7 @@ export function ProfileCard({ auth_id }: ProfileCardProps) {
   const shouldUseFallback = !isValidAvatarUrl || isAvatarRateLimited;
 
   return (
-    <Card className="w-full bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <Card className="w-full bg-card shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-col items-center">
         <Avatar className="h-24 w-24 mb-4 border-2 border-gray-300">
           <AvatarImage
