@@ -175,7 +175,7 @@ function FormComponent() {
       {/* OAuth Buttons */}
       <div className="space-y-3">
         <Button
-          className="w-full h-11 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm"
+          className="w-full h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground border border-border shadow-sm"
           variant="outline"
           onClick={() => signInWithOAuth("google")}
           disabled={oAuthRequest.pending || pending}
@@ -230,9 +230,6 @@ export function SignInCard() {
         <CardTitle className="text-2xl font-semibold text-card-foreground">
           Sign in to your account
         </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Choose your preferred sign-in method below
-        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -244,9 +241,9 @@ export function SignInCard() {
       <CardContent className="pt-0">
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Not sure what to do?{" "}
             <Link
-              href="/"
+              href="https://www.bene-fit.co.nz/contact"
               className="font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline"
             >
               Contact us to get started

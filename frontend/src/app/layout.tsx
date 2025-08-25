@@ -58,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <main className="min-h-screen flex flex-col items-center">
           <NextAuthProvider>
