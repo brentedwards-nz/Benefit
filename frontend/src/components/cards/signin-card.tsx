@@ -131,7 +131,7 @@ function FormComponent() {
             type="email"
             placeholder="your-email@example.com"
             disabled={oAuthRequest.pending || pending}
-            className="h-11"
+            className="h-11 border-border"
           />
           <Button
             type="submit"
@@ -226,8 +226,8 @@ function FormComponent() {
 export function SignInCard() {
   return (
     <Card className="w-full border shadow-lg bg-card">
-      <CardHeader className="space-y-1 pb-4">
-        <CardTitle className="text-2xl font-semibold text-card-foreground">
+      <CardHeader className="space-y-1 pb-2">
+        <CardTitle className="text-xl md:text-2xl font-semibold text-card-foreground">
           Sign in to your account
         </CardTitle>
       </CardHeader>
@@ -244,9 +244,9 @@ export function SignInCard() {
             Not sure what to do?{" "}
             <Link
               href="https://www.bene-fit.co.nz/contact"
-              className="font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline"
+              className="font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline block mt-1"
             >
-              Contact us to get started
+              Click here to contact us
             </Link>
           </p>
         </div>

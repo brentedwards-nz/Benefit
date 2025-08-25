@@ -13,10 +13,10 @@ const SignIn = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8 md:block hidden">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome Back
+            Welcome
           </h1>
           <p className="text-muted-foreground">
-            Sign in to your Bene-Fit account to continue
+            Sign in or create your Bene-Fit account to continue
           </p>
         </div>
         <SignInCard />
