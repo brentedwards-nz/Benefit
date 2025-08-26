@@ -48,6 +48,7 @@ import {
 import { getClientActivities } from "@/server-actions/fitbit/actions";
 import { readEmail } from "@/server-actions/email/actions";
 import { Email } from "@/server-actions/email/types";
+import { WeekView, WeekViewProps } from "@/components/habits/week-view";
 
 interface Client extends ClientForTrainer {}
 
@@ -61,6 +62,28 @@ const TrainerClientsPage = () => {
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
   const [clientEmails, setClientEmails] = useState<Email[]>([]);
   const [isLoadingEmails, setIsLoadingEmails] = useState(false);
+  const [isLoadingClientHabits, setIsLoadingClientHabits] = useState(false);
+  const [weekViewProps, setWeekViewProps] = useState<WeekViewProps>({
+    selectedWeek: {
+      days: [
+        {
+          date: new Date(),
+          dayNumber: 0,
+          isCurrentMonth: true,
+          completionRate: 10, // 0-1
+        },
+      ],
+    },
+    selectedDate: new Date(),
+    programmeHabits: [],
+    habitCompletions: [],
+    isSelf: false,
+    onHabitToggle: (
+      programmeHabitId: string,
+      date: Date,
+      completed: boolean
+    ) => {},
+  });
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(() => {
     const date = new Date();
@@ -121,12 +144,19 @@ const TrainerClientsPage = () => {
       setIsLoadingEmails(true);
       startTransition(async () => {
         try {
-          const emailsResult = await readEmail(selectedClient.email, startDate, endDate, [], ["Benefit"]);
+          const emailsResult = await readEmail(
+            selectedClient.email,
+            startDate,
+            endDate,
+            [],
+            ["Benefit"]
+          );
           if (emailsResult.success) {
             setClientEmails(emailsResult.data || []);
           } else {
             toast.error("Failed to load emails", {
-              description: emailsResult.message || "Could not retrieve client emails.",
+              description:
+                emailsResult.message || "Could not retrieve client emails.",
             });
           }
         } catch (error) {
@@ -253,10 +283,13 @@ const TrainerClientsPage = () => {
                         setStartDate(newDate);
                         if (endDate && differenceInDays(endDate, newDate) > 6) {
                           const adjustedEndDate = new Date(newDate);
-                          adjustedEndDate.setDate(adjustedEndDate.getDate() + 6);
+                          adjustedEndDate.setDate(
+                            adjustedEndDate.getDate() + 6
+                          );
                           setEndDate(adjustedEndDate);
                           toast.info("Date Range Adjusted", {
-                            description: "End date adjusted to maintain a 7-day range.",
+                            description:
+                              "End date adjusted to maintain a 7-day range.",
                           });
                         }
                       }
@@ -293,12 +326,18 @@ const TrainerClientsPage = () => {
                     onSelect={(newDate) => {
                       if (newDate) {
                         setEndDate(newDate);
-                        if (startDate && differenceInDays(newDate, startDate) > 6) {
+                        if (
+                          startDate &&
+                          differenceInDays(newDate, startDate) > 6
+                        ) {
                           const adjustedStartDate = new Date(newDate);
-                          adjustedStartDate.setDate(adjustedStartDate.getDate() - 6);
+                          adjustedStartDate.setDate(
+                            adjustedStartDate.getDate() - 6
+                          );
                           setStartDate(adjustedStartDate);
                           toast.info("Date Range Adjusted", {
-                            description: "Start date adjusted to maintain a 7-day range.",
+                            description:
+                              "Start date adjusted to maintain a 7-day range.",
                           });
                         }
                       }
@@ -395,7 +434,10 @@ const TrainerClientsPage = () => {
                 })}
               </ul>
             ) : (
-              <p>No Fitbit activities found for this client or Fitbit is not connected.</p>
+              <p>
+                No Fitbit activities found for this client or Fitbit is not
+                connected.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -405,13 +447,32 @@ const TrainerClientsPage = () => {
         <Card className="mt-8">
           <CardHeader>
             <CardTitle className="text-2xl">Client Habits Summary</CardTitle>
-            <CardDescription>
-              Summary of client's habits will be displayed here.
-            </CardDescription>
+            {!isLoadingClientHabits &&
+              weekViewProps.selectedWeek.days.length > 0 && (
+                <CardDescription>
+                  Summary of client's habits will be displayed here.
+                </CardDescription>
+              )}
           </CardHeader>
           <CardContent>
-            {/* Placeholder for client habits summary content */}
-            <p>Habits data will be loaded and summarized here.</p>
+            {isLoadingClientHabits ? (
+              <Loading
+                title="Loading Client Habits"
+                description="Fetching client's habit data..."
+                size="sm"
+              />
+            ) : weekViewProps.selectedWeek.days.length > 0 ? (
+              <WeekView
+                selectedWeek={weekViewProps.selectedWeek}
+                selectedDate={weekViewProps.selectedDate}
+                programmeHabits={weekViewProps.programmeHabits}
+                habitCompletions={weekViewProps.habitCompletions}
+                isSelf={weekViewProps.isSelf}
+                onHabitToggle={() => {}}
+              />
+            ) : (
+              <p>No habit data found for this client.</p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -437,10 +498,13 @@ const TrainerClientsPage = () => {
               <ul className="space-y-4">
                 {clientEmails.map((email, index) => (
                   <li key={index} className="border p-3 rounded-md">
-                    
                     <p className="font-semibold">Subject: {email.subject}</p>
-                    <p className="text-sm text-muted-foreground">Received: {email.receivedAt}</p>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{email.body}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Received: {email.receivedAt}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {email.body}
+                    </p>
                   </li>
                 ))}
               </ul>

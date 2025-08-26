@@ -197,6 +197,19 @@ const WeeklyHabitsPageContent = () => {
         }
     };
 
+    const handleDateChange = (days: number) => {
+        const newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + days);
+        setCurrentDate(newDate);
+        setSelectedWeek(null); // Reset selected week
+        const queryParams = new URLSearchParams();
+        if (clientId && clientId !== session?.user?.id) {
+            queryParams.set('clientId', clientId);
+        }
+        queryParams.set('date', newDate.toISOString().split('T')[0]);
+        router.push(`/dashboard/client/habits/weekly?${queryParams.toString()}`);
+    };
+
     // Go back to 4-week view
     const goBackToOverview = () => {
         // Navigate back to the overview page
@@ -264,7 +277,7 @@ const WeeklyHabitsPageContent = () => {
 
     // Auto-select week and date when data is loaded
     useEffect(() => {
-        if (programmeHabits.length > 0 && weeks.length > 0 && !selectedWeek) {
+        if (programmeHabits.length > 0 && weeks.length > 0) {
             let targetDate: Date;
             let targetWeekIndex: number = -1;
 
@@ -307,7 +320,7 @@ const WeeklyHabitsPageContent = () => {
                 }
             }
         }
-    }, [autoSelectWeek, weeks, programmeHabits, selectedWeek, dateParam]);
+    }, [autoSelectWeek, weeks, programmeHabits, dateParam]);
 
     if (loading) {
         return (
@@ -324,14 +337,54 @@ const WeeklyHabitsPageContent = () => {
     if (selectedWeek && selectedDate) {
         return (
             <ProtectedRoute requiredRoles={[UserRole.Client, UserRole.Admin, UserRole.SystemAdmin]}>
-                <>
+                <div className="container mx-auto p-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={goBackToOverview}
+                                aria-label="Back to overview"
+                                className="p-0"
+                            >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleDateChange(-7)}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <h2 className="text-2xl font-bold mx-4">
+                                {selectedWeek.days[0]?.date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                })}
+                                - 
+                                {selectedWeek.days[
+                                    selectedWeek.days.length - 1
+                                ]?.date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                })}
+                            </h2>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleDateChange(7)}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="w-10"></div> {/* Placeholder for alignment */}
+                    </div>
                     <WeekView
                         selectedWeek={selectedWeek}
                         selectedDate={selectedDate}
                         programmeHabits={programmeHabits}
                         habitCompletions={habitCompletions}
                         isSelf={isSelf}
-                        onBack={goBackToOverview}
                         onHabitToggle={handleHabitToggle}
                     />
                     {isSubmitting && (
@@ -342,7 +395,7 @@ const WeeklyHabitsPageContent = () => {
                             </div>
                         </div>
                     )}
-                </>
+                </div>
             </ProtectedRoute>
         );
     }

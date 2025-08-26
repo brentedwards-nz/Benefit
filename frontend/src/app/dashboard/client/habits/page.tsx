@@ -329,13 +329,12 @@ const ClientHabitsPage = () => {
         return (
             <ProtectedRoute requiredRoles={[UserRole.Client, UserRole.Admin, UserRole.SystemAdmin]}>
                 <WeekView
-                    selectedWeek={selectedWeek}
-                    selectedDate={selectedDate}
-                    programmeHabits={programmeHabits}
-                    habitCompletions={habitCompletions}
-                    onBack={goBackToOverview}
-                    onHabitToggle={handleHabitToggle}
-                />
+                        selectedWeek={selectedWeek}
+                        selectedDate={selectedDate}
+                        programmeHabits={programmeHabits}
+                        habitCompletions={habitCompletions}
+                        onHabitToggle={handleHabitToggle}
+                    />
             </ProtectedRoute>
         );
     }
