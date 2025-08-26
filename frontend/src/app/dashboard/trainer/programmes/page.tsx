@@ -346,7 +346,7 @@ const Programme = () => {
   return (
     <>
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="bg-muted/50 flex-1 rounded-xl md:min-h-min p-4">
+        <div className="flex-1 rounded-xl md:min-h-min p-4 border">
           <h1 className="text-2xl font-bold mb-4">Programmes</h1>
 
           {/* Programme Selector */}
@@ -690,7 +690,9 @@ const Programme = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(
-                                `/dashboard/trainer/programmes/clients?programmeId=${programme.id}&programmeName=${encodeURIComponent(
+                                `/dashboard/trainer/programmes/clients?programmeId=${
+                                  programme.id
+                                }&programmeName=${encodeURIComponent(
                                   programme.name
                                 )}`
                               );

@@ -41,10 +41,10 @@ export default function Dashboard() {
           <div className="rounded-xl">
             <ProfileCard auth_id={auth_id} />
           </div>
-          <div className="bg-muted/50 rounded-xl" />
-          <div className="bg-muted/50 rounded-xl" />
+          <div className="rounded-xl border" />
+          <div className="rounded-xl border" />
         </div>
-        <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+        <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min border" />
       </div>
     </>
   );

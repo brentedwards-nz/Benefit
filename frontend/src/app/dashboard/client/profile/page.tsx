@@ -12,9 +12,7 @@ import { Loading } from "@/components/ui/loading";
 const Profile = () => {
   const { data: session, status } = useSession();
 
-  const [initialData, setInitialData] = useState<Client | undefined>(
-    undefined
-  );
+  const [initialData, setInitialData] = useState<Client | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
@@ -99,7 +97,7 @@ const Profile = () => {
         steps={[
           "Authenticating user session",
           "Loading profile data",
-          "Preparing profile form"
+          "Preparing profile form",
         ]}
         size="md"
       />
@@ -130,7 +128,7 @@ const Profile = () => {
   return (
     <>
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min">
+        <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min">
           {initialData && (
             <ProfileEditForm
               initialData={initialData}
