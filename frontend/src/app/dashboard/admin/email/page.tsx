@@ -20,7 +20,7 @@ export default async function EmailPage() {
   let error: string | null = null;
 
   try {
-    const emailResult = await readEmail([], ["Benefit"]);
+    const emailResult = await readEmail("", undefined, undefined, [], ["Benefit"]);
 
     if (emailResult.success) {
       if (Array.isArray(emailResult.data)) {
