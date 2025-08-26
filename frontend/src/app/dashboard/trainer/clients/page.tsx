@@ -46,6 +46,8 @@ import {
   ClientForTrainer,
 } from "@/server-actions/trainer/clients/actions";
 import { getClientActivities } from "@/server-actions/fitbit/actions";
+import { readEmail } from "@/server-actions/email/actions";
+import { Email } from "@/server-actions/email/types";
 
 interface Client extends ClientForTrainer {}
 
@@ -57,6 +59,8 @@ const TrainerClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [clientActivities, setClientActivities] = useState<any[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+  const [clientEmails, setClientEmails] = useState<Email[]>([]);
+  const [isLoadingEmails, setIsLoadingEmails] = useState(false);
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(() => {
     const date = new Date();
@@ -109,6 +113,34 @@ const TrainerClientsPage = () => {
     } else {
       setClientActivities([]);
       setIsLoadingActivities(false);
+    }
+  }, [selectedClient, startDate, endDate, startTransition]);
+
+  useEffect(() => {
+    if (selectedClient?.id) {
+      setIsLoadingEmails(true);
+      startTransition(async () => {
+        try {
+          const emailsResult = await readEmail(selectedClient.email, startDate, endDate, [], ["Benefit"]);
+          if (emailsResult.success) {
+            setClientEmails(emailsResult.data || []);
+          } else {
+            toast.error("Failed to load emails", {
+              description: emailsResult.message || "Could not retrieve client emails.",
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch client emails:", error);
+          toast.error("Failed to load emails", {
+            description: "Could not retrieve client emails.",
+          });
+        } finally {
+          setIsLoadingEmails(false);
+        }
+      });
+    } else {
+      setClientEmails([]);
+      setIsLoadingEmails(false);
     }
   }, [selectedClient, startDate, endDate, startTransition]);
 
@@ -216,7 +248,19 @@ const TrainerClientsPage = () => {
                   <Calendar
                     mode="single"
                     selected={startDate}
-                    onSelect={setStartDate}
+                    onSelect={(newDate) => {
+                      if (newDate) {
+                        setStartDate(newDate);
+                        if (endDate && differenceInDays(endDate, newDate) > 6) {
+                          const adjustedEndDate = new Date(newDate);
+                          adjustedEndDate.setDate(adjustedEndDate.getDate() + 6);
+                          setEndDate(adjustedEndDate);
+                          toast.info("Date Range Adjusted", {
+                            description: "End date adjusted to maintain a 7-day range.",
+                          });
+                        }
+                      }
+                    }}
                     initialFocus
                     className="w-full"
                   />
@@ -246,7 +290,19 @@ const TrainerClientsPage = () => {
                   <Calendar
                     mode="single"
                     selected={endDate}
-                    onSelect={setEndDate}
+                    onSelect={(newDate) => {
+                      if (newDate) {
+                        setEndDate(newDate);
+                        if (startDate && differenceInDays(newDate, startDate) > 6) {
+                          const adjustedStartDate = new Date(newDate);
+                          adjustedStartDate.setDate(adjustedStartDate.getDate() - 6);
+                          setStartDate(adjustedStartDate);
+                          toast.info("Date Range Adjusted", {
+                            description: "Start date adjusted to maintain a 7-day range.",
+                          });
+                        }
+                      }
+                    }}
                     initialFocus
                     className="w-full"
                   />
@@ -273,9 +329,9 @@ const TrainerClientsPage = () => {
               <CardTitle className="text-2xl">Fitbit Activities</CardTitle>
               <CardDescription>
                 {startDate && endDate
-                  ? `Last ${
-                      differenceInDays(endDate, startDate) + 1
-                    } days of Fitbit activity.`
+                  ? `${differenceInDays(endDate, startDate) + 1} day${
+                      differenceInDays(endDate, startDate) + 1 === 1 ? "" : "s"
+                    } of Fitbit activity.`
                   : "Select a date range to view Fitbit activity."}
               </CardDescription>
             </CardHeader>
@@ -344,6 +400,56 @@ const TrainerClientsPage = () => {
             </CardContent>
           </Card>
         )}
+
+      {selectedClient && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl">Client Habits Summary</CardTitle>
+            <CardDescription>
+              Summary of client's habits will be displayed here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Placeholder for client habits summary content */}
+            <p>Habits data will be loaded and summarized here.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedClient && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl">Client Emails Summary</CardTitle>
+            {!isLoadingEmails && clientEmails.length === 0 && (
+              <CardDescription>
+                Summary of client's emails will be displayed here.
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            {isLoadingEmails ? (
+              <Loading
+                title="Loading Client Emails"
+                description="Fetching client's email data..."
+                size="sm"
+              />
+            ) : clientEmails.length > 0 ? (
+              <ul className="space-y-4">
+                {clientEmails.map((email, index) => (
+                  <li key={index} className="border p-3 rounded-md">
+                    
+                    <p className="font-semibold">Subject: {email.subject}</p>
+                    <p className="text-sm text-muted-foreground">Received: {email.receivedAt}</p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{email.body}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No emails found for this client.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

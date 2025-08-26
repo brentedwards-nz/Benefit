@@ -18,18 +18,7 @@ import {
 export async function readConnectedOAuthAccounts(): Promise<
   ActionResult<ConnectedOAuthAccount[]>
 > {
-
-
   try {
-    // TODO: Implement NextAuth authentication check
-    // const supabase = await createClient();
-    // const {
-    //   data: { user },
-    // } = await supabase.auth.getUser();
-    // if (!user) {
-    //   throw new Error("Unauthorized: You must be logged in.");
-    // }
-
     const oauthAccounts = await prisma.oAuthServices.findMany({
       select: {
         id: true,
@@ -56,14 +45,20 @@ export async function readConnectedOAuthAccounts(): Promise<
         const accessToken = (account.properties as any)?.accessToken;
         const expiresAt = (account.properties as any)?.expiresAt;
         const scopes = (account.properties as any)?.scopes;
-        const encryptedRefreshToken = (account.properties as any)?.encryptedRefreshToken;
+        const encryptedRefreshToken = (account.properties as any)
+          ?.encryptedRefreshToken;
 
         return {
           id: account.id,
           name: account.name === "gmail" ? connectedEmail! : displayName!, // Set the 'name' for display purposes
           connected_email: connectedEmail,
           displayName: displayName,
-          account_type: account.name === "gmail" ? "Gmail" : (account.name === "fitbit" ? "Fitbit" : "Unknown"), // Dynamically set account type
+          account_type:
+            account.name === "gmail"
+              ? "Gmail"
+              : account.name === "fitbit"
+              ? "Fitbit"
+              : "Unknown", // Dynamically set account type
           access_token: accessToken,
           expires_at: expiresAt ? new Date(expiresAt) : undefined,
           scopes: scopes,
@@ -85,8 +80,9 @@ export async function readConnectedOAuthAccounts(): Promise<
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"
-        }`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -118,28 +114,51 @@ function getEmailBody(payload: any): string {
   return "";
 }
 
-const createGmailQuery = (folders: string[], labels: string[]): string => {
+const createGmailQuery = (
+  folders: string[],
+  labels: string[],
+  clientEmail: string,
+  startDate?: Date,
+  endDate?: Date
+): string => {
   const folderQueries = folders.map((folder) => `in:${folder}`);
   const labelQueries = labels.map((label) => `label:${label}`);
+  const clientEmailQuery = `(to:${clientEmail} OR from:${clientEmail})`;
 
-  const allQueries = [...folderQueries, ...labelQueries];
+  const dateQueries: string[] = [];
+  if (startDate) {
+    dateQueries.push(`after:${startDate.toISOString().split('T')[0].replace(/-/g, '/')}`);
+  }
+  if (endDate) {
+    const nextDay = new Date(endDate);
+    nextDay.setDate(nextDay.getDate() + 1); // Add one day to the end date
+    dateQueries.push(`before:${nextDay.toISOString().split('T')[0].replace(/-/g, '/')}`);
+  }
 
-  if (allQueries.length === 0) {
+  const allQueries = [...folderQueries, ...labelQueries, clientEmailQuery, ...dateQueries];
+
+  // Filter out empty strings from the array before joining
+  const filteredQueries = allQueries.filter(query => query.trim() !== "");
+
+  if (filteredQueries.length === 0) {
     return "";
   }
 
-  const queryString = allQueries.join(" OR ");
+  const queryString = filteredQueries.join(" AND "); // Use AND to combine client email with folders/labels
   return queryString;
 };
 
 export async function readEmail(
+  clientEmail: string,
+  startDate?: Date,
+  endDate?: Date,
   folders: string[] = ["Inbox"],
-  labels: string[] = [""],
+  labels: string[] = ["Benefit"], // Default to "Benefit" label
   usAi: boolean = false
 ): Promise<ActionResult<Email[]>> {
   try {
     // Skip during build time
-    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+    if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
       return {
         success: false,
         message: "Email service not available during build time",
@@ -149,27 +168,28 @@ export async function readEmail(
 
     // Check if there are any Gmail configurations first
     const gmailConfigs = await prisma.oAuthServices.findMany({
-      select: { id: true, properties: true }
+      select: { id: true, properties: true },
     });
 
-    console.log(JSON.stringify(gmailConfigs,null,2));
+    console.log(JSON.stringify(gmailConfigs, null, 2));
 
     if (gmailConfigs.length === 0) {
       return {
         success: false,
-        message: "No Gmail accounts configured. Please connect Gmail in admin settings.",
+        message:
+          "No Gmail accounts configured. Please connect Gmail in admin settings.",
         code: "NO_GMAIL_CONFIG",
       };
     }
-
-    
 
     // Use the authenticated Gmail client utility
     const { gmail, connectedEmail } = await getAuthenticatedGmailClient();
 
     //q: `in:${folder1} OR label:${label1}`,
-    const query: string = createGmailQuery(folders, labels);
+    // Modify createGmailQuery to include clientEmail
+    const query: string = createGmailQuery(folders, labels, clientEmail, startDate, endDate);
 
+    console.log("Gmail API Query:", query); // Add this line for debugging
     // 5. List messages from the specified folder
     const listResponse = await gmail.users.messages.list({
       userId: "me",
@@ -223,12 +243,27 @@ export async function readEmail(
       };
 
       const emailBody = getEmailBody(res.data.payload);
+      const dateHeader = headers.find((h) => h.name === "Date")?.value;
+      let receivedAt: string;
+
+      if (dateHeader) {
+        try {
+          receivedAt = new Date(dateHeader).toLocaleString();
+        } catch (e) {
+          console.warn("Invalid Date header, falling back to internalDate:", dateHeader);
+          receivedAt = res.data.internalDate ? new Date(parseInt(res.data.internalDate)).toLocaleString() : "Unknown Date";
+        }
+      } else {
+        receivedAt = res.data.internalDate ? new Date(parseInt(res.data.internalDate)).toLocaleString() : "Unknown Date";
+      }
+
       if (emailBody.trim().length == 0) {
         const body: string = "Body of email was empty or un-readable";
         return {
           from,
           subject,
           body,
+          receivedAt,
         };
       }
 
@@ -263,6 +298,7 @@ export async function readEmail(
           from,
           subject,
           body,
+          receivedAt,
         };
       } catch (error) {
         // If the AI call fails, return the original email body
@@ -270,13 +306,13 @@ export async function readEmail(
           from,
           subject,
           body: emailBody,
+          receivedAt,
         };
       }
     });
 
     // Now, use Promise.all to wait for all the promises to resolve
     const emails: Email[] = await Promise.all(ePromises);
-
 
     return {
       success: true,
@@ -287,8 +323,9 @@ export async function readEmail(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"
-        }`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"

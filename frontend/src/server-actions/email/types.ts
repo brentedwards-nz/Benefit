@@ -7,6 +7,7 @@ export type Email = {
   from: From;
   subject: string;
   body: string;
+  receivedAt: string;
 };
 
 export type ConnectedOAuthAccount = {
