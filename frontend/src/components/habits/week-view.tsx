@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Lock } from "lucide-react";
 import { toast } from "sonner";
 
-interface ClientHabits {
+export interface ClientHabits {
   id: string;
   completionDate: string;
   completed: boolean;
@@ -24,7 +24,7 @@ interface ClientHabits {
   notes?: string;
 }
 
-interface ProgrammeHabit {
+export interface ProgrammeHabit {
   id: string;
   programme: {
     id: string;

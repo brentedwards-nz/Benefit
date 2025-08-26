@@ -52,6 +52,8 @@ import {
   WeekView,
   WeekViewProps,
   DayData,
+  ProgrammeHabit,
+  ClientHabits,
 } from "@/components/habits/week-view";
 
 interface Client extends ClientForTrainer {}
@@ -181,46 +183,90 @@ const TrainerClientsPage = () => {
   useEffect(() => {
     const clientId = selectedClient?.id || null;
 
+    const calculateCompletionRate = (
+      dayDate: Date,
+      allProgrammeHabits: ProgrammeHabit[],
+      allHabitCompletions: ClientHabits[]
+    ): number => {
+      const dateString = dayDate.toISOString().split("T")[0];
+      const dayCompletions = allHabitCompletions.filter(
+        (c) => c.completionDate.split("T")[0] === dateString
+      );
+
+      const isHabitActiveOnDate = (ph: ProgrammeHabit): boolean => {
+        const s = ph.programme?.startDate
+          ? new Date(
+              new Date(ph.programme.startDate).toISOString().split("T")[0]
+            )
+          : null;
+        const e = ph.programme?.endDate
+          ? new Date(new Date(ph.programme.endDate).toISOString().split("T")[0])
+          : null;
+        if (!s || !e) return true;
+        const d = new Date(dateString);
+        return d >= s && d <= e;
+      };
+
+      const activeHabits = allProgrammeHabits.filter(isHabitActiveOnDate);
+      const completedCount = activeHabits.filter((ph) => {
+        const requiredPerDay = Math.max(1, ph.frequencyPerDay ?? 1);
+        const rec = dayCompletions.find((c) => c.programmeHabitId === ph.id);
+        const times = rec?.timesDone ?? (rec?.completed ? requiredPerDay : 0);
+        return times >= requiredPerDay;
+      }).length;
+
+      return activeHabits.length > 0 ? completedCount / activeHabits.length : 0;
+    };
+
     const fetchData = async () => {
       try {
         setIsLoadingClientHabits(true);
 
-        // Wait for session to be available
         if (!clientId) {
           return;
         }
 
-        // Fetch programme habits
         const habitsResponse = await fetch(
           `/api/client/habits?clientId=${clientId}`
         );
         if (!habitsResponse.ok) {
           return;
         }
+        const programmeHabitsData = await habitsResponse.json();
 
         const start = startDate || new Date();
         const end = endDate || new Date();
+
+        const s = startDate || new Date();
+        s.setDate(s.getDate() + 1);
+        const e = endDate || new Date();
+        e.setDate(e.getDate() + 1);
+
         const completionsResponse = await fetch(
           `/api/client/habits/completions?startDate=${
-            start.toISOString().split("T")[0]
-          }&endDate=${end.toISOString().split("T")[0]}&clientId=${clientId}`
+            s.toISOString().split("T")[0]
+          }&endDate=${e.toISOString().split("T")[0]}&clientId=${clientId}`
         );
         if (!completionsResponse.ok) {
           return;
         }
+        const completionsData = await completionsResponse.json();
 
         const days: DayData[] = [];
         const currentDate = new Date(start);
 
-        // A while loop is often cleaner for date ranges
         while (currentDate <= end) {
+          const completionRate = calculateCompletionRate(
+            currentDate,
+            programmeHabitsData,
+            completionsData
+          );
           days.push({
-            date: new Date(currentDate), // Create a new Date object to avoid modifying the same reference
+            date: new Date(currentDate),
             dayNumber: currentDate.getDate(),
-            isCurrentMonth: true, // You may need a more complex check here
-            completionRate: 0,
+            isCurrentMonth: true,
+            completionRate: completionRate,
           });
-          // Increment the date by one day
           currentDate.setDate(currentDate.getDate() + 1);
         }
 
@@ -228,19 +274,12 @@ const TrainerClientsPage = () => {
           selectedWeek: {
             days: days,
           },
-          selectedDate: new Date(),
-          programmeHabits: await habitsResponse.json(),
-          habitCompletions: await completionsResponse.json(),
+          selectedDate: new Date(start),
+          programmeHabits: programmeHabitsData,
+          habitCompletions: completionsData,
           isSelf: false,
           onHabitToggle: () => {},
         };
-
-        console.log("-------------------------------------------------");
-        console.log(JSON.stringify(viewProps.programmeHabits, null, 2));
-        console.log("-------------------------------------------------");
-        console.log(JSON.stringify(viewProps.habitCompletions, null, 2));
-        console.log("-------------------------------------------------");
-
         setWeekViewProps(viewProps);
       } catch (error) {
         console.error("Error fetching data:", error);
