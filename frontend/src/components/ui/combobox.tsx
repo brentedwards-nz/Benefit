@@ -63,7 +63,7 @@ export function Combobox({
             }}
           />
           <CommandEmpty>{noResultsText}</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="max-h-56 overflow-y-auto">
             {options.map((option) => (
               <CommandItem
                 key={option.value}
