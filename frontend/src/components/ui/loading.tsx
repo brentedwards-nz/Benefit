@@ -26,7 +26,7 @@ export function Loading({
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center min-h-[100vh]">
+        <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
             <div className="text-center space-y-6 max-w-md">
                 {/* Loading Spinner */}
                 <div className="flex justify-center">

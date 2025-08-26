@@ -313,29 +313,26 @@ const TrainerClientsPage = () => {
         </Card>
       )}
 
-      {selectedClient && isLoadingActivities && (
-        <Loading
-          title="Loading Fitbit Activities"
-          description="Fetching client's Fitbit data..."
-          size="lg"
-        />
-      )}
-
-      {selectedClient &&
-        !isLoadingActivities &&
-        clientActivities.length > 0 && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="text-2xl">Fitbit Activities</CardTitle>
+      {selectedClient && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl">Fitbit Activities</CardTitle>
+            {clientActivities.length > 0 && startDate && endDate && (
               <CardDescription>
-                {startDate && endDate
-                  ? `${differenceInDays(endDate, startDate) + 1} day${
-                      differenceInDays(endDate, startDate) + 1 === 1 ? "" : "s"
-                    } of Fitbit activity.`
-                  : "Select a date range to view Fitbit activity."}
+                {`${differenceInDays(endDate, startDate) + 1} day${
+                  differenceInDays(endDate, startDate) + 1 === 1 ? "" : "s"
+                } of Fitbit activity.`}
               </CardDescription>
-            </CardHeader>
-            <CardContent>
+            )}
+          </CardHeader>
+          <CardContent>
+            {isLoadingActivities ? (
+              <Loading
+                title="Loading Fitbit Activities"
+                description="Fetching client's Fitbit data..."
+                size="sm"
+              />
+            ) : clientActivities.length > 0 ? (
               <ul className="flex flex-wrap gap-4">
                 {clientActivities.map((activity, index) => {
                   const IconComponent: LucideIcon | undefined = {
@@ -397,9 +394,12 @@ const TrainerClientsPage = () => {
                   );
                 })}
               </ul>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p>No Fitbit activities found for this client or Fitbit is not connected.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {selectedClient && (
         <Card className="mt-8">
