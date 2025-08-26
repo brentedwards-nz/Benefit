@@ -15,7 +15,7 @@ export interface EmailCardProps {
 
 export async function EmailCard({ email }: EmailCardProps) {
   return (
-    <Card className="w-full  bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-col items-center">
         <CardTitle className="text-2xl">{email.from.name}</CardTitle>
       </CardHeader>

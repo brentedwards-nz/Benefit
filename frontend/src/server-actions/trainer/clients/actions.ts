@@ -9,9 +9,10 @@ export interface ClientForTrainer {
   id: string;
   name: string;
   email: string;
-  phone?: string; // Assuming phone might be part of contactInfo or added directly
-  dateOfBirth?: string; // Date stored as string for simplicity in transfer
+  phone?: string;
+  dateOfBirth?: string;
   avatarUrl?: string;
+  gender?: string;
 }
 
 export async function fetchClientsForTrainer(query?: string): Promise<ClientForTrainer[]> {
@@ -66,6 +67,7 @@ export async function fetchClientsForTrainer(query?: string): Promise<ClientForT
         avatarUrl: true,
         contactInfo: true,
         authId: true,
+        gender: true,
       },
       orderBy: {
         firstName: "asc",
@@ -107,6 +109,7 @@ export async function fetchClientsForTrainer(query?: string): Promise<ClientForT
             phone: phone || undefined,
             dateOfBirth: client.birthDate?.toISOString().split('T')[0],
             avatarUrl: client.avatarUrl || undefined,
+            gender: client.gender || undefined,
         };
     }));
 

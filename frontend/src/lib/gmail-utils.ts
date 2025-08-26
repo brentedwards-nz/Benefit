@@ -52,34 +52,38 @@ export async function getAuthenticatedGmailClient() {
         process.env.GOOGLE_GMAIL_CLIENT_REDIRECT_URI!
     );
 
+    const expiryDate = systemConfig.expiresAt ? new Date(systemConfig.expiresAt).getTime() : undefined;
+
     // Set credentials
     oauth2Client.setCredentials({
         access_token: systemConfig.accessToken,
         refresh_token: refreshToken,
-        expiry_date: systemConfig.expiresAt,
+        expiry_date: expiryDate,
     });
 
     // Check if token needs refreshing
-    if (systemConfig.expiresAt < new Date()) {
-
-
+    if (expiryDate && expiryDate < Date.now()) {
         try {
             // Refresh the token
             const { credentials } = await oauth2Client.refreshAccessToken();
 
-            // Update the database with new access token
+            // Update the database with new access token and expiry
+            const newExpiresAt = credentials.expiry_date ? new Date(credentials.expiry_date) : null;
+
             await prisma.oAuthServices.update({
                 where: { id: gmailService.id },
                 data: {
                     properties: {
                         ...systemConfig,
                         accessToken: credentials.access_token!,
-                        expiresAt: new Date(credentials.expiry_date!),
+                        expiresAt: newExpiresAt,
                     },
                     updatedAt: new Date(),
                 },
             });
 
+            // Also update the in-memory client
+            oauth2Client.setCredentials(credentials);
 
         } catch (error) {
             console.error('Failed to refresh access token:', error);

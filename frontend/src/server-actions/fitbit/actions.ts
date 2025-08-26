@@ -20,7 +20,7 @@ interface FitbitSettingProperty extends JsonObject {
   encrypted?: boolean;
 }
 
-export async function getClientActivities(clientId: string, endDate: Date) {
+export async function getClientActivities(clientId: string, startDate: Date, endDate: Date) {
   const client = await prisma.client.findUnique({
     where: { id: clientId },
     select: { settings: true },
@@ -143,11 +143,11 @@ export async function getClientActivities(clientId: string, endDate: Date) {
   });
 
   if (activityLogListResponse.data && activityLogListResponse.data.activities) {
-    const sevenDaysAgo = addDays(endDate, -7);
+    const filterStartDate = startDate;
 
     activityLogListResponse.data.activities.forEach((activity: any) => {
       const activityDate = new Date(activity.startTime);
-      if (activityDate < sevenDaysAgo) {
+      if (activityDate < filterStartDate) {
         return; // Skip activities older than 7 days
       }
 
