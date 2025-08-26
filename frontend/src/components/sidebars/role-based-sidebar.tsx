@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { GalleryVerticalEnd } from "lucide-react";
+import { GalleryVerticalEnd, PanelLeft } from "lucide-react"; // Added PanelLeft
 import { useSession } from "next-auth/react";
 import { UserRole } from "@prisma/client";
 
@@ -17,6 +17,8 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
     SidebarRail,
+    SidebarFooter, // Added SidebarFooter
+    useSidebar, // Added useSidebar
 } from "@/components/ui/sidebar";
 
 /**
@@ -263,6 +265,16 @@ export const RoleBasedSidebar = React.forwardRef<
                                 ) : null}
                             </SidebarMenuItem>
                         ))}
+                    </SidebarMenu>
+                </SidebarGroup>
+                <SidebarGroup>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" onClick={useSidebar().toggleSidebar}>
+                                <PanelLeft />
+                                <span>Close Sidebar</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
