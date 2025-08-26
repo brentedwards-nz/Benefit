@@ -232,7 +232,7 @@ export function SignInCard() {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-3 md:space-y-6">
         <form>
           <FormComponent />
         </form>

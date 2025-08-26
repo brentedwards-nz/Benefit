@@ -87,10 +87,8 @@ export default async function Index() {
 
         <footer className="mt-auto text-sm text-foreground/60 border-t border-foreground/10 pt-6">
           <p>
-            &copy; {new Date().getFullYear()} Bene-Fit Wellness Solutions. All
-            rights reserved.
+            &copy; {new Date().getFullYear()} Bene-Fit Wellness Solutions.
           </p>
-          <p className="mt-2">Powered by Next.js and NextAuth.js</p>
         </footer>
       </div>
     </div>

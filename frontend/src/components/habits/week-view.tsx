@@ -251,8 +251,8 @@ export const WeekView = ({
                                             <div
                                                 key={habit.id}
                                                 className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${isDisabledForEdit ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${isCompleted
-                                                    ? 'bg-green-50 border-green-200'
-                                                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                                                    ? 'bg-green-50 border-green-200 dark:bg-green-900 dark:border-green-800'
+                                                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
                                                     }`}
                                                 onClick={() => {
                                                     if (isDisabledForEdit) {
@@ -266,7 +266,7 @@ export const WeekView = ({
                                                 }}
                                             >
                                                 <div className="flex-1">
-                                                    <h4 className={`font-medium ${isCompleted ? 'text-green-800' : 'text-gray-800'}`}>
+                                                    <h4 className={`font-medium ${isCompleted ? 'text-green-800 dark:text-green-300' : 'text-gray-800 dark:text-gray-300'}`}>
                                                         {habit.habit?.title || 'Unknown Habit'}
                                                     </h4>
                                                     <p className="text-sm text-muted-foreground">
@@ -294,7 +294,7 @@ export const WeekView = ({
                                                     >
                                                         −
                                                     </Button>
-                                                    <div className="text-sm tabular-nums min-w-[2.5rem] text-center">{timesDone}/{requiredPerDay}</div>
+                                                    <div className={`text-sm tabular-nums min-w-[2.5rem] text-center ${isCompleted ? 'text-green-800 dark:text-green-300' : 'text-gray-800 dark:text-gray-300'}`}>{timesDone}/{requiredPerDay}</div>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
