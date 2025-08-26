@@ -48,7 +48,11 @@ import {
 import { getClientActivities } from "@/server-actions/fitbit/actions";
 import { readEmail } from "@/server-actions/email/actions";
 import { Email } from "@/server-actions/email/types";
-import { WeekView, WeekViewProps } from "@/components/habits/week-view";
+import {
+  WeekView,
+  WeekViewProps,
+  DayData,
+} from "@/components/habits/week-view";
 
 interface Client extends ClientForTrainer {}
 
@@ -173,6 +177,80 @@ const TrainerClientsPage = () => {
       setIsLoadingEmails(false);
     }
   }, [selectedClient, startDate, endDate, startTransition]);
+
+  useEffect(() => {
+    const clientId = selectedClient?.id || null;
+
+    const fetchData = async () => {
+      try {
+        setIsLoadingClientHabits(true);
+
+        // Wait for session to be available
+        if (!clientId) {
+          return;
+        }
+
+        // Fetch programme habits
+        const habitsResponse = await fetch(
+          `/api/client/habits?clientId=${clientId}`
+        );
+        if (!habitsResponse.ok) {
+          return;
+        }
+
+        const start = startDate || new Date();
+        const end = endDate || new Date();
+        const completionsResponse = await fetch(
+          `/api/client/habits/completions?startDate=${
+            start.toISOString().split("T")[0]
+          }&endDate=${end.toISOString().split("T")[0]}&clientId=${clientId}`
+        );
+        if (!completionsResponse.ok) {
+          return;
+        }
+
+        const days: DayData[] = [];
+        const currentDate = new Date(start);
+
+        // A while loop is often cleaner for date ranges
+        while (currentDate <= end) {
+          days.push({
+            date: new Date(currentDate), // Create a new Date object to avoid modifying the same reference
+            dayNumber: currentDate.getDate(),
+            isCurrentMonth: true, // You may need a more complex check here
+            completionRate: 0,
+          });
+          // Increment the date by one day
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const viewProps: WeekViewProps = {
+          selectedWeek: {
+            days: days,
+          },
+          selectedDate: new Date(),
+          programmeHabits: await habitsResponse.json(),
+          habitCompletions: await completionsResponse.json(),
+          isSelf: false,
+          onHabitToggle: () => {},
+        };
+
+        console.log("-------------------------------------------------");
+        console.log(JSON.stringify(viewProps.programmeHabits, null, 2));
+        console.log("-------------------------------------------------");
+        console.log(JSON.stringify(viewProps.habitCompletions, null, 2));
+        console.log("-------------------------------------------------");
+
+        setWeekViewProps(viewProps);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoadingClientHabits(false);
+      }
+    };
+
+    fetchData();
+  }, [endDate, startDate, selectedClient]);
 
   const calculateAge = (dateOfBirth: string | undefined) => {
     if (!dateOfBirth) return "N/A";

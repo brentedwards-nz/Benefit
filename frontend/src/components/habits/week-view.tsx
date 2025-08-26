@@ -40,7 +40,7 @@ interface ProgrammeHabit {
   frequencyPerDay?: number | null;
 }
 
-interface DayData {
+export interface DayData {
   date: Date;
   dayNumber: number;
   isCurrentMonth: boolean;
