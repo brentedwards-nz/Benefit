@@ -306,7 +306,7 @@ const TrainerClientsPage = () => {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-2xl">Find a Client</CardTitle>
-          <div className="pt-4">
+          <div className="pt-4 min-w-0">
             <Combobox
               options={clients.map((client) => ({
                 value: client.id,
