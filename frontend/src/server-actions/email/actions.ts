@@ -127,12 +127,20 @@ const createGmailQuery = (
 
   const dateQueries: string[] = [];
   if (startDate) {
-    dateQueries.push(`after:${startDate.toISOString().split('T')[0].replace(/-/g, '/')}`);
+    const year = startDate.getFullYear();
+    const month = startDate.getMonth();
+    const day = startDate.getDate();
+    // Create a UTC date for the start of the day
+    const utcStartDate = new Date(Date.UTC(year, month, day));
+    dateQueries.push(`after:${utcStartDate.toISOString().split('T')[0].replace(/-/g, '/')}`);
   }
   if (endDate) {
-    const nextDay = new Date(endDate);
-    nextDay.setDate(nextDay.getDate() + 1); // Add one day to the end date
-    dateQueries.push(`before:${nextDay.toISOString().split('T')[0].replace(/-/g, '/')}`);
+    const year = endDate.getFullYear();
+    const month = endDate.getMonth();
+    const day = endDate.getDate();
+    // Create a UTC date for the end of the day (by taking the next day's start)
+    const utcNextDay = new Date(Date.UTC(year, month, day + 1));
+    dateQueries.push(`before:${utcNextDay.toISOString().split('T')[0].replace(/-/g, '/')}`);
   }
 
   const allQueries = [...folderQueries, ...labelQueries, clientEmailQuery, ...dateQueries];
