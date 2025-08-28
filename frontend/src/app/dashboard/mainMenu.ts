@@ -87,6 +87,10 @@ const menuDefinition: NavData = {
           title: "Chatbot",
           url: "/dashboard/experimental/chatbot",
         },
+        {
+          title: "Habits",
+          url: "/dashboard/experimental/habits",
+        },
       ],
     },
   ],

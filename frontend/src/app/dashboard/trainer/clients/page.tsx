@@ -90,10 +90,7 @@ const TrainerClientsPage = () => {
   });
 
   const [startDate, setStartDate] = useState<Date | undefined>(() => {
-    const today = startOfDay(new Date()); // Use startOfDay from date-fns
-    const start = new Date(today); // Create a new Date object from the start of today
-    start.setDate(start.getDate() - 6); // 7 days range including today
-    return start;
+    return startOfDay(new Date()); // Normalize to start of today
   });
 
   useEffect(() => {
@@ -234,52 +231,54 @@ const TrainerClientsPage = () => {
         const programmeHabitsData = await habitsResponse.json();
 
         // Create new Date objects to avoid mutating state
-            const startForApi = startDate ? new Date(startDate) : new Date();
-            const endForApi = endDate ? new Date(endDate) : new Date();
+        const startForApi = startDate ? new Date(startDate) : new Date();
+        const endForApi = endDate ? new Date(endDate) : new Date();
 
-            // Adjust for API, but on copies
-            startForApi.setDate(startForApi.getDate() + 1);
-            endForApi.setDate(endForApi.getDate() + 1);
+        // Adjust for API, but on copies
+        startForApi.setDate(startForApi.getDate() + 1);
+        endForApi.setDate(endForApi.getDate() + 1);
 
-            const completionsResponse = await fetch(
-              `/api/client/habits/completions?startDate=${
-                startForApi.toISOString().split("T")[0]
-              }&endDate=${endForApi.toISOString().split("T")[0]}&clientId=${clientId}`
-            );
-            if (!completionsResponse.ok) {
-              return;
-            }
-            const completionsData = await completionsResponse.json();
+        const completionsResponse = await fetch(
+          `/api/client/habits/completions?startDate=${
+            startForApi.toISOString().split("T")[0]
+          }&endDate=${
+            endForApi.toISOString().split("T")[0]
+          }&clientId=${clientId}`
+        );
+        if (!completionsResponse.ok) {
+          return;
+        }
+        const completionsData = await completionsResponse.json();
 
-            const days: DayData[] = [];
-            const currentDate = new Date(startDate || new Date()); // Use startDate directly for display logic
-            const loopEndDate = endDate || new Date(); // Use endDate directly for display logic
+        const days: DayData[] = [];
+        const currentDate = new Date(startForApi || new Date()); // Use startDate directly for display logic
+        const loopEndDate = endForApi || new Date(); // Use endDate directly for display logic
 
-            while (currentDate <= loopEndDate) {
-              const completionRate = calculateCompletionRate(
-                currentDate,
-                programmeHabitsData,
-                completionsData
-              );
-              days.push({
-                date: new Date(currentDate),
-                dayNumber: currentDate.getDate(),
-                isCurrentMonth: true,
-                completionRate: completionRate,
-              });
-              currentDate.setDate(currentDate.getDate() + 1);
-            }
+        while (currentDate <= loopEndDate) {
+          const completionRate = calculateCompletionRate(
+            currentDate,
+            programmeHabitsData,
+            completionsData
+          );
+          days.push({
+            date: new Date(currentDate),
+            dayNumber: currentDate.getDate(),
+            isCurrentMonth: true,
+            completionRate: completionRate,
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
 
-            const viewProps: WeekViewProps = {
-              selectedWeek: {
-                days: days,
-              },
-              selectedDate: new Date(startDate || new Date()), // Use startDate directly
-              programmeHabits: programmeHabitsData,
-              habitCompletions: completionsData,
-              isSelf: false,
-              onHabitToggle: () => {},
-            };
+        const viewProps: WeekViewProps = {
+          selectedWeek: {
+            days: days,
+          },
+          selectedDate: new Date(startDate || new Date()), // Use startDate directly
+          programmeHabits: programmeHabitsData,
+          habitCompletions: completionsData,
+          isSelf: false,
+          onHabitToggle: () => {},
+        };
         setWeekViewProps(viewProps);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -374,7 +373,10 @@ const TrainerClientsPage = () => {
           <CardContent className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Label>Start Date</Label>
-              <Popover open={isStartDatePopoverOpen} onOpenChange={setIsStartDatePopoverOpen}>
+              <Popover
+                open={isStartDatePopoverOpen}
+                onOpenChange={setIsStartDatePopoverOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
@@ -408,12 +410,15 @@ const TrainerClientsPage = () => {
                         }
 
                         setStartDate(normalizedDate);
-                        if (endDate && differenceInDays(endDate, normalizedDate) > 6) {
+                        if (
+                          endDate &&
+                          differenceInDays(endDate, normalizedDate) > 6
+                        ) {
                           const adjustedEndDate = new Date(normalizedDate);
                           adjustedEndDate.setDate(
-                            adjustedEndDate.getDate() + 7
+                            adjustedEndDate.getDate() + 6
                           );
-                          setEndDate(adjustedEndDate);
+                          setEndDate(endOfDay(adjustedEndDate));
                           toast.info("Date Range Adjusted", {
                             description:
                               "End date adjusted to maintain a 7-day range.",
@@ -424,13 +429,17 @@ const TrainerClientsPage = () => {
                     }}
                     className="w-full"
                     disableTodayHighlight
+                    weekStartsOn={1}
                   />
                 </PopoverContent>
               </Popover>
             </div>
             <div className="flex-1">
               <Label>End Date</Label>
-              <Popover open={isEndDatePopoverOpen} onOpenChange={setIsEndDatePopoverOpen}>
+              <Popover
+                open={isEndDatePopoverOpen}
+                onOpenChange={setIsEndDatePopoverOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
@@ -474,11 +483,39 @@ const TrainerClientsPage = () => {
                       }
                     }}
                     className="w-full"
+                    weekStartsOn={1}
                   />
                 </PopoverContent>
               </Popover>
             </div>
-            
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedClient && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl">Client Habits Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingClientHabits ? (
+              <Loading
+                title="Loading Client Habits"
+                description="Fetching client's habit data..."
+                size="sm"
+              />
+            ) : weekViewProps.selectedWeek.days.length > 0 ? (
+              <WeekView
+                selectedWeek={weekViewProps.selectedWeek}
+                selectedDate={weekViewProps.selectedDate}
+                programmeHabits={weekViewProps.programmeHabits}
+                habitCompletions={weekViewProps.habitCompletions}
+                isSelf={weekViewProps.isSelf}
+                onHabitToggle={() => {}}
+              />
+            ) : (
+              <p>No habit data found for this client.</p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -569,35 +606,6 @@ const TrainerClientsPage = () => {
                 No Fitbit activities found for this client or Fitbit is not
                 connected.
               </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedClient && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">Client Habits Summary</CardTitle>
-            
-          </CardHeader>
-          <CardContent>
-            {isLoadingClientHabits ? (
-              <Loading
-                title="Loading Client Habits"
-                description="Fetching client's habit data..."
-                size="sm"
-              />
-            ) : weekViewProps.selectedWeek.days.length > 0 ? (
-              <WeekView
-                selectedWeek={weekViewProps.selectedWeek}
-                selectedDate={weekViewProps.selectedDate}
-                programmeHabits={weekViewProps.programmeHabits}
-                habitCompletions={weekViewProps.habitCompletions}
-                isSelf={weekViewProps.isSelf}
-                onHabitToggle={() => {}}
-              />
-            ) : (
-              <p>No habit data found for this client.</p>
             )}
           </CardContent>
         </Card>
