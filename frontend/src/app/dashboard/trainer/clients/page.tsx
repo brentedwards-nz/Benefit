@@ -28,7 +28,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format, differenceInDays, startOfDay, endOfDay, startOfWeek, endOfWeek } from "date-fns";
+import {
+  format,
+  differenceInDays,
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+} from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   Dumbbell,
@@ -397,18 +404,10 @@ const TrainerClientsPage = () => {
                       if (newDate) {
                         const normalizedDate = startOfDay(newDate);
 
-                        // If new startDate is after endDate, cancel operation and show message
-                        if (endDate && normalizedDate > endDate) {
-                          toast.error("Invalid Date Selection", {
-                            description: "Start date cannot be after end date.",
-                          });
-                          return; // Exit without setting startDate
-                        }
-
                         setStartDate(normalizedDate);
                         if (
                           endDate &&
-                          differenceInDays(endDate, normalizedDate) > 6
+                          Math.abs(differenceInDays(endDate, normalizedDate)) > 6 || normalizedDate > endDate
                         ) {
                           const adjustedEndDate = new Date(normalizedDate);
                           adjustedEndDate.setDate(
@@ -424,7 +423,6 @@ const TrainerClientsPage = () => {
                       }
                     }}
                     className="w-full"
-                    disableTodayHighlight
                     weekStartsOn={1}
                   />
                 </PopoverContent>
@@ -463,13 +461,13 @@ const TrainerClientsPage = () => {
                         setEndDate(normalizedDate);
                         if (
                           startDate &&
-                          differenceInDays(normalizedDate, startDate) > 6
+                          Math.abs(differenceInDays(normalizedDate, startDate)) > 6 || normalizedDate < startDate
                         ) {
                           const adjustedStartDate = new Date(normalizedDate);
                           adjustedStartDate.setDate(
                             adjustedStartDate.getDate() - 6
                           );
-                          setStartDate(adjustedStartDate);
+                          setStartDate(startOfDay(adjustedStartDate));
                           toast.info("Date Range Adjusted", {
                             description:
                               "Start date adjusted to maintain a 7-day range.",
