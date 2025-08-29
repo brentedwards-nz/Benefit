@@ -28,7 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format, differenceInDays, startOfDay, endOfDay } from "date-fns";
+import { format, differenceInDays, startOfDay, endOfDay, startOfWeek, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   Dumbbell,
@@ -86,11 +86,11 @@ const TrainerClientsPage = () => {
   const [isStartDatePopoverOpen, setIsStartDatePopoverOpen] = useState(false);
   const [isEndDatePopoverOpen, setIsEndDatePopoverOpen] = useState(false);
   const [endDate, setEndDate] = useState<Date | undefined>(() => {
-    return endOfDay(new Date()); // Use endOfDay from date-fns
+    return endOfDay(endOfWeek(new Date(), { weekStartsOn: 1 }));
   });
 
   const [startDate, setStartDate] = useState<Date | undefined>(() => {
-    return startOfDay(new Date()); // Normalize to start of today
+    return startOfDay(startOfWeek(new Date(), { weekStartsOn: 1 }));
   });
 
   useEffect(() => {
@@ -233,10 +233,6 @@ const TrainerClientsPage = () => {
         // Create new Date objects to avoid mutating state
         const startForApi = startDate ? new Date(startDate) : new Date();
         const endForApi = endDate ? new Date(endDate) : new Date();
-
-        // Adjust for API, but on copies
-        startForApi.setDate(startForApi.getDate() + 1);
-        endForApi.setDate(endForApi.getDate() + 1);
 
         const completionsResponse = await fetch(
           `/api/client/habits/completions?startDate=${
