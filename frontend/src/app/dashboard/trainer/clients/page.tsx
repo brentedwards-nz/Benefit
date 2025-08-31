@@ -407,7 +407,7 @@ const TrainerClientsPage = () => {
                         setStartDate(normalizedDate);
                         if (
                           endDate &&
-                          Math.abs(differenceInDays(endDate, normalizedDate)) > 6 || normalizedDate > endDate
+                          (Math.abs(differenceInDays(endDate, normalizedDate)) > 6 || normalizedDate > endDate)
                         ) {
                           const adjustedEndDate = new Date(normalizedDate);
                           adjustedEndDate.setDate(
@@ -461,7 +461,7 @@ const TrainerClientsPage = () => {
                         setEndDate(normalizedDate);
                         if (
                           startDate &&
-                          Math.abs(differenceInDays(normalizedDate, startDate)) > 6 || normalizedDate < startDate
+                          (Math.abs(differenceInDays(normalizedDate, startDate)) > 6 || normalizedDate < startDate)
                         ) {
                           const adjustedStartDate = new Date(normalizedDate);
                           adjustedStartDate.setDate(

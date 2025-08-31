@@ -72,6 +72,7 @@ model Client {
   // Relationships
   programmeEnrolments ProgrammeEnrolment[]
   habitCompletions    ClientHabits[]
+  transactions        ClientTransaction[]
 }
 
 model Programme {
@@ -106,25 +107,26 @@ model ProgrammeTemplate {
 }
 
 model ProgrammeEnrolment {
-  id                  String             @id @default(cuid())
+  id                  String              @id @default(cuid())
   programId           String
   clientId            String
   notes               String?
   adhocData           Json?
-  createdAt           DateTime?          @default(now()) @db.Timestamp(6)
-  updatedAt           DateTime?          @default(now()) @db.Timestamp(6)
+  createdAt           DateTime?           @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime?           @default(now()) @db.Timestamp(6)
   programmeTemplateId String?
-  programme           Programme          @relation(fields: [programId], references: [id], onDelete: Cascade)
-  ProgrammeTemplate   ProgrammeTemplate? @relation(fields: [programmeTemplateId], references: [id])
-  client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  programme           Programme           @relation(fields: [programId], references: [id], onDelete: Cascade)
+  ProgrammeTemplate   ProgrammeTemplate?  @relation(fields: [programmeTemplateId], references: [id])
+  client              Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  transactions        ClientTransaction[]
 }
 
 model OAuthServices {
-  id          String    @id @default(cuid())
-  name        String
-  properties  Json
-  createdAt   DateTime? @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime? @default(now()) @db.Timestamptz(6)
+  id         String    @id @default(cuid())
+  name       String
+  properties Json
+  createdAt  DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime? @default(now()) @db.Timestamptz(6)
 }
 
 model Habit {
@@ -188,6 +190,18 @@ model ClientHabits {
   @@unique([programmeHabitId, clientId, completionDate]) // One completion per habit per client per day
 }
 
+enum TransactionStatus {
+  Pending
+  Complete
+}
+
+enum TransactionType {
+  Invoice
+  Payment
+  CreditNote
+  Adjustment
+}
+
 enum UserRole {
   SystemAdmin
   Admin
@@ -200,4 +214,21 @@ enum Gender {
   Female
   Other
   PreferNotToSay
+}
+
+model ClientTransaction {
+  id                   String   @id @default(cuid())
+  clientId             String
+  programmeEnrolmentId String?
+  transactionDate      DateTime @default(now())
+  description          String
+  amount               Decimal  @default(0)
+  taxAmount            Decimal  @default(0)
+  total                Decimal  @default(0)
+  taxRate              Decimal  @default(0.125)
+
+  status             TransactionStatus   @default(Pending)
+  transactionType    TransactionType
+  client             Client              @relation(fields: [clientId], references: [id])
+  programmeEnrolment ProgrammeEnrolment? @relation(fields: [programmeEnrolmentId], references: [id])
 }

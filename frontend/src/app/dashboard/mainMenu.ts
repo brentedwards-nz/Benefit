@@ -1,5 +1,4 @@
 import { NavData } from "@/components/sidebars/role-based-sidebar";
-import { UserRole } from "@prisma/client";
 
 const menuDefinition: NavData = {
   navMain: [
@@ -7,12 +6,12 @@ const menuDefinition: NavData = {
       title: "Home",
       url: "/dashboard",
       items: [],
-      roles: [UserRole.SystemAdmin, UserRole.Admin, UserRole.Client], // All authenticated users
+      roles: ["SystemAdmin", "Admin", "Client"], // All authenticated users
     },
     {
       title: "Client",
       url: "/dashboard/client",
-      roles: [UserRole.SystemAdmin, UserRole.Admin, UserRole.Client], // All authenticated users
+      roles: ["SystemAdmin", "Admin", "Client"], // All authenticated users
       items: [
         {
           title: "Profile",
@@ -36,7 +35,7 @@ const menuDefinition: NavData = {
     {
       title: "Trainer",
       url: "/dashboard/trainer",
-      roles: [UserRole.SystemAdmin, UserRole.Admin],
+      roles: ["SystemAdmin", "Admin"],
       items: [
         {
           title: "Clients",
@@ -51,7 +50,7 @@ const menuDefinition: NavData = {
     {
       title: "Admin",
       url: "/dashboard/admin",
-      roles: [UserRole.SystemAdmin, UserRole.Admin], // Only SystemAdmin and Admin
+      roles: ["SystemAdmin", "Admin"], // Only SystemAdmin and Admin
       items: [
         {
           title: "Email",
@@ -65,12 +64,16 @@ const menuDefinition: NavData = {
           title: "Habits",
           url: "/dashboard/admin/habits",
         },
+        {
+          title: "Transactions",
+          url: "/dashboard/admin/transactions",
+        },
       ],
     },
     {
       title: "Settings",
       url: "/dashboard/settings",
-      roles: [UserRole.SystemAdmin, UserRole.Admin], // Only SystemAdmin
+      roles: ["SystemAdmin", "Admin"], // Only SystemAdmin
       items: [
         {
           title: "OAuth Settings",
@@ -81,7 +84,7 @@ const menuDefinition: NavData = {
     {
       title: "Experimental",
       url: "/dashboard/experimental",
-      roles: [UserRole.SystemAdmin], // Only SystemAdmin
+      roles: ["SystemAdmin"], // Only SystemAdmin
       items: [
         {
           title: "Chatbot",

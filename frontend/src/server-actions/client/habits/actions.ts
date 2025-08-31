@@ -130,6 +130,7 @@ export async function readClientHabitsByDateRange(
 interface Programme {
   id: string;
   name: string;
+  humanReadableId: string;
   startDate: Date;
   endDate: Date;
 }
@@ -195,6 +196,7 @@ async function clientProgrammeEnrolmentsbyDateRange(
     const programmes: Programme[] = programmesResult.map((value) => ({
       id: value.programme.id,
       name: value.programme.name,
+      humanReadableId: value.programme.humanReadableId,
       startDate: value.programme.startDate,
       endDate: value.programme.endDate ?? new Date(),
     }));

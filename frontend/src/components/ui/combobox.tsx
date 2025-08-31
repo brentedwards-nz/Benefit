@@ -25,7 +25,8 @@ interface ComboboxProps {
   placeholder?: string;
   searchPlaceholder?: string;
   noResultsText?: string;
-  onSearchChange?: (search: string) => void; // Add this prop
+  onSearchChange?: (search: string) => void;
+  modal?: boolean;
 }
 
 export function Combobox({
@@ -35,18 +36,19 @@ export function Combobox({
   placeholder = "Select option...",
   searchPlaceholder = "Search options...",
   noResultsText = "No option found.",
-  onSearchChange, // Destructure the new prop
+  onSearchChange,
+  modal = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={modal}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className={cn("w-full justify-between", !value && "text-muted-foreground")}
         >
           {value ? (
             <span className="block truncate flex-1">

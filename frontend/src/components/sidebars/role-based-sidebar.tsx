@@ -194,9 +194,13 @@ export const RoleBasedSidebar = React.forwardRef<
     const { data: session } = useSession();
     const [currentPathname, setCurrentPathname] = React.useState<string>("");
     const [menuItems, setMenuItems] = React.useState<NavData>({ navMain: [] });
+    const [isMenuLoaded, setIsMenuLoaded] = React.useState(false);
 
     // Get user roles from session
     const userRoles = session?.user?.roles || [];
+
+    // Call useSidebar unconditionally
+    const sidebarContext = useSidebar();
 
     React.useEffect(() => {
         if (typeof window !== "undefined") {
@@ -212,74 +216,79 @@ export const RoleBasedSidebar = React.forwardRef<
             const filteredMenu = filterMenuByRoles(processedMenu, userRoles);
             const enabledMenu = filterMenuByEnabled(filteredMenu)
             setMenuItems(enabledMenu);
+            setIsMenuLoaded(true);
         }
     }, [data, session?.user?.roles]);
 
     return (
-        <Sidebar {...props} ref={ref}>
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <a href="#">
-                                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                                    <GalleryVerticalEnd className="size-4" />
-                                </div>
-                                <div className="flex flex-col gap-0.5 leading-none">
-                                    <span className="font-medium">Bene-Fit</span>
-                                    <span className="">Dashboard</span>
-                                </div>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarMenu>
-                        {menuItems.navMain.map((item) => (
-                            <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={item.isActive}
-                                    className="data-[active=true]:bg-accent dark:data-[active=true]:text-sidebar-primary-foreground"
-                                >
-                                    <a href={item.url} className="font-medium">
-                                        {item.title}
+        <>
+            {isMenuLoaded ? (
+                <Sidebar {...props} ref={ref}>
+                    <SidebarHeader>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton size="lg" asChild>
+                                    <a href="#">
+                                        <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                                            <GalleryVerticalEnd className="size-4" />
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 leading-none">
+                                            <span className="font-medium">Bene-Fit</span>
+                                            <span className="">Dashboard</span>
+                                        </div>
                                     </a>
                                 </SidebarMenuButton>
-                                {item.items?.length ? (
-                                    <SidebarMenuSub>
-                                        {item.items.map((subItem) => (
-                                            <SidebarMenuSubItem key={subItem.title}>
-                                                <SidebarMenuSubButton
-                                                    asChild
-                                                    isActive={subItem.isActive}
-                                                    className="data-[active=true]:bg-accent dark:data-[active=true]:text-sidebar-primary-foreground"
-                                                >
-                                                    <a href={subItem.url}>{subItem.title}</a>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
-                                        ))}
-                                    </SidebarMenuSub>
-                                ) : null}
                             </SidebarMenuItem>
-                        ))}
-                    </SidebarMenu>
-                </SidebarGroup>
-                <SidebarGroup>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton size="lg" onClick={useSidebar().toggleSidebar}>
-                                <PanelLeft />
-                                <span>Close Sidebar</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroup>
-            </SidebarContent>
-            <SidebarRail />
-        </Sidebar>
+                        </SidebarMenu>
+                    </SidebarHeader>
+                    <SidebarContent>
+                        <SidebarGroup>
+                            <SidebarMenu>
+                                {menuItems.navMain.map((item) => (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={item.isActive}
+                                            className="data-[active=true]:bg-accent dark:data-[active=true]:text-sidebar-primary-foreground"
+                                        >
+                                            <a href={item.url} className="font-medium">
+                                                {item.title}
+                                            </a>
+                                        </SidebarMenuButton>
+                                        {item.items?.length ? (
+                                            <SidebarMenuSub>
+                                                {item.items.map((subItem) => (
+                                                    <SidebarMenuSubItem key={subItem.title}>
+                                                        <SidebarMenuSubButton
+                                                            asChild
+                                                            isActive={subItem.isActive}
+                                                            className="data-[active=true]:bg-accent dark:data-[active=true]:text-sidebar-primary-foreground"
+                                                        >
+                                                            <a href={subItem.url}>{subItem.title}</a>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                ))}
+                                            </SidebarMenuSub>
+                                        ) : null}
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroup>
+                        <SidebarGroup>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton size="lg" onClick={sidebarContext.toggleSidebar}>
+                                        <PanelLeft />
+                                        <span>Close Sidebar</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroup>
+                    </SidebarContent>
+                    <SidebarRail />
+                </Sidebar>
+            ) : null}
+        </>
     );
 });
 
