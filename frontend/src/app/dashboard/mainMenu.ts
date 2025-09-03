@@ -79,6 +79,10 @@ const menuDefinition: NavData = {
           title: "OAuth Settings",
           url: "/dashboard/admin/oauth-settings",
         },
+        {
+          title: "Configuration",
+          url: "/dashboard/settings/config",
+        },
       ],
     },
     {

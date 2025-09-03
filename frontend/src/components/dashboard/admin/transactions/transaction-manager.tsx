@@ -58,7 +58,7 @@ import { Combobox } from "@/components/ui/combobox";
 import {
   searchClients,
   ClientSearchResult,
-} from "@/server-actions/admin/clients/actions";
+} from "@/server-actions/programme/actions";
 import { toast } from "sonner";
 import { TransactionForm, TransactionFormValues } from "./transaction-form";
 
@@ -373,10 +373,8 @@ export default function TransactionManager({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Client</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead>Type</TableHead>
+            <TableHead>Amount</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -390,10 +388,8 @@ export default function TransactionManager({
                 {clients.find((c) => c.id === tx.clientId)?.firstName}{" "}
                 {clients.find((c) => c.id === tx.clientId)?.lastName}
               </TableCell>
-              <TableCell>{tx.description}</TableCell>
-              <TableCell>{tx.amount.toString()}</TableCell>
-              <TableCell>{tx.status}</TableCell>
               <TableCell>{tx.transactionType}</TableCell>
+              <TableCell>{tx.total.toFixed(2)}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(tx)}>

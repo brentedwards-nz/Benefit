@@ -232,3 +232,24 @@ model ClientTransaction {
   client             Client              @relation(fields: [clientId], references: [id])
   programmeEnrolment ProgrammeEnrolment? @relation(fields: [programmeEnrolmentId], references: [id])
 }
+
+enum SystemSettingType {
+  String
+  Number
+  Boolean
+  Json
+  DateTime
+  Enum
+  Array
+  Object
+}
+
+model SystemSetting {
+  id          String            @id @default(cuid())
+  key         String            @unique
+  value       String
+  type        SystemSettingType
+  description String?
+  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime          @default(now()) @db.Timestamptz(6)
+}

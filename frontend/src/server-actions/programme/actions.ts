@@ -2,7 +2,7 @@
 
 import { ActionResult } from "@/types/server-action-results";
 import prisma from "@/utils/prisma/client";
-import { Prisma } from "@prisma/client";
+import { Prisma, TransactionStatus, TransactionType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -14,6 +14,13 @@ import {
   ProgrammeTemplateUpdateInput,
 } from "./types";
 import { z } from "zod";
+
+export type ClientSearchResult = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+};
 
 /**
  * Programme Template Server Actions
@@ -796,7 +803,10 @@ export async function addClientToProgramme(
     // Check programme capacity
     const programme = await prisma.programme.findUnique({
       where: { id: programmeId },
-      include: {
+      select: {
+        name: true,
+        programmeCost: true,
+        maxClients: true,
         _count: {
           select: { enrolments: true },
         },
@@ -884,13 +894,10 @@ export async function removeClientFromProgramme(
 
 export async function searchClients(
   searchTerm: string
-): Promise<ActionResult<any[]>> {
+): Promise<ClientSearchResult[]> {
   try {
     if (!searchTerm || searchTerm.trim().length < 2) {
-      return {
-        success: true,
-        data: [],
-      };
+      return [];
     }
 
     const clients = await prisma.client.findMany({
@@ -904,29 +911,32 @@ export async function searchClients(
         id: true,
         firstName: true,
         lastName: true,
-        contactInfo: true,
+        authId: true, // Select authId to fetch email
       },
       take: 10, // Limit results
       orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     });
 
-    return {
-      success: true,
-      data: clients,
-    };
+    const clientAuthIds = clients.map((c) => c.authId).filter((id) => id) as string[];
+    const relatedUsers = await prisma.user.findMany({
+      where: {
+        id: { in: clientAuthIds },
+      },
+      select: { id: true, email: true },
+    });
+
+    return clients.map((client) => {
+      const user = relatedUsers.find((u) => u.id === client.authId);
+      return {
+        id: client.id,
+        firstName: client.firstName,
+        lastName: client.lastName,
+        email: user?.email || null,
+      };
+    });
   } catch (err: any) {
     console.error("Error searching clients:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
+    // Return an empty array on error, as the combobox expects an array
+    return [];
   }
 }

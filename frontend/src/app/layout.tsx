@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 import { GeistSans } from "geist/font/sans";
@@ -69,6 +70,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               {children}
+              <Toaster />
             </ThemeProvider>
           </NextAuthProvider>
         </main>
