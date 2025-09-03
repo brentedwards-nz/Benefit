@@ -67,9 +67,11 @@ interface ProgrammeEnrolment {
     humanReadableId: string;
     maxClients: number;
   };
-  transactions: {
-    total: number;
-  };
+  transactions:
+    | {
+        total: number;
+      }[]
+    | null;
 }
 
 interface Client {
@@ -260,6 +262,8 @@ function ProgrammeClientsManagementContent() {
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data);
+      } else {
+        console.error("Failed to search clients.");
       }
     } catch (error) {
       console.error("Error searching clients:", error);
@@ -447,7 +451,18 @@ function ProgrammeClientsManagementContent() {
                   </TableCell>
                   <TableCell>{getClientContact(enrolment.clientId)}</TableCell>
                   <TableCell>
-                    {enrolment.transactions?.total ? `${enrolment.transactions.total.toFixed(2)}` : "No Invoice"}
+                    {enrolment.transactions && enrolment.transactions.length > 0
+                      ? (() => {
+                          const firstTransaction = enrolment.transactions.at(0);
+                          if (firstTransaction) {
+                            const totalAsString =
+                              firstTransaction.total.toString();
+                            const totalAsNumber = parseFloat(totalAsString);
+                            return `${totalAsNumber.toFixed(2)}`;
+                          }
+                          return "Invlaid Invoice";
+                        })()
+                      : "No Invoice"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
@@ -471,7 +486,18 @@ function ProgrammeClientsManagementContent() {
                   </TableCell>
                   <TableCell>{getClientContact(enrolment.clientId)}</TableCell>
                   <TableCell>
-                    {enrolment.transactions?.total ? `${enrolment.transactions.total.toFixed(2)}` : "No Invoice"}
+                    {enrolment.transactions && enrolment.transactions.length > 0
+                      ? (() => {
+                          const firstTransaction = enrolment.transactions.at(0);
+                          if (firstTransaction) {
+                            const totalAsString =
+                              firstTransaction.total.toString();
+                            const totalAsNumber = parseFloat(totalAsString);
+                            return `${totalAsNumber.toFixed(2)}`;
+                          }
+                          return "Invlaid Invoice";
+                        })()
+                      : "No Invoice"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
