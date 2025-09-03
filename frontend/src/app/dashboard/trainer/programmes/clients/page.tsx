@@ -33,7 +33,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Plus,
@@ -67,6 +66,9 @@ interface ProgrammeEnrolment {
     name: string;
     humanReadableId: string;
     maxClients: number;
+  };
+  transactions: {
+    total: number;
   };
 }
 
@@ -430,6 +432,7 @@ function ProgrammeClientsManagementContent() {
             <TableRow>
               <TableHead>Client</TableHead>
               <TableHead>Contact</TableHead>
+              <TableHead>Invoice</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -443,6 +446,9 @@ function ProgrammeClientsManagementContent() {
                     {getClientName(enrolment.clientId)}
                   </TableCell>
                   <TableCell>{getClientContact(enrolment.clientId)}</TableCell>
+                  <TableCell>
+                    {enrolment.transactions?.total ? `${enrolment.transactions.total.toFixed(2)}` : "No Invoice"}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Button
@@ -464,6 +470,9 @@ function ProgrammeClientsManagementContent() {
                     {getClientName(enrolment.clientId)}
                   </TableCell>
                   <TableCell>{getClientContact(enrolment.clientId)}</TableCell>
+                  <TableCell>
+                    {enrolment.transactions?.total ? `${enrolment.transactions.total.toFixed(2)}` : "No Invoice"}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Button

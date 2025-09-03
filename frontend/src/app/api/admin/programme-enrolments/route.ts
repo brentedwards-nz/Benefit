@@ -2,6 +2,7 @@ import { TransactionStatus, TransactionType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getGSTRate } from "@/server-actions/settings/actions";
 import prisma from "@/utils/prisma/client";
 
 export async function GET(request: NextRequest) {
@@ -39,6 +40,13 @@ export async function GET(request: NextRequest) {
     const enrolments = await prisma.programmeEnrolment.findMany({
       where: whereClause,
       include: {
+        transactions: {
+          where: { transactionType: TransactionType.Invoice },
+          take: 1,
+          select: {
+            total: true,
+          },
+        },
         programme: {
           select: {
             id: true,
@@ -177,31 +185,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    //         model ClientTransaction {
-    //   id                   String   @id @default(cuid())
-    //   clientId             String
-    //   programmeEnrolmentId String?
-    //   transactionDate      DateTime @default(now())
-    //   description          String
-    //   amount               Decimal  @default(0)
-    //   taxAmount            Decimal  @default(0)
-    //   total                Decimal  @default(0)
-    //   taxRate              Decimal  @default(0.125)
+    // Create associated invoice transaction
+    const total = Number(programme.programmeCost);
+    const taxRate = await getGSTRate();
+    const amount = parseFloat((total / (1 + taxRate)).toFixed(2));
+    const taxAmount = total - amount;
 
-    //   status             TransactionStatus   @default(Pending)
-    //   transactionType    TransactionType
-    //   client             Client              @relation(fields: [clientId], references: [id])
-    //   programmeEnrolment ProgrammeEnrolment? @relation(fields: [programmeEnrolmentId], references: [id])
-    // }
-
-    const transaction = await prisma.clientTransaction.create({
+    await prisma.clientTransaction.create({
       data: {
         clientId,
         programmeEnrolmentId: enrolment.id,
         description: `Enrolment in programme: ${programme.name}`,
-        total: programme.programmeCost,
-        amount: programme.programmeCost,
-        taxAmount: 0,
+        total: total,
+        taxRate: taxRate,
+        amount: amount,
+        taxAmount: taxAmount,
         transactionType: TransactionType.Invoice,
         status: TransactionStatus.Pending,
       },
