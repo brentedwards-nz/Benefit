@@ -17,26 +17,21 @@ import { Pencil, Trash2 } from 'lucide-react';
 
 interface ConfigurationListProps {
   settings: SystemSetting[];
+  onEdit: (setting: SystemSetting) => void;
+  onDelete: (setting: SystemSetting) => void;
 }
 
-export function ConfigurationList({ settings }: ConfigurationListProps) {
+export function ConfigurationList({ settings, onEdit, onDelete }: ConfigurationListProps) {
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
 
-  // TODO: Implement edit functionality
   const handleEdit = (setting: SystemSetting) => {
-    console.log('Editing:', setting);
-    toast.info('Edit functionality not yet implemented.');
+    onEdit(setting);
   };
 
   const handleDelete = async (setting: SystemSetting) => {
     if (!setting.id) return;
     setDeletingId(setting.id);
-    const result = await deleteSystemSetting(setting.id);
-    if (result.success) {
-      toast.success(`Setting "${setting.key}" deleted successfully.`);
-    } else {
-      toast.error(`Failed to delete setting: ${result.message}`);
-    }
+    onDelete(setting);
     setDeletingId(null);
   };
 
