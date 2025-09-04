@@ -132,7 +132,9 @@ const createGmailQuery = (
     const day = startDate.getDate();
     // Create a UTC date for the start of the day
     const utcStartDate = new Date(Date.UTC(year, month, day));
-    dateQueries.push(`after:${utcStartDate.toISOString().split('T')[0].replace(/-/g, '/')}`);
+    dateQueries.push(
+      `after:${utcStartDate.toISOString().split("T")[0].replace(/-/g, "/")}`
+    );
   }
   if (endDate) {
     const year = endDate.getFullYear();
@@ -140,13 +142,20 @@ const createGmailQuery = (
     const day = endDate.getDate();
     // Create a UTC date for the end of the day (by taking the next day's start)
     const utcNextDay = new Date(Date.UTC(year, month, day + 1));
-    dateQueries.push(`before:${utcNextDay.toISOString().split('T')[0].replace(/-/g, '/')}`);
+    dateQueries.push(
+      `before:${utcNextDay.toISOString().split("T")[0].replace(/-/g, "/")}`
+    );
   }
 
-  const allQueries = [...folderQueries, ...labelQueries, clientEmailQuery, ...dateQueries];
+  const allQueries = [
+    ...folderQueries,
+    ...labelQueries,
+    clientEmailQuery,
+    ...dateQueries,
+  ];
 
   // Filter out empty strings from the array before joining
-  const filteredQueries = allQueries.filter(query => query.trim() !== "");
+  const filteredQueries = allQueries.filter((query) => query.trim() !== "");
 
   if (filteredQueries.length === 0) {
     return "";
@@ -179,7 +188,7 @@ export async function readEmail(
       select: { id: true, properties: true },
     });
 
-    console.log(JSON.stringify(gmailConfigs, null, 2));
+    //console.log(JSON.stringify(gmailConfigs, null, 2));
 
     if (gmailConfigs.length === 0) {
       return {
@@ -195,9 +204,15 @@ export async function readEmail(
 
     //q: `in:${folder1} OR label:${label1}`,
     // Modify createGmailQuery to include clientEmail
-    const query: string = createGmailQuery(folders, labels, clientEmail, startDate, endDate);
+    const query: string = createGmailQuery(
+      folders,
+      labels,
+      clientEmail,
+      startDate,
+      endDate
+    );
 
-    console.log("Gmail API Query:", query); // Add this line for debugging
+    //console.log("Gmail API Query:", query); // Add this line for debugging
     // 5. List messages from the specified folder
     const listResponse = await gmail.users.messages.list({
       userId: "me",
@@ -258,11 +273,18 @@ export async function readEmail(
         try {
           receivedAt = new Date(dateHeader).toLocaleString();
         } catch (e) {
-          console.warn("Invalid Date header, falling back to internalDate:", dateHeader);
-          receivedAt = res.data.internalDate ? new Date(parseInt(res.data.internalDate)).toLocaleString() : "Unknown Date";
+          console.warn(
+            "Invalid Date header, falling back to internalDate:",
+            dateHeader
+          );
+          receivedAt = res.data.internalDate
+            ? new Date(parseInt(res.data.internalDate)).toLocaleString()
+            : "Unknown Date";
         }
       } else {
-        receivedAt = res.data.internalDate ? new Date(parseInt(res.data.internalDate)).toLocaleString() : "Unknown Date";
+        receivedAt = res.data.internalDate
+          ? new Date(parseInt(res.data.internalDate)).toLocaleString()
+          : "Unknown Date";
       }
 
       if (emailBody.trim().length == 0) {

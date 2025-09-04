@@ -71,7 +71,7 @@ model Client {
 
   // Relationships
   programmeEnrolments ProgrammeEnrolment[]
-  habitCompletions    ClientHabits[]
+  programmeHabits    ClientHabit[]
   transactions        ClientTransaction[]
 }
 
@@ -167,16 +167,16 @@ model ProgrammeHabit {
   // Relationships
   programme   Programme      @relation(fields: [programmeId], references: [id], onDelete: Cascade)
   habit       Habit          @relation(fields: [habitId], references: [id], onDelete: Cascade)
-  completions ClientHabits[] // Track daily completions
+  clientHabits ClientHabit[] // Track daily completions
 
   @@unique([programmeId, habitId])
 }
 
-model ClientHabits {
+model ClientHabit {
   id               String   @id @default(cuid())
   programmeHabitId String
   clientId         String
-  completionDate   DateTime @db.Date
+  habitDate        DateTime @db.Date
   completed        Boolean  @default(false)
   timesDone        Int      @default(0)
   notes            String?
@@ -187,7 +187,7 @@ model ClientHabits {
   programmeHabit ProgrammeHabit @relation(fields: [programmeHabitId], references: [id], onDelete: Cascade)
   client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  @@unique([programmeHabitId, clientId, completionDate]) // One completion per habit per client per day
+  @@unique([programmeHabitId, clientId, habitDate]) // One completion per habit per client per day
 }
 
 enum TransactionStatus {

@@ -31,16 +31,16 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch habit completions for the client within the date range
-        const completions = await prisma.clientHabits.findMany({
+        const completions = await prisma.clientHabit.findMany({
             where: {
                 clientId: client.id,
-                completionDate: {
+                habitDate: {
                     gte: new Date(startDate),
                     lte: new Date(endDate)
                 }
             },
             orderBy: [
-                { completionDate: 'asc' }
+                { habitDate: 'asc' }
             ]
         })
         return NextResponse.json(completions)
@@ -72,16 +72,16 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { programmeHabitId, completionDate, completed, notes, delta } = body
+        const { programmeHabitId, habitDate, completed, notes, delta } = body
 
-        console.log('Received request body:', { programmeHabitId, completionDate, completed, notes })
+        console.log('Received request body:', { programmeHabitId, habitDate, completed, notes })
 
-        if (!programmeHabitId || !completionDate) {
+        if (!programmeHabitId || !habitDate) {
             return NextResponse.json({ error: 'Programme habit ID and completion date are required' }, { status: 400 })
         }
 
-        const completionDateObj = new Date(completionDate);
-        const dayOfWeek = completionDateObj.getDay(); // 0 for Sunday, 1 for Monday, etc.
+        const habitDateObj = new Date(habitDate);
+        const dayOfWeek = habitDateObj.getDay(); // 0 for Sunday, 1 for Monday, etc.
         const dayFrequencyMap: Record<number, 'monFrequency' | 'tueFrequency' | 'wedFrequency' | 'thuFrequency' | 'friFrequency' | 'satFrequency' | 'sunFrequency'> = {
             1: 'monFrequency',
             2: 'tueFrequency',
@@ -118,11 +118,11 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if completion already exists
-        const existingCompletion = await prisma.clientHabits.findFirst({
+        const existingCompletion = await prisma.clientHabit.findFirst({
             where: {
                 programmeHabitId,
                 clientId: client.id,
-                completionDate: new Date(completionDate)
+                habitDate: new Date(habitDate)
             }
         });
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
                     MAX_PER_DAY
                 );
                 const nextCompleted = nextTimesDone >= requiredPerDay;
-                completion = await prisma.clientHabits.update({
+                completion = await prisma.clientHabit.update({
                     where: { id: existingCompletion.id },
                     data: {
                         timesDone: nextTimesDone,
@@ -182,11 +182,11 @@ export async function POST(request: NextRequest) {
             } else {
                 const initialTimesDone = clamp(typeof delta === 'number' ? Math.max(delta, 0) : (completed ? 1 : 0), 0, MAX_PER_DAY);
                 const initialCompleted = initialTimesDone >= requiredPerDay;
-                completion = await prisma.clientHabits.create({
+                completion = await prisma.clientHabit.create({
                     data: {
                         programmeHabitId,
                         clientId: client.id,
-                        completionDate: new Date(completionDate),
+                        habitDate: new Date(habitDate),
                         timesDone: initialTimesDone,
                         completed: initialCompleted,
                         notes

@@ -1,30 +1,40 @@
-import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
+// app/habits/page.tsx (or a similar path)
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
+import HabitClientWrapper from "./HabitClientWrapper";
 
-const ExperimentalHabitsPage = async () => {
+export default async function ServerHabitsPage() {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id || "no-user-id";
 
-  const habitsData = await readClientHabitsByDateRange(
-    userId,
-    new Date("2025-08-25T00:00:00"),
-    new Date("2025-08-28T23:59:59")
+  if (!session?.user.id) {
+    return <div>Please log in.</div>;
+  }
+
+  const clientHabits = await readClientHabitsByDateRange(
+    session.user.id,
+    new Date("2025-09-01T00:00:00Z"),
+    new Date("2025-09-07T23:59:59Z")
   );
+
+  const daysData = clientHabits.success ? clientHabits.data.HabitDayData : [];
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min border">
+      <div className="w-full">
         <h1 className="text-2xl font-bold mb-4">Experimental Habits Page</h1>
+      </div>
+      <div className="w-full">
+        <HabitClientWrapper daysData={daysData} />
+      </div>
+      <div className="text-sm mt-2 text-white">
         <p>
           This page displays the raw JSON data from the habits server action.
         </p>
-        <pre className="mt-4 p-4 bg-transparent rounded-md">
-          {JSON.stringify(habitsData, null, 2)}
+        <pre className="mt-4 p-4 bg-transparent rounded-md text-white">
+          {JSON.stringify(clientHabits, null, 2)}
         </pre>
       </div>
     </div>
   );
-};
-
-export default ExperimentalHabitsPage;
+}

@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { getDayColor } from "@/utils/general-utils";
 
 export interface ClientHabits {
   id: string;
-  completionDate: string;
+  habitDate: string;
   completed: boolean;
   timesDone?: number;
   programmeHabitId: string;
@@ -68,7 +69,7 @@ export const WeekView = ({
   selectedWeek,
   selectedDate,
   programmeHabits,
-  habitCompletions,
+  clientHabits,
   isSelf = true,
   onHabitToggle,
 }: WeekViewProps) => {
@@ -96,16 +97,6 @@ export const WeekView = ({
       ? (todayOnlyTs - selectedOnlyTs) / 86400000 > 3
       : false;
   const isDisabledForEdit = isFutureSelectedDay || isMoreThan3DaysPast;
-
-  const getDayColor = (completionRate: number): string => {
-    if (completionRate === 1) return "bg-green-500";
-    if (completionRate === 0) return "bg-red-500";
-
-    if (completionRate >= 0.8) return "bg-orange-400";
-    if (completionRate >= 0.6) return "bg-orange-500";
-    if (completionRate >= 0.4) return "bg-orange-600";
-    return "bg-orange-700";
-  };
 
   const isWithinProgramme = (programmeHabit: ProgrammeHabit, date: Date) => {
     const habitStartDate = programmeHabit.programme.startDate
@@ -381,4 +372,6 @@ export const WeekView = ({
       )}
     </div>
   );
+};
+
 };

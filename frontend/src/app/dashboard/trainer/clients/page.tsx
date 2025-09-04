@@ -9,16 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
@@ -55,13 +47,12 @@ import {
 import { getClientActivities } from "@/server-actions/fitbit/actions";
 import { readEmail } from "@/server-actions/email/actions";
 import { Email } from "@/server-actions/email/types";
+import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
 import {
-  WeekView,
-  WeekViewProps,
+  HabitOverView,
+  HabitOverViewProps,
   DayData,
-  ProgrammeHabit,
-  ClientHabits,
-} from "@/components/habits/week-view";
+} from "@/components/habits/habit-overview";
 
 interface Client extends ClientForTrainer {}
 
@@ -76,20 +67,11 @@ const TrainerClientsPage = () => {
   const [clientEmails, setClientEmails] = useState<Email[]>([]);
   const [isLoadingEmails, setIsLoadingEmails] = useState(false);
   const [isLoadingClientHabits, setIsLoadingClientHabits] = useState(false);
-  const [weekViewProps, setWeekViewProps] = useState<WeekViewProps>({
-    selectedWeek: {
+  const [habitOverViewProps, setHabitOverViewProps] =
+    useState<HabitOverViewProps>({
       days: [],
-    },
-    selectedDate: new Date(),
-    programmeHabits: [],
-    habitCompletions: [],
-    isSelf: false,
-    onHabitToggle: (
-      programmeHabitId: string,
-      date: Date,
-      completed: boolean
-    ) => {},
-  });
+      selectedDate: new Date(),
+    });
   const [isStartDatePopoverOpen, setIsStartDatePopoverOpen] = useState(false);
   const [isEndDatePopoverOpen, setIsEndDatePopoverOpen] = useState(false);
   const [endDate, setEndDate] = useState<Date | undefined>(() => {
@@ -122,104 +104,78 @@ const TrainerClientsPage = () => {
     }
   }, [selectedClientId, clients]);
 
-  useEffect(() => {
-    if (selectedClient?.id && startDate && endDate) {
-      setIsLoadingActivities(true);
-      startTransition(async () => {
-        try {
-          const activities = await getClientActivities(
-            selectedClient.id,
-            startDate,
-            endDate
-          );
-          setClientActivities(activities);
-        } catch (error) {
-          console.error("Failed to fetch client activities:", error);
-          toast.error("Failed to load activities", {
-            description: "Could not retrieve client Fitbit activities.",
-          });
-        } finally {
-          setIsLoadingActivities(false);
-        }
-      });
-    } else {
-      setClientActivities([]);
-      setIsLoadingActivities(false);
-    }
-  }, [selectedClient, startDate, endDate, startTransition]);
+  // Fitbit Activities Fetch
+  // useEffect(() => {
+  //   if (selectedClient?.id && startDate && endDate) {
+  //     setIsLoadingActivities(true);
+  //     startTransition(async () => {
+  //       try {
+  //         const activities = await getClientActivities(
+  //           selectedClient.id,
+  //           startOfDay(startDate),
+  //           endOfDay(endDate)
+  //         );
+  //         setClientActivities(activities);
+  //       } catch (error) {
+  //         console.error("Failed to fetch client activities:", error);
+  //         toast.error("Failed to load activities", {
+  //           description: "Could not retrieve client Fitbit activities.",
+  //         });
+  //       } finally {
+  //         setIsLoadingActivities(false);
+  //       }
+  //     });
+  //   } else {
+  //     setClientActivities([]);
+  //     setIsLoadingActivities(false);
+  //   }
+  // }, [selectedClient, startDate, endDate, startTransition]);
 
-  useEffect(() => {
-    if (selectedClient?.id) {
-      setIsLoadingEmails(true);
-      startTransition(async () => {
-        try {
-          const emailsResult = await readEmail(
-            selectedClient.email,
-            startDate,
-            endDate,
-            [],
-            ["Benefit"]
-          );
-          if (emailsResult.success) {
-            setClientEmails(emailsResult.data || []);
-          } else {
-            toast.error("Failed to load emails", {
-              description:
-                emailsResult.message || "Could not retrieve client emails.",
-            });
-          }
-        } catch (error) {
-          console.error("Failed to fetch client emails:", error);
-          toast.error("Failed to load emails", {
-            description: "Could not retrieve client emails.",
-          });
-        } finally {
-          setIsLoadingEmails(false);
-        }
-      });
-    } else {
-      setClientEmails([]);
-      setIsLoadingEmails(false);
-    }
-  }, [selectedClient, startDate, endDate, startTransition]);
+  // Emails Fetch
+  // useEffect(() => {
+  //   if (selectedClient?.id) {
+  //     setIsLoadingEmails(true);
+  //     startTransition(async () => {
+  //       try {
+  //         const emailsResult = await readEmail(
+  //           selectedClient.email,
+  //           startDate,
+  //           endDate,
+  //           [],
+  //           ["Benefit"]
+  //         );
+  //         if (emailsResult.success) {
+  //           setClientEmails(emailsResult.data || []);
+  //         } else {
+  //           toast.error("Failed to load emails", {
+  //             description:
+  //               emailsResult.message || "Could not retrieve client emails.",
+  //           });
+  //         }
+  //       } catch (error) {
+  //         console.error("Failed to fetch client emails:", error);
+  //         toast.error("Failed to load emails", {
+  //           description: "Could not retrieve client emails.",
+  //         });
+  //       } finally {
+  //         setIsLoadingEmails(false);
+  //       }
+  //     });
+  //   } else {
+  //     setClientEmails([]);
+  //     setIsLoadingEmails(false);
+  //   }
+  // }, [selectedClient, startDate, endDate, startTransition]);
 
   useEffect(() => {
     const clientId = selectedClient?.id || null;
-
-    const calculateCompletionRate = (
-      dayDate: Date,
-      allProgrammeHabits: ProgrammeHabit[],
-      allHabitCompletions: ClientHabits[]
-    ): number => {
-      const dateString = dayDate.toISOString().split("T")[0];
-      const dayCompletions = allHabitCompletions.filter(
-        (c) => c.completionDate.split("T")[0] === dateString
-      );
-
-      const isHabitActiveOnDate = (ph: ProgrammeHabit): boolean => {
-        const s = ph.programme?.startDate
-          ? new Date(
-              new Date(ph.programme.startDate).toISOString().split("T")[0]
-            )
-          : null;
-        const e = ph.programme?.endDate
-          ? new Date(new Date(ph.programme.endDate).toISOString().split("T")[0])
-          : null;
-        if (!s || !e) return true;
-        const d = new Date(dateString);
-        return d >= s && d <= e;
-      };
-
-      const activeHabits = allProgrammeHabits.filter(isHabitActiveOnDate);
-      const completedCount = activeHabits.filter((ph) => {
-        const requiredPerDay = Math.max(1, ph.frequencyPerDay ?? 1);
-        const rec = dayCompletions.find((c) => c.programmeHabitId === ph.id);
-        const times = rec?.timesDone ?? (rec?.completed ? requiredPerDay : 0);
-        return times >= requiredPerDay;
-      }).length;
-
-      return activeHabits.length > 0 ? completedCount / activeHabits.length : 0;
-    };
+    if (!clientId) {
+      setHabitOverViewProps({
+        days: [],
+        selectedDate: new Date(),
+      });
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -229,64 +185,28 @@ const TrainerClientsPage = () => {
           return;
         }
 
-        const habitsResponse = await fetch(
-          `/api/client/habits?clientId=${clientId}`
+        const clientHabits = await readClientHabitsByDateRange(
+          clientId,
+          startDate || new Date(),
+          endDate || new Date()
         );
-        if (!habitsResponse.ok) {
-          return;
-        }
-        const programmeHabitsData = await habitsResponse.json();
-
-        // Create new Date objects to avoid mutating state
-        const startForApi = startDate ? new Date(startDate) : new Date();
-        const endForApi = endDate ? new Date(endDate) : new Date();
-
-        const completionsResponse = await fetch(
-          `/api/client/habits/completions?startDate=${
-            startForApi.toISOString().split("T")[0]
-          }&endDate=${
-            endForApi.toISOString().split("T")[0]
-          }&clientId=${clientId}`
-        );
-        if (!completionsResponse.ok) {
-          return;
-        }
-        const completionsData = await completionsResponse.json();
-
-        const days: DayData[] = [];
-        const currentDate = new Date(startForApi || new Date()); // Use startDate directly for display logic
-        const loopEndDate = endForApi || new Date(); // Use endDate directly for display logic
-
-        while (currentDate <= loopEndDate) {
-          const completionRate = calculateCompletionRate(
-            currentDate,
-            programmeHabitsData,
-            completionsData
-          );
-          days.push({
-            date: new Date(currentDate),
-            dayNumber: currentDate.getDate(),
-            isCurrentMonth: true,
-            completionRate: completionRate,
-          });
-          currentDate.setDate(currentDate.getDate() + 1);
+        if (!clientHabits.success) {
+          throw new Error("No habit data found for the client.");
         }
 
-        const viewProps: WeekViewProps = {
-          selectedWeek: {
-            days: days,
-          },
-          selectedDate: new Date(startDate || new Date()), // Use startDate directly
-          programmeHabits: programmeHabitsData,
-          habitCompletions: completionsData,
-          isSelf: false,
-          onHabitToggle: () => {},
+        const days = clientHabits.data.HabitDayData;
+
+        console.log(JSON.stringify(days, null, 2));
+
+        const viewProps: HabitOverViewProps = {
+          days: days,
+          selectedDate: new Date(), // Use startDate directly
         };
-        setWeekViewProps(viewProps);
+        setHabitOverViewProps(viewProps);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setIsLoadingClientHabits(false);
+        setIsLoadingClientHabit(false);
       }
     };
 
@@ -390,7 +310,7 @@ const TrainerClientsPage = () => {
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? (
-                      format(startDate, "PPP")
+                      format(startDate, "EEE, dd-MMM-yyyy")
                     ) : (
                       <span>Pick a date</span>
                     )}
@@ -407,7 +327,9 @@ const TrainerClientsPage = () => {
                         setStartDate(normalizedDate);
                         if (
                           endDate &&
-                          (Math.abs(differenceInDays(endDate, normalizedDate)) > 6 || normalizedDate > endDate)
+                          (Math.abs(differenceInDays(endDate, normalizedDate)) >
+                            6 ||
+                            normalizedDate > endDate)
                         ) {
                           const adjustedEndDate = new Date(normalizedDate);
                           adjustedEndDate.setDate(
@@ -444,7 +366,7 @@ const TrainerClientsPage = () => {
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? (
-                      format(endDate, "PPP")
+                      format(endDate, "EEE, dd-MMM-yyyy")
                     ) : (
                       <span>Pick a date</span>
                     )}
@@ -461,7 +383,10 @@ const TrainerClientsPage = () => {
                         setEndDate(normalizedDate);
                         if (
                           startDate &&
-                          (Math.abs(differenceInDays(normalizedDate, startDate)) > 6 || normalizedDate < startDate)
+                          (Math.abs(
+                            differenceInDays(normalizedDate, startDate)
+                          ) > 6 ||
+                            normalizedDate < startDate)
                         ) {
                           const adjustedStartDate = new Date(normalizedDate);
                           adjustedStartDate.setDate(
@@ -498,14 +423,10 @@ const TrainerClientsPage = () => {
                 description="Fetching client's habit data..."
                 size="sm"
               />
-            ) : weekViewProps.selectedWeek.days.length > 0 ? (
-              <WeekView
-                selectedWeek={weekViewProps.selectedWeek}
-                selectedDate={weekViewProps.selectedDate}
-                programmeHabits={weekViewProps.programmeHabits}
-                habitCompletions={weekViewProps.habitCompletions}
-                isSelf={weekViewProps.isSelf}
-                onHabitToggle={() => {}}
+            ) : habitOverViewProps.days.length > 0 ? (
+              <HabitOverView
+                days={habitOverViewProps.days}
+                selectedDate={habitOverViewProps.selectedDate}
               />
             ) : (
               <p>No habit data found for this client.</p>

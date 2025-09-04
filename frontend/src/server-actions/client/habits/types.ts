@@ -1,6 +1,8 @@
 export interface HabitDayData {
   date: Date;
-  habitCount: number;
-  completedCount: number;
-  isLocked: boolean;
+  dayNumber: number;
+  completionRate: number;
+  isCurrentMonth: boolean;
+  isProgrammeDay: boolean;
+  color: string;
 }

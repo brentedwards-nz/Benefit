@@ -3,8 +3,9 @@
 import { PrismaClient } from "@prisma/client";
 import { encrypt, decrypt } from "@/lib/encryption";
 import { Api, ApiConfig } from "@/lib/fitbit/20250801/api/client";
-import { addDays, format } from "date-fns";
+import { addDays, endOfDay, format, startOfDay } from "date-fns";
 import { JsonObject } from "@prisma/client/runtime/library";
+import { Buffer } from "buffer";
 
 const prisma = new PrismaClient();
 
@@ -20,7 +21,17 @@ interface FitbitSettingProperty extends JsonObject {
   encrypted?: boolean;
 }
 
-export async function getClientActivities(clientId: string, startDate: Date, endDate: Date) {
+export async function getClientActivities(
+  clientId: string,
+  startDate: Date,
+  endDate: Date
+) {
+  startDate = startOfDay(startDate);
+  endDate = endOfDay(endDate);
+  console.log(`Fetching activities for clientId: ${clientId}`);
+  console.log(`Start ${startDate}`);
+  console.log(`End   ${endDate}`);
+
   const client = await prisma.client.findUnique({
     where: { id: clientId },
     select: { settings: true },
@@ -31,7 +42,7 @@ export async function getClientActivities(clientId: string, startDate: Date, end
     return [];
   }
 
-  if (typeof client.settings !== 'object' || client.settings === null) {
+  if (typeof client.settings !== "object" || client.settings === null) {
     console.error("Client settings are not a valid object.");
     return [];
   }
@@ -39,7 +50,9 @@ export async function getClientActivities(clientId: string, startDate: Date, end
   const fitbitClientSettings = client.settings as FitbitClientSetting[];
 
   if (!fitbitClientSettings || fitbitClientSettings.length === 0) {
-    console.error("Fitbit settings not found or is empty for client:" + clientId);
+    console.error(
+      "Fitbit settings not found or is empty for client:" + clientId
+    );
     return [];
   }
 
@@ -54,15 +67,26 @@ export async function getClientActivities(clientId: string, startDate: Date, end
   );
 
   if (fitbitConfig) {
-    accessToken = fitbitConfig.properties.find((p) => p.name === "accessToken")?.value;
-    refreshToken = fitbitConfig.properties.find((p) => p.name === "refreshToken")?.value;
-    expiresAt = fitbitConfig.properties.find((p) => p.name === "expiresAt")?.value;
+    accessToken = fitbitConfig.properties.find(
+      (p) => p.name === "accessToken"
+    )?.value;
+    refreshToken = fitbitConfig.properties.find(
+      (p) => p.name === "refreshToken"
+    )?.value;
+    expiresAt = fitbitConfig.properties.find(
+      (p) => p.name === "expiresAt"
+    )?.value;
     scopes = fitbitConfig.properties.find((p) => p.name === "scopes")?.value;
-    fitbitUserId = fitbitConfig.properties.find((p) => p.name === "userId")?.value; // Retrieve Fitbit userId
+    fitbitUserId = fitbitConfig.properties.find(
+      (p) => p.name === "userId"
+    )?.value; // Retrieve Fitbit userId
   }
 
   if (!accessToken || !refreshToken || !expiresAt || !fitbitUserId) {
-    console.error("Missing Fitbit tokens, expiry information, or userId for client:" + clientId);
+    console.error(
+      "Missing Fitbit tokens, expiry information, or userId for client:" +
+        clientId
+    );
     return [];
   }
 
@@ -71,50 +95,98 @@ export async function getClientActivities(clientId: string, startDate: Date, end
   const isTokenExpired = new Date() > new Date(expiresAt);
 
   if (isTokenExpired) {
+    console.log("Fitbit access token expired, refreshing...");
     try {
       const clientIdEnv = process.env.FITBIT_CLIENT_ID;
+      const clientSecretEnv = process.env.FITBIT_CLIENT_SECRET;
 
-      if (!clientIdEnv) {
-        console.error("FITBIT_CLIENT_ID is not defined.");
+      console.log("FITBIT_CLIENT_ID:", clientIdEnv);
+      console.log("FITBIT_CLIENT_SECRET:", clientSecretEnv);
+      if (!clientIdEnv || !clientSecretEnv) {
+        console.error("Fitbit client environment variables not defined.");
         return [];
       }
-      const api = new Api();
-      const newTokens = await api.oauth2.oauthToken({
-        client_id: clientIdEnv,
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
+
+      const credentials = `${clientIdEnv}:${clientSecretEnv}`;
+      const encodedCredentials = Buffer.from(credentials, "utf-8").toString(
+        "base64"
+      );
+
+      // --- Start of change: Using fetch API for a direct POST request ---
+      const response = await fetch("https://api.fitbit.com/oauth2/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Basic ${encodedCredentials}`,
+        },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        }).toString(),
       });
 
-      if (!newTokens.data || !newTokens.data.access_token || !newTokens.data.refresh_token || !newTokens.data.expires_in) {
-        console.error("Failed to refresh Fitbit token: no data or missing fields.", newTokens.error); // Debug log
+      const newTokens = await response.json();
+
+      if (!response.ok) {
+        console.error(
+          "Failed to refresh Fitbit token. Status:",
+          response.status
+        );
+        console.error("Error response:", newTokens);
+        return [];
+      }
+      // --- End of change ---
+
+      if (
+        !newTokens.access_token ||
+        !newTokens.refresh_token ||
+        !newTokens.expires_in
+      ) {
+        console.error(
+          "Failed to refresh Fitbit token: no data or missing fields.",
+          newTokens
+        );
         return [];
       }
 
-      accessToken = newTokens.data.access_token;
-      refreshToken = newTokens.data.refresh_token;
-      expiresAt = new Date(Date.now() + newTokens.data.expires_in * 1000).toISOString();
+      accessToken = newTokens.access_token;
+      refreshToken = newTokens.refresh_token;
+      expiresAt = new Date(
+        Date.now() + newTokens.expires_in * 1000
+      ).toISOString();
 
-      const updatedFitbitProperties = fitbitConfig?.properties.map((prop) => {
-        if (prop.name === "accessToken")
-          return { ...prop, value: encrypt(accessToken as string) };
-        if (prop.name === "refreshToken")
-          return { ...prop, value: encrypt(refreshToken as string) };
-        if (prop.name === "expiresAt")
-          return { ...prop, value: expiresAt as string };
-        return prop;
-      }) || [];
+      const updatedFitbitProperties =
+        fitbitConfig?.properties.map((prop) => {
+          if (prop.name === "accessToken")
+            return { ...prop, value: encrypt(accessToken as string) };
+          if (prop.name === "refreshToken")
+            return { ...prop, value: encrypt(refreshToken as string) };
+          if (prop.name === "expiresAt")
+            return { ...prop, value: expiresAt as string };
+          return prop;
+        }) || [];
 
-      const updatedFitbitConfig = { ...fitbitConfig, properties: updatedFitbitProperties };
+      const updatedFitbitConfig = {
+        ...fitbitConfig,
+        properties: updatedFitbitProperties,
+      };
 
       const currentSettings = (client.settings as unknown as JsonObject) || {};
-      currentSettings["fitbit"] = { settings: fitbitClientSettings.map(s => s.id === updatedFitbitConfig.id ? updatedFitbitConfig : s) };
+      currentSettings["fitbit"] = {
+        settings: fitbitClientSettings.map((s) =>
+          s.id === updatedFitbitConfig.id ? updatedFitbitConfig : s
+        ),
+      };
 
       await prisma.client.update({
         where: { id: clientId },
         data: { settings: currentSettings },
       });
     } catch (error) {
-      console.error("Error refreshing Fitbit token for client:" + clientId, error);
+      console.error(
+        "Error refreshing Fitbit token for client:" + clientId,
+        error
+      );
       return [];
     }
   }
@@ -151,7 +223,13 @@ export async function getClientActivities(clientId: string, startDate: Date, end
         return; // Skip activities older than 7 days
       }
 
-      const specificActivityTypes = ["Workout", "Run", "Walk", "Bike", "Swimming"];
+      const specificActivityTypes = [
+        "Workout",
+        "Run",
+        "Walk",
+        "Bike",
+        "Swimming",
+      ];
       const activityType = specificActivityTypes.includes(activity.activityName)
         ? activity.activityName
         : "Others";
@@ -186,14 +264,21 @@ export async function getClientActivities(clientId: string, startDate: Date, end
       activityTypeSummaries[activityType].caloriesOut += activity.calories || 0;
       activityTypeSummaries[activityType].steps += activity.steps || 0;
       activityTypeSummaries[activityType].count += 1;
-      activityTypeSummaries[activityType].totalDuration += activity.duration || 0; // Aggregate duration
+      activityTypeSummaries[activityType].totalDuration +=
+        activity.duration || 0; // Aggregate duration
 
       // Simple aggregation for distance - ideally, this would handle different distance units
-      let existingDistance = activityTypeSummaries[activityType].distances.find((d: any) => d.activity === 'total');
+      let existingDistance = activityTypeSummaries[activityType].distances.find(
+        (d: any) => d.activity === "total"
+      );
       if (existingDistance) {
         existingDistance.distance += activity.distance || 0;
       } else {
-        activityTypeSummaries[activityType].distances.push({ activity: 'total', distance: activity.distance || 0, unit: activity.distanceUnit || 'km' });
+        activityTypeSummaries[activityType].distances.push({
+          activity: "total",
+          distance: activity.distance || 0,
+          unit: activity.distanceUnit || "km",
+        });
       }
     });
   }
@@ -201,7 +286,10 @@ export async function getClientActivities(clientId: string, startDate: Date, end
   // Convert activity type summaries into the desired array format and round distance
   Object.keys(activityTypeSummaries).forEach((activityType) => {
     const summary = activityTypeSummaries[activityType];
-    summary.distances = summary.distances.map((d: any) => ({ ...d, distance: parseFloat(d.distance.toFixed(2)) })); // Round distance
+    summary.distances = summary.distances.map((d: any) => ({
+      ...d,
+      distance: parseFloat(d.distance.toFixed(2)),
+    })); // Round distance
     activities.push({
       date: activityType, // Reuse 'date' field to store activity type for display
       summary: summary,
@@ -244,6 +332,3 @@ export async function getClientActivities(clientId: string, startDate: Date, end
     return a.date.localeCompare(b.date);
   });
 }
-
-
-
