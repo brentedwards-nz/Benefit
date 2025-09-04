@@ -8,8 +8,8 @@ const ExperimentalHabitsPage = async () => {
 
   const habitsData = await readClientHabitsByDateRange(
     userId,
-    new Date("2025-08-25T00:00:00"),
-    new Date("2025-08-28T23:59:59")
+    new Date("2025-09-01T00:00:00Z"),
+    new Date("2025-09-07T23:59:59Z")
   );
 
   return (

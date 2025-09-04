@@ -460,7 +460,7 @@ function ProgrammeClientsManagementContent() {
                             const totalAsNumber = parseFloat(totalAsString);
                             return `${totalAsNumber.toFixed(2)}`;
                           }
-                          return "Invlaid Invoice";
+                          return "Invalid Invoice";
                         })()
                       : "No Invoice"}
                   </TableCell>
@@ -495,7 +495,7 @@ function ProgrammeClientsManagementContent() {
                             const totalAsNumber = parseFloat(totalAsString);
                             return `${totalAsNumber.toFixed(2)}`;
                           }
-                          return "Invlaid Invoice";
+                          return "Invalid Invoice";
                         })()
                       : "No Invoice"}
                   </TableCell>

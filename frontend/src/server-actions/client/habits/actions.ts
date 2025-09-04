@@ -1,23 +1,22 @@
 "use server";
+import { addDays } from "date-fns";
+import { toBenefitDateRange, BenefitDateRange } from "@/utils/date-utils";
 import { ActionResult } from "@/types/server-action-results";
-import prisma from "@/utils/prisma/client";
-import { Prisma } from "@prisma/client";
-import { revalidatePath } from "next/cache";
-import { randomUUID } from "crypto";
-
 import { HabitDayData } from "./types";
-import { z } from "zod";
+import prisma from "@/utils/prisma/client";
 
 interface QueryParameters {
   user_id: string;
-  startDate: Date;
-  endDate: Date;
+  start: Date;
+  end: Date;
+  dateRange: BenefitDateRange;
 }
 
 export interface HabitintermediateData {
   QueryParameters: QueryParameters;
-  HabitDayData: HabitDayData[];
   Programmes: Programme[];
+  ClientHabits: ClientHabit[];
+  HabitDayData: HabitDayData[];
 }
 
 export async function readClientHabitsByDateRange(
@@ -33,46 +32,20 @@ export async function readClientHabitsByDateRange(
     };
   }
 
-  const beginDate = startDate;
-  beginDate.setHours(0, 0, 0, 0);
-  const finishDate = endDate;
-  finishDate.setHours(23, 59, 59, 999);
+  const dateRange = toBenefitDateRange(startDate, endDate);
+  if (!dateRange) {
+    console.error("Invalid date range provided to getClientHabitsByDateRange.");
+    return {
+      success: false,
+      message: `Invalid date range provided`,
+    };
+  }
+
+  const beginDate = dateRange.start;
+  const finishDate = dateRange.end;
 
   try {
-    const programmeHabits = await prisma.programmeHabit.findMany({
-      where: {
-        programme: {
-          enrolments: {
-            some: {
-              clientId: user_id,
-            },
-          },
-        },
-        current: true,
-      },
-      include: {
-        programme: {
-          select: {
-            id: true,
-            name: true,
-            humanReadableId: true,
-            startDate: true,
-            endDate: true,
-          },
-        },
-        habit: {
-          select: {
-            id: true,
-            title: true,
-            notes: true,
-          },
-        },
-        _count: { select: { completions: true } },
-      },
-      orderBy: [{ programme: { name: "asc" } }, { habit: { title: "asc" } }],
-    });
-
-    const programmes = await clientProgrammeEnrolmentsbyDateRange(
+    const programmes = await getProgrammeHabitsbyClientAndDateRange(
       user_id,
       beginDate,
       finishDate
@@ -87,23 +60,38 @@ export async function readClientHabitsByDateRange(
       };
     }
 
+    const clientHabits = await getClientHabitsByDateRange(
+      user_id,
+      beginDate,
+      finishDate
+    );
+    if (!clientHabits.success) {
+      return {
+        success: false,
+        message: clientHabits.message || "Failed to fetch programmes",
+        code: clientHabits.code,
+        details: clientHabits.details,
+      };
+    }
+
+    let habitDayData = calculateHabitDayData(
+      dateRange,
+      programmes.data,
+      clientHabits.data
+    );
+
     const queryParameters: QueryParameters = {
       user_id,
-      startDate: beginDate,
-      endDate: finishDate,
+      start: beginDate,
+      end: finishDate,
+      dateRange: dateRange,
     };
 
     const clientHabitsResult: HabitintermediateData = {
       QueryParameters: queryParameters,
-      HabitDayData: [
-        {
-          date: new Date(new Date().setHours(0, 0, 0, 0)),
-          habitCount: 3,
-          completedCount: 2,
-          isLocked: false,
-        },
-      ],
       Programmes: programmes.data,
+      ClientHabits: clientHabits.data,
+      HabitDayData: habitDayData,
     };
 
     return {
@@ -127,71 +115,172 @@ export async function readClientHabitsByDateRange(
   }
 }
 
+const areDatesOnSameDay = (date1: Date, date2: Date): boolean => {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+};
+
+function calculateHabitDayData(
+  range: BenefitDateRange,
+  programmes: Programme[],
+  clientHabits: ClientHabit[]
+): HabitDayData[] {
+  let result: HabitDayData[] = [];
+
+  for (let i = 0; i < range.duration; i++) {
+    const currentDate = addDays(new Date(range.start), i);
+    currentDate.setHours(0, 0, 0, 0);
+
+    // Calculate how many habits are scheduled for this day
+    const dayOfWeek = currentDate.getDay(); // 0 (Sun) to 6 (Sat)
+    let habitCount = 0;
+
+    programmes.forEach((programme) => {
+      // Check if the current date is within the programme's date range
+      if (
+        currentDate >= programme.startDate &&
+        currentDate <= programme.endDate
+      ) {
+        programme.habits.forEach((habit) => {
+          switch (dayOfWeek) {
+            case 0:
+              if (habit.sunFrequency > 0) habitCount++;
+              break;
+            case 1:
+              if (habit.monFrequency > 0) habitCount++;
+              break;
+            case 2:
+              if (habit.tueFrequency > 0) habitCount++;
+              break;
+            case 3:
+              if (habit.wedFrequency > 0) habitCount++;
+              break;
+            case 4:
+              if (habit.thuFrequency > 0) habitCount++;
+              break;
+            case 5:
+              if (habit.friFrequency > 0) habitCount++;
+              break;
+            case 6:
+              if (habit.satFrequency > 0) habitCount++;
+              break;
+          }
+        });
+      }
+    });
+
+    // Calculate how many habits were completed on this day
+    let completedHabitCount = 0;
+    console.log("Client habit:", currentDate);
+    clientHabits.forEach((clientHabit) => {
+      console.log("Client habit:", clientHabit.completionDate, currentDate);
+      if (
+        areDatesOnSameDay(clientHabit.completionDate, currentDate) &&
+        clientHabit.timesDone > 0
+      ) {
+        completedHabitCount++;
+      }
+    });
+    console.log("\n");
+
+    result.push({
+      date: currentDate,
+      habitCount: habitCount,
+      completedCount: completedHabitCount,
+      isLocked: false,
+    });
+  }
+
+  return result;
+}
+
+interface Habit {
+  id: string;
+  // title: string;
+  // notes: string | null;
+  monFrequency: number;
+  tueFrequency: number;
+  wedFrequency: number;
+  thuFrequency: number;
+  friFrequency: number;
+  satFrequency: number;
+  sunFrequency: number;
+}
+
 interface Programme {
   id: string;
   name: string;
   humanReadableId: string;
   startDate: Date;
   endDate: Date;
+  habits: Habit[];
 }
+
 export interface HabitIntermediateData {
   Programmes: Programme[];
 }
 
-async function clientProgrammeEnrolmentsbyDateRange(
+async function getProgrammeHabitsbyClientAndDateRange(
   user_id: string,
-  beginDate: Date,
-  finishDate: Date
+  begin: Date,
+  finish: Date
 ): Promise<ActionResult<Programme[]>> {
   try {
-    const programmesResult = await prisma.programmeEnrolment.findMany({
+    const client = await prisma.client.findUnique({
       where: {
-        programme: {
-          enrolments: {
-            some: {
-              clientId: user_id,
+        id: user_id,
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        programmeEnrolments: {
+          where: {
+            programme: {
+              AND: [
+                { startDate: { lte: finish } },
+                { endDate: { gte: begin } },
+              ],
             },
           },
-          OR: [
-            {
-              // beginDate is in programme's range
-              AND: [
-                { startDate: { lte: beginDate } },
-                {
-                  OR: [
-                    { endDate: { gte: beginDate } },
-                    { endDate: { equals: null } },
-                  ],
-                },
-              ],
-            },
-            {
-              // finishDate is in programme's range
-              AND: [
-                { startDate: { lte: finishDate } },
-                {
-                  OR: [
-                    { endDate: { gte: finishDate } },
-                    { endDate: { equals: null } },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      include: {
-        programme: {
           select: {
-            id: true,
-            name: true,
-            humanReadableId: true,
-            startDate: true,
-            endDate: true,
+            programme: {
+              select: {
+                id: true,
+                name: true,
+                startDate: true,
+                endDate: true,
+                humanReadableId: true,
+                programmeHabits: {
+                  select: {
+                    id: true,
+                    monFrequency: true,
+                    tueFrequency: true,
+                    wedFrequency: true,
+                    thuFrequency: true,
+                    friFrequency: true,
+                    satFrequency: true,
+                    sunFrequency: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
     });
+
+    if (!client) {
+      return {
+        success: false,
+        message: `Client with ID ${user_id} not found`,
+        code: "CLIENT_NOT_FOUND",
+      };
+    }
+
+    const programmesResult = client.programmeEnrolments;
 
     const programmes: Programme[] = programmesResult.map((value) => ({
       id: value.programme.id,
@@ -199,6 +288,16 @@ async function clientProgrammeEnrolmentsbyDateRange(
       humanReadableId: value.programme.humanReadableId,
       startDate: value.programme.startDate,
       endDate: value.programme.endDate ?? new Date(),
+      habits: value.programme.programmeHabits.map((ph) => ({
+        id: ph.id,
+        monFrequency: ph.monFrequency,
+        tueFrequency: ph.tueFrequency,
+        wedFrequency: ph.wedFrequency,
+        thuFrequency: ph.thuFrequency,
+        friFrequency: ph.friFrequency,
+        satFrequency: ph.satFrequency,
+        sunFrequency: ph.sunFrequency,
+      })),
     }));
 
     return {
@@ -208,6 +307,76 @@ async function clientProgrammeEnrolmentsbyDateRange(
   } catch (err: any) {
     console.error(err);
 
+    return {
+      success: false,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
+      code: "UNEXPECTED_SERVER_ERROR",
+      details:
+        process.env.NODE_ENV === "development"
+          ? { stack: err.stack }
+          : undefined,
+    };
+  }
+}
+
+interface ClientHabit {
+  programmeHabitId: string;
+  completionDate: Date;
+  completed: boolean;
+  timesDone: number;
+}
+
+async function getClientHabitsByDateRange(
+  clientId: string,
+  beginDate: Date,
+  finishDate: Date
+): Promise<ActionResult<ClientHabit[]>> {
+  try {
+    const habits = await prisma.clientHabits.findMany({
+      where: {
+        AND: [
+          { clientId: clientId },
+          {
+            completionDate: {
+              gte: beginDate,
+              lte: finishDate,
+            },
+          },
+        ],
+      },
+      select: {
+        programmeHabitId: true,
+        completionDate: true,
+        completed: true,
+        timesDone: true,
+      },
+      orderBy: {
+        completionDate: "asc",
+      },
+    });
+
+    if (!habits) {
+      return {
+        success: false,
+        message: `No habits found for client with ID ${clientId} in the specified date range`,
+        code: "HABITS_NOT_FOUND",
+      };
+    }
+
+    const result: ClientHabit[] = habits.map((habit) => ({
+      programmeHabitId: habit.programmeHabitId,
+      completionDate: habit.completionDate,
+      completed: habit.completed,
+      timesDone: habit.timesDone,
+    }));
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (err: any) {
     return {
       success: false,
       message: `An unexpected server error occurred: ${
