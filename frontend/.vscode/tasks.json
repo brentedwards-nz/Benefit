@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Launch Chrome for Debugging",
+      "type": "shell",
+      "command": "",
+      "windows": {
+        "command": "taskkill /im chrome.exe /f & \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --remote-debugging-port=9222 --user-data-dir=\"C:\\Temp\\chrome-debug-profile\""
+      },
+      "osx": {
+        "command": "killall 'Google Chrome' ; /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --remote-debugging-port=9222 --user-data-dir=\"/tmp/chrome-debug-profile\""
+      },
+      "linux": {
+        "command": "killall chrome ; google-chrome --remote-debugging-port=9222 --user-data-dir=\"/tmp/chrome-debug-profile\""
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "isBackground": true
+    }
+  ]
+}

@@ -48,13 +48,6 @@ import { getClientActivities } from "@/server-actions/fitbit/actions";
 import { readEmail } from "@/server-actions/email/actions";
 import { Email } from "@/server-actions/email/types";
 import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
-// import {
-//   WeekView,
-//   WeekViewProps,
-//   DayData,
-//   ProgrammeHabit,
-//   ClientHabits,
-// } from "@/components/habits/week-view";
 import {
   HabitOverView,
   HabitOverViewProps,
@@ -201,18 +194,7 @@ const TrainerClientsPage = () => {
           throw new Error("No habit data found for the client.");
         }
 
-        const days: DayData[] = clientHabits.data.HabitDayData.map((habit) => {
-          const completionRate =
-            habit.habitCount > 0 ? habit.completedCount / habit.habitCount : 0;
-          const date = new Date(habit.date);
-
-          return {
-            date: date,
-            dayNumber: date.getDate(),
-            isCurrentMonth: false,
-            completionRate: completionRate,
-          };
-        });
+        const days = clientHabits.data.HabitDayData;
 
         console.log(JSON.stringify(days, null, 2));
 

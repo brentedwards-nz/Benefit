@@ -32,12 +32,12 @@ export function toBenefitDateRange(
 
   // Calculate the duration in days
   const duration = Math.ceil(
-    (finalEnd.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   return {
-    start,
-    end: finalEnd,
+    start: startDate,
+    end: endDate,
     duration: duration,
   };
 }

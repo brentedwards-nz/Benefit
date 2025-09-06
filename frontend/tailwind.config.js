@@ -5,6 +5,19 @@ module.exports = {
 		'./src/app/**/*.{js,ts,jsx,tsx,mdx}',
 		'./src/components/**/*.{js,ts,jsx,tsx,mdx}',
 	],
+	safelist: [
+		"bg-green-500",
+		"bg-green-400",
+		"bg-lime-500",
+		"bg-lime-400",
+		"bg-yellow-400",
+		"bg-amber-400",
+		"bg-orange-400",
+		"bg-orange-500",
+		"bg-red-300",
+		"bg-red-400",
+		"bg-red-500"
+	],
 	theme: {
 		extend: {
 			colors: {
@@ -61,7 +74,21 @@ module.exports = {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// ADD THIS NEW COLOR SCALE
+				progress: {
+					'0': '#FF0000',
+					'10': '#FF2400',
+					'20': '#FF4800',
+					'30': '#FF6C00',
+					'40': '#FF9000',
+					'50': '#FFB400',
+					'60': '#D2FF00',
+					'70': '#A4FF00',
+					'80': '#78FF00',
+					'90': '#4CFF00',
+					'100': '#00FF00',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

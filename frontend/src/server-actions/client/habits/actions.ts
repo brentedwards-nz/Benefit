@@ -4,11 +4,13 @@ import { toBenefitDateRange, BenefitDateRange } from "@/utils/date-utils";
 import { ActionResult } from "@/types/server-action-results";
 import { HabitDayData } from "./types";
 import prisma from "@/utils/prisma/client";
+import { getDayColor } from "@/utils/general-utils";
 
 interface QueryParameters {
+  function_name: string;
   user_id: string;
-  start: Date;
-  end: Date;
+  startDate: Date;
+  endDate: Date;
   dateRange: BenefitDateRange;
 }
 
@@ -41,14 +43,11 @@ export async function readClientHabitsByDateRange(
     };
   }
 
-  const beginDate = dateRange.start;
-  const finishDate = dateRange.end;
-
   try {
     const programmes = await getProgrammeHabitsbyClientAndDateRange(
       user_id,
-      beginDate,
-      finishDate
+      startDate,
+      endDate
     );
 
     if (!programmes.success) {
@@ -62,8 +61,8 @@ export async function readClientHabitsByDateRange(
 
     const clientHabits = await getClientHabitsByDateRange(
       user_id,
-      beginDate,
-      finishDate
+      startDate,
+      endDate
     );
     if (!clientHabits.success) {
       return {
@@ -81,9 +80,10 @@ export async function readClientHabitsByDateRange(
     );
 
     const queryParameters: QueryParameters = {
+      function_name: "readClientHabitsByDateRange",
       user_id,
-      start: beginDate,
-      end: finishDate,
+      startDate: startDate,
+      endDate: endDate,
       dateRange: dateRange,
     };
 
@@ -138,12 +138,15 @@ function calculateHabitDayData(
     const dayOfWeek = currentDate.getDay(); // 0 (Sun) to 6 (Sat)
     let habitCount = 0;
 
+    let isProgrammeDay = false;
+
     programmes.forEach((programme) => {
       // Check if the current date is within the programme's date range
       if (
         currentDate >= programme.startDate &&
         currentDate <= programme.endDate
       ) {
+        isProgrammeDay = true;
         programme.habits.forEach((habit) => {
           switch (dayOfWeek) {
             case 0:
@@ -174,9 +177,9 @@ function calculateHabitDayData(
 
     // Calculate how many habits were completed on this day
     let completedHabitCount = 0;
-    console.log("Client habit:", currentDate);
+    //console.log("Client habit:", currentDate);
     clientHabits.forEach((clientHabit) => {
-      console.log("Client habit:", clientHabit.completionDate, currentDate);
+      //console.log("Client habit:", clientHabit.completionDate, currentDate);
       if (
         areDatesOnSameDay(clientHabit.completionDate, currentDate) &&
         clientHabit.timesDone > 0
@@ -186,11 +189,17 @@ function calculateHabitDayData(
     });
     console.log("\n");
 
+    const completionRate =
+      habitCount === 0 ? 0 : completedHabitCount / habitCount;
+
     result.push({
       date: currentDate,
-      habitCount: habitCount,
-      completedCount: completedHabitCount,
-      isLocked: false,
+      dayNumber: currentDate.getDate(),
+      completionRate: completionRate,
+      isCurrentMonth: false,
+      isSelected: currentDate === new Date(),
+      isProgrammeDay: isProgrammeDay,
+      color: getDayColor(completionRate),
     });
   }
 

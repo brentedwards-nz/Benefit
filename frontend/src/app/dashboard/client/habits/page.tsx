@@ -1,5 +1,5 @@
 "use client";
-
+import { getDayColor } from "@/utils/general-utils";
 import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -153,18 +153,6 @@ const ClientHabitsPage = () => {
     }
 
     return weeks;
-  };
-
-  // Get color based on completion rate
-  const getDayColor = (completionRate: number): string => {
-    if (completionRate === 1) return "bg-green-500"; // All habits completed
-    if (completionRate === 0) return "bg-red-500"; // No habits completed
-
-    // Orange gradient based on completion rate
-    if (completionRate >= 0.8) return "bg-orange-400";
-    if (completionRate >= 0.6) return "bg-orange-500";
-    if (completionRate >= 0.4) return "bg-orange-600";
-    return "bg-orange-700";
   };
 
   // Navigate to previous 4 weeks
