@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProfileEditForm } from "@/components/profile/profile-edit";
 import { readClient, updateClient } from "@/server-actions/client/actions";
 import type { Client } from "@/server-actions/client/types";
@@ -8,32 +9,53 @@ import { ProfileFormValues } from "@/components/profile/schema";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/loading";
+import { UserRole } from "@prisma/client";
 
 const Profile = () => {
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
 
-  const [initialData, setInitialData] = useState<Client | undefined>(undefined);
+  const clientId = searchParams.get("clientId");
+
+  const [profileData, setProfileData] = useState<Client | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  const [user_id, setUserId] = useState<string | undefined>(undefined);
+  const [auth_id, setAuthId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (session?.user?.id) {
-      setUserId(session.user.id);
-    } else {
-      // No session or user ID found
+    setAuthId(session?.user?.id);
+    if (clientId) {
+      if (
+        session?.user?.roles.includes(UserRole.Trainer) ||
+        session?.user?.roles.includes(UserRole.Admin) ||
+        session?.user?.roles.includes(UserRole.SystemAdmin)
+      ) {
+        setUserId(clientId);
+        return;
+      }
+
+      return;
     }
-  }, [session]);
+
+    if (session?.user?.id) {
+      setAuthId(session.user.id);
+      return;
+    }
+  }, [session, clientId]);
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (!userId) {
+      if (!auth_id) {
         setIsLoading(false);
         return;
       }
+
       try {
-        const result = await readClient(userId);
+        setIsLoading(false);
+        const result = await readClient(auth_id, user_id!);
         if (result.success) {
-          setInitialData(result.data);
+          setProfileData(result.data);
         } else {
           toast.error("Failed to load profile: " + result.message);
         }
@@ -45,10 +67,10 @@ const Profile = () => {
     };
 
     fetchProfileData();
-  }, [userId]);
+  }, [user_id, auth_id]);
 
   const onSubmit = async (data: ProfileFormValues) => {
-    if (!userId) {
+    if (!auth_id) {
       toast.error("User not authenticated.");
       return;
     }
@@ -71,10 +93,10 @@ const Profile = () => {
         authId: data.authId,
       };
 
-      const result = await updateClient(userId, updateData);
+      const result = await updateClient(auth_id, updateData);
       if (result.success) {
         toast.success("Profile updated successfully!");
-        setInitialData(result.data);
+        setProfileData(result.data);
       } else {
         toast.error("Failed to update profile: " + result.message);
       }
@@ -89,7 +111,7 @@ const Profile = () => {
     // Implement cancel logic, e.g., navigate back or reset form
   };
 
-  if (isLoading || !initialData) {
+  if (isLoading || !profileData) {
     return (
       <Loading
         title="Loading Profile"
@@ -104,13 +126,13 @@ const Profile = () => {
     );
   }
 
-  if (!initialData) {
+  if (!profileData) {
     return (
       <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center min-h-[100vh]">
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold">Profile Not Found</h2>
           <p>No profile found or an error occurred. Please try again.</p>
-          {!userId && (
+          {!user_id && (
             <div className="mt-4">
               <a
                 href="/auth/signin"
@@ -129,9 +151,9 @@ const Profile = () => {
     <>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min">
-          {initialData && (
+          {profileData && (
             <ProfileEditForm
-              initialData={initialData}
+              initialData={profileData}
               onSubmit={onSubmit}
               onCancel={onCancel}
               isLoading={isLoading}

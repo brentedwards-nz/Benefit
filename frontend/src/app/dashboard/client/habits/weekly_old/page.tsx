@@ -16,42 +16,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { UserRole } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loading } from "@/components/ui/loading";
-import { WeekView } from "@/components/habits/week-view";
+import { WeekView, ClientHabits, ProgrammeHabit } from "@/components/habits/week-view";
 import { toast } from "sonner";
-
-interface ClientHabits {
-  id: string;
-  completionDate: string;
-  completed: boolean;
-  timesDone?: number;
-  programmeHabitId: string;
-  programmeHabit: {
-    id: string;
-    programme: {
-      id: string;
-      name: string;
-    };
-    habit: {
-      id: string;
-      title: string;
-    };
-  };
-  notes?: string;
-}
-
-interface ProgrammeHabit {
-  id: string;
-  programme: {
-    id: string;
-    name: string;
-    humanReadableId: string;
-  };
-  habit: {
-    id: string;
-    title: string;
-  };
-  frequencyPerDay?: number | null;
-}
 
 interface DayData {
   date: Date;
@@ -72,7 +38,7 @@ const WeeklyHabitsPageContent = () => {
   const [weeks, setWeeks] = useState<WeekData[]>([]);
   const [loading, setLoading] = useState(true);
   const [programmeHabits, setProgrammeHabits] = useState<ProgrammeHabit[]>([]);
-  const [clientHabits, setClientHabits] = useState<ClientHabit[]>([]);
+  const [clientHabits, setClientHabits] = useState<ClientHabits[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekData | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [autoSelectWeek, setAutoSelectWeek] = useState(true); // Flag to control auto-selection
@@ -104,7 +70,7 @@ const WeeklyHabitsPageContent = () => {
   };
 
   // Generate 4 weeks of data starting from the given date
-  const generateWeeks = (startDate: Date): WeekData[] => {
+  const generateWeeks = (startDate: Date, clientHabits: ClientHabits[]): WeekData[] => {
     const weeks: WeekData[] = [];
     const startOfWeek = getStartOfWeek(startDate);
 
@@ -119,8 +85,8 @@ const WeeklyHabitsPageContent = () => {
 
         // Get habit completions for this specific date
         const dateString = currentDate.toISOString().split("T")[0];
-        const dayCompletions = habitCompletions.filter(
-          (c) => c.completionDate === dateString
+        const dayCompletions = clientHabits.filter(
+          (c) => c.habitDate.split("T")[0] === dateString
         );
 
         const completedCount = dayCompletions.filter((c) => c.completed).length;
@@ -177,7 +143,7 @@ const WeeklyHabitsPageContent = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           programmeHabitId,
-          completionDate: dateString,
+          habitDate: dateString,
           // Interpret completed as +1 or -1 intent
           delta: completed ? 1 : -1,
           clientId,
@@ -198,7 +164,7 @@ const WeeklyHabitsPageContent = () => {
 
         if (completionsResponse.ok) {
           const completionsData = await completionsResponse.json();
-          setHabitCompletions(completionsData);
+          setClientHabits(completionsData);
         }
       } else {
         const errorData = await response.json();
@@ -276,7 +242,7 @@ const WeeklyHabitsPageContent = () => {
         if (completionsResponse.ok) {
           const completionsData = await completionsResponse.json();
           console.log(JSON.stringify(completionsData, null, 2));
-          setHabitCompletions(completionsData);
+          setClientHabits(completionsData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -290,9 +256,9 @@ const WeeklyHabitsPageContent = () => {
 
   useEffect(() => {
     if (programmeHabits.length > 0) {
-      setWeeks(generateWeeks(currentDate));
+      setWeeks(generateWeeks(currentDate, clientHabits));
     }
-  }, [currentDate, programmeHabits, habitCompletions]);
+  }, [currentDate, programmeHabits, clientHabits]);
 
   // Auto-select week and date when data is loaded
   useEffect(() => {
@@ -423,7 +389,7 @@ const WeeklyHabitsPageContent = () => {
             selectedWeek={selectedWeek}
             selectedDate={selectedDate}
             programmeHabits={programmeHabits}
-            habitCompletions={habitCompletions}
+            habitCompletions={clientHabits}
             isSelf={isSelf}
             onHabitToggle={handleHabitToggle}
           />
@@ -474,4 +440,3 @@ const WeeklyHabitsPage = () => {
 };
 
 export default WeeklyHabitsPage;
-age;

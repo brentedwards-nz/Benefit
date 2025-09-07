@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
                         notes: true
                     }
                 },
-                _count: { select: { completions: true } }
+                                _count: { select: { clientHabits: true } }
             },
             orderBy: [
                 { programme: { name: 'asc' } },

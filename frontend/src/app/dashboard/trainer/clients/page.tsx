@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   Card,
@@ -206,7 +207,7 @@ const TrainerClientsPage = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setIsLoadingClientHabit(false);
+        setIsLoadingClientHabits(false);
       }
     };
 
@@ -251,13 +252,18 @@ const TrainerClientsPage = () => {
             <CardTitle className="text-2xl">Client Details</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row items-center gap-6">
-            <Avatar className="h-24 w-24 md:h-32 md:w-32">
-              <AvatarImage
-                src={selectedClient.avatarUrl || "/placeholder-avatar.jpg"}
-                alt={selectedClient.name}
-              />
-              <AvatarFallback>{selectedClient.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+            <Link
+              href={`/dashboard/client/profile?clientId=${selectedClient.id}`}
+            >
+              <Avatar className="h-24 w-24 md:h-32 md:w-32 border-2 border-primary">
+                <AvatarImage
+                  src={selectedClient.avatarUrl || "/placeholder-avatar.jpg"}
+                  alt={selectedClient.name}
+                  className="object-cover"
+                />
+                <AvatarFallback>{selectedClient.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="flex-1 space-y-2 text-center md:text-left">
               <p className="text-xl font-semibold">{selectedClient.name}</p>
               <p className="text-muted-foreground">

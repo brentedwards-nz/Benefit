@@ -45,15 +45,21 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-import {
-  ProfileSchema,
-  //ContactInfoItemSchema,
-  ProfileFormValues,
-  //ContactInfoItemFormValues,
-} from "./schema";
+import { useAuthorization } from "@/hooks/use-authorization";
+import { UserRole } from "@prisma/client";
+
+import { ProfileSchema, ProfileFormValues } from "./schema";
 
 import { Client } from "@/server-actions/client/types";
 import { toast } from "sonner";
+
+const roleHierarchy: Record<UserRole, number> = {
+  SystemAdmin: 4,
+  Admin: 3,
+  Trainer: 2,
+  Client: 1,
+};
+const allRoles = Object.values(UserRole);
 
 interface ProfileEditFormProps {
   initialData: Client;
@@ -68,26 +74,51 @@ export function ProfileEditForm({
   onCancel,
   isLoading,
 }: ProfileEditFormProps) {
-  const defaultValues: ProfileFormValues = {
-    ...initialData,
-    firstName: initialData.firstName || '',
-    lastName: initialData.lastName || '',
-    contactInfo:
-      initialData.contactInfo?.map((ci) => ({
-        ...ci,
-        id: ci.id || Math.random().toString(),
-      })) || [],
-    birthDate:
-      initialData.birthDate instanceof Date
-        ? initialData.birthDate
-        : initialData.birthDate
-          ? new Date(initialData.birthDate)
-          : null,
-  };
+  const { user: currentUser } = useAuthorization();
+  const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
+  const [displayMonth, setDisplayMonth] = React.useState<Date>(
+    initialData.birthDate || new Date()
+  );
+
+  const profilePrimaryRole = initialData.roles?.[0];
+  const currentUserPrimaryRole = currentUser?.roles?.[0];
+
+  const isRoleSelectDisabled = React.useMemo(() => {
+    if (!currentUserPrimaryRole || !profilePrimaryRole) {
+      return true;
+    }
+    if (currentUser?.id === initialData.id) {
+      return true;
+    }
+    if (currentUserPrimaryRole === "SystemAdmin") {
+      return false;
+    }
+    if (currentUserPrimaryRole === "Admin") {
+      if (profilePrimaryRole === "Trainer" || profilePrimaryRole === "Client") {
+        return false;
+      }
+    }
+    return true;
+  }, [currentUser, initialData.id, profilePrimaryRole, currentUserPrimaryRole]);
+
+  const availableRoles = React.useMemo(() => {
+    if (!currentUserPrimaryRole) return [];
+    const currentUserLevel = roleHierarchy[currentUserPrimaryRole];
+
+    if (currentUserPrimaryRole === "SystemAdmin") {
+      return allRoles;
+    }
+
+    return allRoles.filter((role) => roleHierarchy[role] < currentUserLevel);
+  }, [currentUserPrimaryRole]);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileSchema),
-    defaultValues,
+    defaultValues: {
+      ...initialData,
+      firstName: initialData.firstName || "",
+      lastName: initialData.lastName || "",
+    },
     mode: "onChange",
   });
 
@@ -148,7 +179,9 @@ export function ProfileEditForm({
                 <div
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => {
-                    const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+                    const fileInput = document.getElementById(
+                      "avatar-upload"
+                    ) as HTMLInputElement;
                     if (fileInput) fileInput.click();
                   }}
                 >
@@ -159,13 +192,14 @@ export function ProfileEditForm({
                       className="w-24 h-24 rounded-full object-cover border-4 border-border shadow-lg"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        target.style.display = "none";
                       }}
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-muted border-4 border-border flex items-center justify-center hover:bg-muted/80 transition-colors">
                       <span className="text-2xl text-muted-foreground">
-                        {form.watch("firstName")?.charAt(0)?.toUpperCase() || 'U'}
+                        {form.watch("firstName")?.charAt(0)?.toUpperCase() ||
+                          "U"}
                       </span>
                     </div>
                   )}
@@ -187,7 +221,9 @@ export function ProfileEditForm({
                   {form.watch("firstName")} {form.watch("lastName")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {form.watch("avatarUrl") ? "Click to change" : "Click to upload"}
+                  {form.watch("avatarUrl")
+                    ? "Click to change"
+                    : "Click to upload"}
                 </p>
               </div>
 
@@ -202,7 +238,8 @@ export function ProfileEditForm({
                   if (file) {
                     try {
                       // Import and use image utilities
-                      const { validateImageFile, compressAndResizeImage } = await import('@/lib/imageUtils');
+                      const { validateImageFile, compressAndResizeImage } =
+                        await import("@/lib/imageUtils");
 
                       // Validate file
                       const validation = validateImageFile(file, 2);
@@ -212,7 +249,12 @@ export function ProfileEditForm({
                       }
 
                       // Compress and resize image
-                      const compressedImageUrl = await compressAndResizeImage(file, 200, 200, 0.8);
+                      const compressedImageUrl = await compressAndResizeImage(
+                        file,
+                        200,
+                        200,
+                        0.8
+                      );
                       form.setValue("avatarUrl", compressedImageUrl);
                       toast.success("Profile picture uploaded successfully!");
                     } catch (error) {
@@ -267,51 +309,59 @@ export function ProfileEditForm({
                 </FormDescription>
               </FormItem>
 
-              <FormField
-                control={form.control}
-                name="birthDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date of Birth</FormLabel>
-                    <div className="flex space-x-2">
-                      <FormControl>
-                        <Input
-                          type="date"
-                          value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                          onChange={(e) => {
-                            const date = e.target.value ? new Date(e.target.value) : null;
-                            field.onChange(date);
-                          }}
-                          max={format(new Date(), "yyyy-MM-dd")}
-                          min="1900-01-01"
-                          className="flex-1"
-                        />
-                      </FormControl>
-                      <Popover>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:col-span-2">
+                <FormField
+                  control={form.control}
+                  name="birthDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date of Birth</FormLabel>
+                      <Popover
+                        open={isDatePickerOpen}
+                        onOpenChange={(open) => {
+                          setIsDatePickerOpen(open);
+                          if (open) {
+                            setDisplayMonth(field.value || new Date());
+                          }
+                        }}
+                      >
                         <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className="px-3"
-                          >
-                            <CalendarIcon className="h-4 w-4" />
-                          </Button>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? (
+                                format(field.value, "EEE, dd-MMM-yyyy")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <div className="p-3 border-b">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium">Quick Navigation</span>
+                              <span className="text-sm font-medium">
+                                Quick Navigation
+                              </span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                              {[1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020].map((year) => (
+                              {[
+                                1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020,
+                              ].map((year) => (
                                 <Button
                                   key={year}
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    const currentDate = field.value || new Date();
-                                    const newDate = new Date(currentDate);
+                                    const newDate = new Date(displayMonth);
                                     newDate.setFullYear(year);
-                                    field.onChange(newDate);
+                                    setDisplayMonth(newDate);
                                   }}
                                   className="text-xs"
                                 >
@@ -321,51 +371,103 @@ export function ProfileEditForm({
                             </div>
                           </div>
                           <Calendar
+                            month={displayMonth}
+                            onMonthChange={setDisplayMonth}
                             mode="single"
                             selected={field.value || undefined}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              setIsDatePickerOpen(false);
+                            }}
                             disabled={(date) =>
                               date > new Date() || date < new Date("1900-01-01")
                             }
-                            initialFocus
                             captionLayout="dropdown"
                             fromYear={1900}
                             toYear={new Date().getFullYear()}
+                            weekStartsOn={1}
+                            className="w-full"
                           />
                         </PopoverContent>
                       </Popover>
-                    </div>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                        <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                          <SelectItem value="PreferNotToSay">
+                            Prefer not to say
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="roles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      {isRoleSelectDisabled ? (
+                        <FormControl>
+                          <Input
+                            value={
+                              field.value?.[0]
+                                ? field.value[0]
+                                    .replace(/([A-Z])/g, " $1")
+                                    .trim()
+                                : "Not Assigned"
+                            }
+                            readOnly
+                            disabled
+                          />
+                        </FormControl>
+                      ) : (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange([value]);
+                          }}
+                          value={field.value?.[0] || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableRoles.map((role) => (
+                              <SelectItem key={role} value={role}>
+                                {role.replace(/([A-Z])/g, " $1").trim()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

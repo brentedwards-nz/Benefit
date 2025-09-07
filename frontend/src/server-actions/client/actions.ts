@@ -3,7 +3,7 @@
 
 import { ActionResult } from "@/types/server-action-results";
 import prisma from "@/utils/prisma/client";
-import { Prisma } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 
@@ -36,7 +36,10 @@ const ClientSchema = z.object({
     .refine((date) => !date || date < new Date(), {
       message: "Birth date cannot be in the future.",
     }),
-  gender: z.enum(['Male', 'Female', 'Other', 'PreferNotToSay']).nullable().optional(),
+  gender: z
+    .enum(["Male", "Female", "Other", "PreferNotToSay"])
+    .nullable()
+    .optional(),
   current: z.boolean().default(true), // Default to true if not provided
   disabled: z.boolean().default(false), // Default to false if not provided
   avatarUrl: z.string().url("Must be a valid URL.").nullable().optional(), // Allow null or undefined
@@ -46,16 +49,15 @@ const ClientSchema = z.object({
     .optional(), // Allow undefined for the entire array
   createdAt: z.date().nullable().optional(),
   updatedAt: z.date().nullable().optional(),
-  roles: z.array(z.string()).optional(),
+  roles: z.array(z.nativeEnum(UserRole)).optional(),
   authId: z.string().optional(),
 });
 
 export async function readClient(
-  user_id: string
+  auth_id: string,
+  user_id?: string
 ): Promise<ActionResult<Client>> {
-
-
-  if (typeof user_id !== "string" || user_id.trim() === "") {
+  if (typeof auth_id !== "string" || auth_id.trim() === "") {
     console.error("Invalid auth_id provided to getClient Server Action.");
     return {
       success: false,
@@ -64,10 +66,10 @@ export async function readClient(
   }
 
   try {
+    const whereClause = !user_id ? { authId: auth_id } : { id: user_id };
+
     const client = await prisma.client.findUnique({
-      where: {
-        authId: user_id,
-      },
+      where: whereClause,
       select: {
         id: true,
         firstName: true,
@@ -99,10 +101,10 @@ export async function readClient(
     const contactInfo = Array.isArray(client.contactInfo)
       ? (client.contactInfo as ContactInfoItem[])
       : typeof client.contactInfo === "string"
-        ? (JSON.parse(client.contactInfo) as ContactInfoItem[])
-        : client.contactInfo === null
-          ? null
-          : [];
+      ? (JSON.parse(client.contactInfo) as ContactInfoItem[])
+      : client.contactInfo === null
+      ? null
+      : [];
 
     const clientResult: Client = {
       id: client.id,
@@ -129,8 +131,9 @@ export async function readClient(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"
-        }`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -156,6 +159,7 @@ export async function updateClient(
     authId: auth_id,
     ...data,
   });
+
   if (!validationResult.success) {
     return {
       success: false,
@@ -164,67 +168,82 @@ export async function updateClient(
     };
   }
 
-  const validatedData = validationResult.data;
+  const { id, ...validatedData } = validationResult.data;
 
   try {
-    const contactInfoJson: any[] = (validatedData.contactInfo || []).map(
-      (item: any) => ({
-        type: item.type,
-        value: item.value,
-        label: item.label,
-        primary: item.primary,
-      })
-    );
+    let updatedOrCreatedRecord;
 
-    const updatedOrCreatedRecord = await prisma.client.upsert({
-      where: {
-        authId: auth_id,
-      },
-      update: {
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        birthDate: validatedData.birthDate,
-        gender: validatedData.gender,
-        current: validatedData.current,
-        disabled: validatedData.disabled,
-        avatarUrl: validatedData.avatarUrl,
+    const contactInfoJson = validatedData.contactInfo
+      ? (validatedData.contactInfo as Prisma.JsonArray)
+      : Prisma.JsonNull;
+
+    if (id) {
+      // UPDATE logic
+      const updateData: Prisma.ClientUpdateInput = {
+        ...validatedData,
         contactInfo: contactInfoJson,
-      },
-      create: {
-        id: randomUUID(),
-        authId: auth_id,
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        birthDate: validatedData.birthDate,
-        gender: validatedData.gender,
-        current: validatedData.current,
-        disabled: validatedData.disabled,
-        avatarUrl: validatedData.avatarUrl,
-        contactInfo: contactInfoJson,
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        birthDate: true,
-        gender: true,
-        current: true,
-        disabled: true,
-        avatarUrl: true,
-        contactInfo: true,
-        createdAt: true,
-        updatedAt: true,
-        roles: true,
-        authId: true,
-      },
-    });
+        updatedAt: new Date(),
+      };
+
+      // Only update roles if they are explicitly provided in the input data
+      if (!("roles" in data)) {
+        delete (updateData as Partial<Client>).roles;
+      }
+
+      updatedOrCreatedRecord = await prisma.client.update({
+        where: { id },
+        data: updateData,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          birthDate: true,
+          gender: true,
+          current: true,
+          disabled: true,
+          avatarUrl: true,
+          contactInfo: true,
+          createdAt: true,
+          updatedAt: true,
+          roles: true,
+          authId: true,
+        },
+      });
+    } else {
+      // CREATE logic
+      updatedOrCreatedRecord = await prisma.client.create({
+        data: {
+          id: randomUUID(),
+          authId: auth_id,
+          ...validatedData,
+          contactInfo: contactInfoJson,
+          roles: validatedData.roles || ["Client"], // Default role on creation
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          birthDate: true,
+          gender: true,
+          current: true,
+          disabled: true,
+          avatarUrl: true,
+          contactInfo: true,
+          createdAt: true,
+          updatedAt: true,
+          roles: true,
+          authId: true,
+        },
+      });
+    }
 
     revalidatePath("/dashboard/profile");
     revalidatePath("/dashboard");
 
     const clientResult: Client = {
       id: updatedOrCreatedRecord.id,
-      firstName: updatedOrCreatedRecord.firstName || "** First name required **",
+      firstName:
+        updatedOrCreatedRecord.firstName || "** First name required **",
       lastName: updatedOrCreatedRecord.lastName || "** Last name required **",
       birthDate: updatedOrCreatedRecord.birthDate,
       gender: updatedOrCreatedRecord.gender,
@@ -247,8 +266,9 @@ export async function updateClient(
   } catch (err: any) {
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"
-        }`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"

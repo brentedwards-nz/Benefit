@@ -14,44 +14,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { UserRole } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loading } from "@/components/ui/loading";
-import { WeekView } from "@/components/habits/week-view";
+import { WeekView, ClientHabits, ProgrammeHabit } from "@/components/habits/week-view";
 import { toast } from "sonner";
-
-interface ClientHabits {
-  id: string;
-  completionDate: string;
-  completed: boolean;
-  timesDone?: number;
-  programmeHabitId: string;
-  programmeHabit: {
-    id: string;
-    programme: {
-      id: string;
-      name: string;
-    };
-    habit: {
-      id: string;
-      title: string;
-    };
-  };
-  notes?: string;
-}
-
-interface ProgrammeHabit {
-  id: string;
-  programme: {
-    id: string;
-    name: string;
-    humanReadableId: string;
-    startDate?: string | null;
-    endDate?: string | null;
-  };
-  habit: {
-    id: string;
-    title: string;
-  };
-  frequencyPerDay?: number | null;
-}
 
 interface DayData {
   date: Date;
@@ -116,7 +80,7 @@ const ClientHabitsPage = () => {
   };
 
   // Generate 4 weeks of data starting from the given date
-  const generateWeeks = (startDate: Date): WeekData[] => {
+  const generateWeeks = (startDate: Date, clientHabits: ClientHabits[]): WeekData[] => {
     const weeks: WeekData[] = [];
     const startOfWeek = getStartOfWeek(startDate);
 
@@ -132,7 +96,7 @@ const ClientHabitsPage = () => {
         // Get habit completions for this specific date
         const dateString = currentDate.toISOString().split("T")[0];
         const dayCompletions = clientHabits.filter(
-          (c) => c.completionDate.split("T")[0] === dateString
+          (c) => c.habitDate.split("T")[0] === dateString
         );
 
         const completedCount = dayCompletions.filter((c) => c.completed).length;
@@ -238,7 +202,7 @@ const ClientHabitsPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           programmeHabitId,
-          completionDate: dateString,
+          habitDate: dateString,
           completed: !completed,
           clientId,
         }),
@@ -323,9 +287,9 @@ const ClientHabitsPage = () => {
 
   useEffect(() => {
     if (programmeHabits.length > 0) {
-      setWeeks(generateWeeks(currentDate));
+      setWeeks(generateWeeks(currentDate, habitCompletions));
     }
-  }, [currentDate, programmeHabits]);
+  }, [currentDate, programmeHabits, habitCompletions]);
 
   if (loading) {
     return (
@@ -460,8 +424,8 @@ const ClientHabitsPage = () => {
                     {week.days.map((day, dayIndex) => {
                       // Calculate completion rate on the fly like the weekly view
                       const dateString = day.date.toISOString().split("T")[0];
-                      const dayCompletions = clientHabits.filter(
-                        (c) => c.completionDate.split("T")[0] === dateString
+                      const dayCompletions = habitCompletions.filter(
+                        (c) => c.habitDate.split("T")[0] === dateString
                       );
                       // Only consider habits whose programme is active on this specific date
                       const isHabitActiveOnDate = (
@@ -576,6 +540,4 @@ export default function ClientHabitsPageWrapper() {
       <ClientHabitsPage />
     </Suspense>
   );
-}
-
 }

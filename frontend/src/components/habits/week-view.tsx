@@ -69,7 +69,7 @@ export const WeekView = ({
   selectedWeek,
   selectedDate,
   programmeHabits,
-  clientHabits,
+  habitCompletions,
   isSelf = true,
   onHabitToggle,
 }: WeekViewProps) => {
@@ -139,7 +139,7 @@ export const WeekView = ({
               day.date.toDateString() === selectedDay.toDateString();
             const dateString = day.date.toISOString().split("T")[0];
             const dayCompletions = habitCompletions.filter(
-              (c) => c.completionDate.split("T")[0] === dateString
+              (c) => c.habitDate.split("T")[0] === dateString
             );
 
             // Only count habits active on this date; a habit is complete when timesDone >= requiredPerDay
@@ -258,7 +258,7 @@ export const WeekView = ({
                     const completion = habitCompletions.find(
                       (c) =>
                         c.programmeHabitId === habit.id &&
-                        c.completionDate.split("T")[0] === dateString
+                        c.habitDate.split("T")[0] === dateString
                     );
                     const timesDone = completion?.timesDone ?? 0;
                     const requiredPerDay = Math.max(
@@ -372,6 +372,4 @@ export const WeekView = ({
       )}
     </div>
   );
-};
-
 };
