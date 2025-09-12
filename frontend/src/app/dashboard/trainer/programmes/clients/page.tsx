@@ -54,7 +54,6 @@ interface ProgrammeEnrolment {
   adhocData: any;
   createdAt: string;
   updatedAt: string;
-  programmeTemplateId: string | null;
   client: {
     id: string;
     firstName: string | null;

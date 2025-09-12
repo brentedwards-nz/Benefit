@@ -106,67 +106,67 @@ const TrainerClientsPage = () => {
   }, [selectedClientId, clients]);
 
   // Fitbit Activities Fetch
-  // useEffect(() => {
-  //   if (selectedClient?.id && startDate && endDate) {
-  //     setIsLoadingActivities(true);
-  //     startTransition(async () => {
-  //       try {
-  //         const activities = await getClientActivities(
-  //           selectedClient.id,
-  //           startOfDay(startDate),
-  //           endOfDay(endDate)
-  //         );
-  //         setClientActivities(activities);
-  //       } catch (error) {
-  //         console.error("Failed to fetch client activities:", error);
-  //         toast.error("Failed to load activities", {
-  //           description: "Could not retrieve client Fitbit activities.",
-  //         });
-  //       } finally {
-  //         setIsLoadingActivities(false);
-  //       }
-  //     });
-  //   } else {
-  //     setClientActivities([]);
-  //     setIsLoadingActivities(false);
-  //   }
-  // }, [selectedClient, startDate, endDate, startTransition]);
+  useEffect(() => {
+    if (selectedClient?.id && startDate && endDate) {
+      setIsLoadingActivities(true);
+      startTransition(async () => {
+        try {
+          const activities = await getClientActivities(
+            selectedClient.id,
+            startOfDay(startDate),
+            endOfDay(endDate)
+          );
+          setClientActivities(activities);
+        } catch (error) {
+          console.error("Failed to fetch client activities:", error);
+          toast.error("Failed to load activities", {
+            description: "Could not retrieve client Fitbit activities.",
+          });
+        } finally {
+          setIsLoadingActivities(false);
+        }
+      });
+    } else {
+      setClientActivities([]);
+      setIsLoadingActivities(false);
+    }
+  }, [selectedClient, startDate, endDate, startTransition]);
 
   // Emails Fetch
-  // useEffect(() => {
-  //   if (selectedClient?.id) {
-  //     setIsLoadingEmails(true);
-  //     startTransition(async () => {
-  //       try {
-  //         const emailsResult = await readEmail(
-  //           selectedClient.email,
-  //           startDate,
-  //           endDate,
-  //           [],
-  //           ["Benefit"]
-  //         );
-  //         if (emailsResult.success) {
-  //           setClientEmails(emailsResult.data || []);
-  //         } else {
-  //           toast.error("Failed to load emails", {
-  //             description:
-  //               emailsResult.message || "Could not retrieve client emails.",
-  //           });
-  //         }
-  //       } catch (error) {
-  //         console.error("Failed to fetch client emails:", error);
-  //         toast.error("Failed to load emails", {
-  //           description: "Could not retrieve client emails.",
-  //         });
-  //       } finally {
-  //         setIsLoadingEmails(false);
-  //       }
-  //     });
-  //   } else {
-  //     setClientEmails([]);
-  //     setIsLoadingEmails(false);
-  //   }
-  // }, [selectedClient, startDate, endDate, startTransition]);
+  useEffect(() => {
+    if (selectedClient?.id) {
+      setIsLoadingEmails(true);
+      startTransition(async () => {
+        try {
+          const emailsResult = await readEmail(
+            selectedClient.email,
+            startDate,
+            endDate,
+            [],
+            ["Benefit"]
+          );
+          if (emailsResult.success) {
+            setClientEmails(emailsResult.data || []);
+          } else {
+            toast.error("Failed to load emails", {
+              description:
+                emailsResult.message || "Could not retrieve client emails.",
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch client emails:", error);
+          toast.error("Failed to load emails", {
+            description: "Could not retrieve client emails.",
+          });
+        } finally {
+          setIsLoadingEmails(false);
+        }
+      });
+    } else {
+      setClientEmails([]);
+      setIsLoadingEmails(false);
+    }
+  }, [selectedClient, startDate, endDate, startTransition]);
 
   useEffect(() => {
     const clientId = selectedClient?.id || null;

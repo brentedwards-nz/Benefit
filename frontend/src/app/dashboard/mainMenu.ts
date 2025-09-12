@@ -57,10 +57,6 @@ const menuDefinition: NavData = {
           url: "/dashboard/admin/email",
         },
         {
-          title: "Templates",
-          url: "/dashboard/admin/programme-templates",
-        },
-        {
           title: "Habits",
           url: "/dashboard/admin/habits",
         },

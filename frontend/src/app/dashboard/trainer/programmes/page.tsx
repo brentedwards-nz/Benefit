@@ -7,10 +7,8 @@ import {
   createProgramme,
   updateProgramme,
 } from "@/server-actions/programme/actions";
-import { readProgramTemplates } from "@/server-actions/programme/actions";
 import {
   Programme as ProgrammeType,
-  ProgrammeTemplate,
   ProgrammeCreateInput,
 } from "@/server-actions/programme/types";
 import {
@@ -26,17 +24,28 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 
 const Programme = () => {
   const router = useRouter();
   const [programmes, setProgrammes] = useState<ProgrammeType[]>([]);
-  const [templates, setTemplates] = useState<ProgrammeTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProgrammeId, setSelectedProgrammeId] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isStartDatePopoverOpen, setIsStartDatePopoverOpen] = useState(false);
+  const [isEndDatePopoverOpen, setIsEndDatePopoverOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<ProgrammeType>>({
     name: "",
@@ -56,19 +65,12 @@ const Programme = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [programmesResult, templatesResult] = await Promise.all([
-          readProgrammes(),
-          readProgramTemplates(),
-        ]);
+        const programmesResult = await readProgrammes();
 
         if (programmesResult.success) {
           setProgrammes(programmesResult.data);
         } else {
           setError(programmesResult.message);
-        }
-
-        if (templatesResult.success) {
-          setTemplates(templatesResult.data);
         }
       } catch (err) {
         setError("Failed to fetch data");
@@ -99,10 +101,6 @@ const Programme = () => {
           schedule: [],
         },
       });
-    } else if (programmeId === "create-new-template") {
-      // Navigate to ProgrammeTemplate page
-      router.push("/dashboard/admin/templates");
-      return;
     } else {
       setIsCreating(false);
       setIsEditing(true);
@@ -128,26 +126,7 @@ const Programme = () => {
   };
 
   const handleCopyFromSelection = (selectionId: string) => {
-    if (selectionId.startsWith("template-")) {
-      // Copy from template
-      const templateId = selectionId.replace("template-", "");
-      const template = templates.find((t) => t.id === templateId);
-      if (template) {
-        setFormData({
-          name: template.name,
-          startDate: new Date(),
-          maxClients: template.maxClients,
-          programmeCost: template.programmeCost,
-          notes: template.notes || "",
-          sessionsDescription: template.sessionsDescription || {
-            totalWeeks: 0,
-            sessionsPerWeek: 0,
-            schedule: [],
-          },
-        });
-        toast.success("Template data copied to form!");
-      }
-    } else if (selectionId.startsWith("programme-")) {
+    if (selectionId.startsWith("programme-")) {
       // Copy from programme
       const programmeId = selectionId.replace("programme-", "");
       const programme = programmes.find((p) => p.id === programmeId);
@@ -207,18 +186,8 @@ const Programme = () => {
       setIsSubmitting(true);
 
       if (isCreating) {
-        // For now, we'll use the first template. In a real app, you'd let the user select one
-        if (templates.length === 0) {
-          toast.error(
-            "No templates available. Please create a template first."
-          );
-          return;
-        }
-
-        const templateId = templates[0].id; // Use first template for now
         const createData: ProgrammeCreateInput = {
-          programmeTemplateId: templateId,
-          humanReadableId: `PROGRAMME_${Date.now()}`,
+          humanReadableId: `${formData.name} ${Date.now()}`,
           name: formData.name,
           startDate: formData.startDate!,
           endDate: formData.endDate,
@@ -368,9 +337,6 @@ const Programme = () => {
                 <SelectItem value="create-new">
                   ➕ Create New Programme
                 </SelectItem>
-                <SelectItem value="create-new-template">
-                  🎯 Create New Template
-                </SelectItem>
                 <Separator />
                 {programmes.map((programme) => (
                   <SelectItem key={programme.id} value={programme.id}>
@@ -409,24 +375,12 @@ const Programme = () => {
                     </Label>
                     <Select onValueChange={handleCopyFromSelection}>
                       <SelectTrigger className="w-full max-w-md">
-                        <SelectValue placeholder="Select template or programme to copy from..." />
+                        <SelectValue placeholder="Select programme to copy from..." />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">
                           Start with empty form
                         </SelectItem>
-                        <Separator />
-                        <div className="px-2 py-1 text-sm font-medium text-muted-foreground">
-                          Templates
-                        </div>
-                        {templates.map((template) => (
-                          <SelectItem
-                            key={`template-${template.id}`}
-                            value={`template-${template.id}`}
-                          >
-                            🎯 {template.name}
-                          </SelectItem>
-                        ))}
                         <Separator />
                         <div className="px-2 py-1 text-sm font-medium text-muted-foreground">
                           Existing Programmes
@@ -458,40 +412,79 @@ const Programme = () => {
                   </div>
                   <div>
                     <Label htmlFor="startDate">Start Date</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={
-                        formData.startDate
-                          ? new Date(formData.startDate)
-                              .toISOString()
-                              .split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleInputChange("startDate", new Date(e.target.value))
-                      }
-                    />
+                    <Popover
+                      open={isStartDatePopoverOpen}
+                      onOpenChange={setIsStartDatePopoverOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.startDate ? (
+                            format(formData.startDate, "EEE, dd-MMM-yyyy")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[320px] p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.startDate}
+                          onSelect={(newDate) => {
+                            if (newDate) {
+                              handleInputChange("startDate", newDate);
+                              setIsStartDatePopoverOpen(false);
+                            }
+                          }}
+                          className="w-full"
+                          weekStartsOn={1}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
                     <Label htmlFor="endDate">End Date</Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={
-                        formData.endDate
-                          ? new Date(formData.endDate)
-                              .toISOString()
-                              .split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          "endDate",
-                          e.target.value ? new Date(e.target.value) : undefined
-                        )
-                      }
-                    />
+                    <Popover
+                      open={isEndDatePopoverOpen}
+                      onOpenChange={setIsEndDatePopoverOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.endDate ? (
+                            format(formData.endDate, "EEE, dd-MMM-yyyy")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[320px] p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.endDate || new Date()}
+                          onSelect={(newDate) => {
+                            if (newDate) {
+                              handleInputChange("endDate", newDate);
+                              setIsEndDatePopoverOpen(false);
+                            }
+                          }}
+                          className="w-full"
+                          weekStartsOn={1}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
                     <Label htmlFor="maxClients">Max Clients</Label>

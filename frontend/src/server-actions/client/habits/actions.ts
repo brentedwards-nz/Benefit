@@ -5,6 +5,8 @@ import { ActionResult } from "@/types/server-action-results";
 import { HabitDayData } from "./types";
 import prisma from "@/utils/prisma/client";
 import { getDayColor } from "@/utils/general-utils";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 interface QueryParameters {
   function_name: string;
@@ -103,9 +105,7 @@ export async function readClientHabitsByDateRange(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -207,7 +207,7 @@ function calculateHabitDayData(
 
 interface Habit {
   id: string;
-  // title: string;
+  title: string;
   // notes: string | null;
   monFrequency: number;
   tueFrequency: number;
@@ -264,6 +264,11 @@ async function getProgrammeHabitsbyClientAndDateRange(
                 programmeHabits: {
                   select: {
                     id: true,
+                    habit: {
+                      select: {
+                        title: true,
+                      },
+                    },
                     monFrequency: true,
                     tueFrequency: true,
                     wedFrequency: true,
@@ -298,6 +303,7 @@ async function getProgrammeHabitsbyClientAndDateRange(
       endDate: value.programme.endDate ?? new Date(),
       habits: value.programme.programmeHabits.map((ph) => ({
         id: ph.id,
+        title: ph.habit.title,
         monFrequency: ph.monFrequency,
         tueFrequency: ph.tueFrequency,
         wedFrequency: ph.wedFrequency,
@@ -317,9 +323,7 @@ async function getProgrammeHabitsbyClientAndDateRange(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -387,9 +391,7 @@ async function getClientHabitsByDateRange(
   } catch (err: any) {
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -419,119 +421,160 @@ async function getClientHabitsByDateRange(
 
 export interface DailyHabit {
   title: string;
+  clientHabitId?: string;
   programmeHabitId: string;
-
-  completionDate: Date;
+  habitDate: Date;
   completed: boolean;
   timesDone: number;
   habitFrequency?: number;
 }
 
 export async function readClientHabitsByDate(
-  user_id: string,
+  user_id: string, // Parameter restored as per user feedback
   date: Date
 ): Promise<ActionResult<DailyHabit[]>> {
-  if (typeof user_id !== "string" || user_id.trim() === "") {
-    console.error("Invalid auth_id provided to getClient Server Action.");
-    return {
-      success: false,
-      message: `Invalid authentication ID provided`,
-    };
+  // Security check: Ensure the caller is logged in.
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return { success: false, message: "Unauthorized: You must be logged in." };
   }
-
-  console.log("Reading habits for user:", user_id, "on date:", date);
+  // Note: A more robust authorization check would verify if the logged-in user
+  // has permission to view the habits for the requested `user_id`.
+  // This is omitted for now as per the immediate requirement.
 
   try {
-    const habits = await prisma.clientHabit.findMany({
+    // 1. Get the scheduled habits for the day for the specified user_id
+    const programmesResult = await getProgrammeHabitsbyClientAndDateRange(
+      user_id,
+      date,
+      date
+    );
+
+    if (!programmesResult.success) {
+      return programmesResult;
+    }
+    if (programmesResult.data.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 2. Get existing ClientHabit records for that day for the specified user_id
+    const existingClientHabits = await prisma.clientHabit.findMany({
       where: {
-        AND: [
-          { clientId: user_id },
-          {
-            habitDate: {
-              gte: new Date(date.setHours(0, 0, 0, 0)),
-              lte: new Date(date.setHours(23, 59, 59, 999)),
-            },
-          },
-        ],
-      },
-      select: {
-        programmeHabitId: true,
-        habitDate: true,
-        completed: true,
-        timesDone: true,
-        programmeHabit: {
-          select: {
-            monFrequency: true,
-            tueFrequency: true,
-            wedFrequency: true,
-            thuFrequency: true,
-            friFrequency: true,
-            satFrequency: true,
-            sunFrequency: true,
-            habit: {
-              select: {
-                title: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        habitDate: "asc",
+        clientId: user_id,
+        habitDate: date,
       },
     });
 
-    if (!habits) {
-      return {
-        success: true,
-        data: [],
-      };
-    }
+    // 3. Create a lookup map for easy access
+    const clientHabitMap = new Map(
+      existingClientHabits.map((ch) => [ch.programmeHabitId, ch])
+    );
 
-    const result: DailyHabit[] = habits.map((habit) => ({
-      title: habit.programmeHabit.habit.title,
-      programmeHabitId: habit.programmeHabitId,
-      completionDate: habit.habitDate,
-      completed: habit.completed,
-      timesDone: habit.timesDone,
-      habitFrequency: (() => {
-        const dayOfWeek = habit.habitDate.getDay();
-        switch (dayOfWeek) {
-          case 0:
-            return habit.programmeHabit.sunFrequency;
-          case 1:
-            return habit.programmeHabit.monFrequency;
-          case 2:
-            return habit.programmeHabit.tueFrequency;
-          case 3:
-            return habit.programmeHabit.wedFrequency;
-          case 4:
-            return habit.programmeHabit.thuFrequency;
-          case 5:
-            return habit.programmeHabit.friFrequency;
-          case 6:
-            return habit.programmeHabit.satFrequency;
-          default:
-            return 0;
+    let result: DailyHabit[] = [];
+    for (const programme of programmesResult.data) {
+      for (const habit of programme.habits) {
+        const existingRecord = clientHabitMap.get(habit.id);
+
+        const dayOfWeek = date.getDay();
+        const habitFrequency = [
+          habit.sunFrequency,
+          habit.monFrequency,
+          habit.tueFrequency,
+          habit.wedFrequency,
+          habit.thuFrequency,
+          habit.friFrequency,
+          habit.satFrequency,
+        ][dayOfWeek];
+
+        if (habitFrequency > 0) {
+          result.push({
+            title: habit.title,
+            programmeHabitId: habit.id,
+            habitDate: date,
+            clientHabitId: existingRecord?.id,
+            completed: existingRecord?.completed ?? false,
+            timesDone: existingRecord?.timesDone ?? 0,
+            habitFrequency: habitFrequency,
+          });
         }
-      })(),
-    }));
+      }
+    }
 
     return {
       success: true,
       data: result,
     };
   } catch (err: any) {
+    console.error("Error in readClientHabitsByDate:", err);
     return {
       success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
+      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
           ? { stack: err.stack }
           : undefined,
     };
+  }
+}
+
+import { ClientHabit as PrismaClientHabit } from "@prisma/client";
+
+// This type is for data coming from the client
+type UpsertHabitData = {
+  programmeHabitId: string;
+  habitDate: Date;
+  timesDone: number;
+  completed: boolean;
+};
+
+export async function upsertClientHabit(
+  data: UpsertHabitData
+): Promise<ActionResult<PrismaClientHabit>> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return { success: false, message: "Unauthorized" };
+  }
+  const authId = session.user.id;
+
+  try {
+    const client = await prisma.client.findUnique({
+      where: { authId },
+      select: { id: true },
+    });
+
+    if (!client) {
+      return { success: false, message: "Client not found." };
+    }
+    const clientId = client.id;
+    const { programmeHabitId, habitDate, timesDone, completed } = data;
+
+    // The unique constraint is on (programmeHabitId, clientId, habitDate)
+    // So we use that to find the record to update or create.
+    const result = await prisma.clientHabit.upsert({
+      where: {
+        programmeHabitId_clientId_habitDate: {
+          programmeHabitId,
+          clientId,
+          habitDate,
+        },
+      },
+      update: {
+        timesDone,
+        completed,
+      },
+      create: {
+        programmeHabitId,
+        clientId,
+        habitDate,
+        timesDone,
+        completed,
+      },
+    });
+
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error("Error upserting client habit:", error);
+    return { success: false, message: "Failed to update habit." };
   }
 }

@@ -77,7 +77,6 @@ model Client {
 
 model Programme {
   id                  String               @id @default(cuid())
-  programmeTemplateId String
   humanReadableId     String               @unique
   name                String
   startDate           DateTime
@@ -89,21 +88,8 @@ model Programme {
   createdAt           DateTime?            @default(now()) @db.Timestamp(6)
   updatedAt           DateTime?            @default(now()) @db.Timestamp(6)
   sessionsDescription Json?
-  ProgrammeTemplate   ProgrammeTemplate    @relation(fields: [programmeTemplateId], references: [id])
   enrolments          ProgrammeEnrolment[]
   programmeHabits     ProgrammeHabit[]
-}
-
-model ProgrammeTemplate {
-  id                  String               @id @default(cuid())
-  name                String               @unique
-  maxClients          Int
-  programmeCost       Decimal              @db.Decimal(10, 2)
-  notes               String?
-  adhocData           Json?
-  sessionsDescription Json?
-  programmes          Programme[]
-  ProgrammeEnrolment  ProgrammeEnrolment[]
 }
 
 model ProgrammeEnrolment {
@@ -114,9 +100,7 @@ model ProgrammeEnrolment {
   adhocData           Json?
   createdAt           DateTime?           @default(now()) @db.Timestamp(6)
   updatedAt           DateTime?           @default(now()) @db.Timestamp(6)
-  programmeTemplateId String?
   programme           Programme           @relation(fields: [programId], references: [id], onDelete: Cascade)
-  ProgrammeTemplate   ProgrammeTemplate?  @relation(fields: [programmeTemplateId], references: [id])
   client              Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
   transactions        ClientTransaction[]
 }

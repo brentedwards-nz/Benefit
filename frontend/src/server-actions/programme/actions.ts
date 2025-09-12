@@ -9,9 +9,6 @@ import {
   Programme,
   ProgrammeCreateInput,
   ProgrammeUpdateInput,
-  ProgrammeTemplate,
-  ProgrammeTemplateCreateInput,
-  ProgrammeTemplateUpdateInput,
 } from "./types";
 import { z } from "zod";
 
@@ -22,282 +19,6 @@ export type ClientSearchResult = {
   email: string | null;
 };
 
-/**
- * Programme Template Server Actions
- *
- * Note: We use undefined instead of null for optional fields when creating/updating
- * because Prisma expects undefined for optional JSON fields, not null.
- * The update function filters out undefined values to avoid sending empty updates.
- */
-export async function readProgramTemplates(): Promise<
-  ActionResult<ProgrammeTemplate[]>
-> {
-  try {
-    const templates = await prisma.programmeTemplate.findMany({
-      orderBy: {
-        name: "asc",
-      },
-    });
-
-    if (!templates || templates.length === 0) {
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
-    // Transform the data to match our ProgrammeTemplate type
-    const programmeTemplates: ProgrammeTemplate[] = templates.map(
-      (template) => ({
-        id: template.id,
-        name: template.name,
-        maxClients: template.maxClients,
-        sessionsDescription: template.sessionsDescription as any,
-        programmeCost: template.programmeCost.toNumber(),
-        notes: template.notes,
-        adhocData: template.adhocData as any,
-      })
-    );
-
-    return {
-      success: true,
-      data: programmeTemplates,
-    };
-  } catch (err: any) {
-    console.error("Error reading programme templates:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
-  }
-}
-
-export async function readProgramTemplateById(
-  id: string
-): Promise<ActionResult<ProgrammeTemplate>> {
-  try {
-    const template = await prisma.programmeTemplate.findUnique({
-      where: { id },
-    });
-
-    if (!template) {
-      return {
-        success: false,
-        message: "Programme template not found.",
-        code: "TEMPLATE_NOT_FOUND",
-      };
-    }
-
-    const programmeTemplate: ProgrammeTemplate = {
-      id: template.id,
-      name: template.name,
-      maxClients: template.maxClients,
-      sessionsDescription: template.sessionsDescription as any,
-      programmeCost: template.programmeCost.toNumber(),
-      notes: template.notes,
-      adhocData: template.adhocData as any,
-    };
-
-    return {
-      success: true,
-      data: programmeTemplate,
-    };
-  } catch (err: any) {
-    console.error("Error reading programme template by ID:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
-  }
-}
-
-export async function createProgramTemplate(
-  data: ProgrammeTemplateCreateInput
-): Promise<ActionResult<ProgrammeTemplate>> {
-  try {
-    console.log("createProgramTemplate received data:", data);
-    console.log("createProgramTemplate data keys:", Object.keys(data));
-    console.log("createProgramTemplate has startDate:", "startDate" in data);
-
-    // Explicitly define only the fields we want to send to Prisma
-    const prismaData = {
-      name: String(data.name),
-      maxClients: Number(data.maxClients),
-      sessionsDescription: data.sessionsDescription || undefined,
-      programmeCost: new Prisma.Decimal(data.programmeCost),
-      notes: data.notes || undefined,
-      adhocData: data.adhocData || undefined,
-    };
-
-    // Double-check that no unexpected fields exist
-    const allowedKeys = [
-      "name",
-      "maxClients",
-      "sessionsDescription",
-      "programmeCost",
-      "notes",
-      "adhocData",
-    ];
-    const hasUnexpectedFields = Object.keys(prismaData).some(
-      (key) => !allowedKeys.includes(key)
-    );
-
-    if (hasUnexpectedFields) {
-      console.error(
-        "Unexpected fields found in prismaData:",
-        Object.keys(prismaData)
-      );
-      throw new Error("Unexpected data fields detected in template creation");
-    }
-
-    // Additional safety check - ensure no startDate field exists
-    if ("startDate" in prismaData) {
-      console.error("startDate field detected in prismaData:", prismaData);
-      throw new Error("startDate field detected in template creation data");
-    }
-
-    console.log("createProgramTemplate prisma data:", prismaData);
-    console.log("prisma data keys:", Object.keys(prismaData));
-    console.log("prisma data has startDate:", "startDate" in prismaData);
-
-    const template = await prisma.programmeTemplate.create({
-      data: prismaData,
-    });
-
-    const programmeTemplate: ProgrammeTemplate = {
-      id: template.id,
-      name: template.name,
-      maxClients: template.maxClients,
-      sessionsDescription: template.sessionsDescription as any,
-      programmeCost: template.programmeCost.toNumber(),
-      notes: template.notes,
-      adhocData: template.adhocData as any,
-    };
-
-    revalidatePath("/dashboard/admin/programmes");
-
-    return {
-      success: true,
-      data: programmeTemplate,
-    };
-  } catch (err: any) {
-    console.error("Error creating programme template:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
-  }
-}
-
-export async function updateProgramTemplate(
-  id: string,
-  data: ProgrammeTemplateUpdateInput
-): Promise<ActionResult<ProgrammeTemplate>> {
-  try {
-    // Filter out undefined values to avoid Prisma errors
-    const updateData: any = {};
-
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.maxClients !== undefined) updateData.maxClients = data.maxClients;
-    if (data.sessionsDescription !== undefined)
-      updateData.sessionsDescription = data.sessionsDescription;
-    if (data.programmeCost !== undefined)
-      updateData.programmeCost = data.programmeCost;
-    if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.adhocData !== undefined) updateData.adhocData = data.adhocData;
-
-    const template = await prisma.programmeTemplate.update({
-      where: { id },
-      data: updateData,
-    });
-
-    const programmeTemplate: ProgrammeTemplate = {
-      id: template.id,
-      name: template.name,
-      maxClients: template.maxClients,
-      sessionsDescription: template.sessionsDescription as any,
-      programmeCost: template.programmeCost.toNumber(),
-      notes: template.notes,
-      adhocData: template.adhocData as any,
-    };
-
-    revalidatePath("/dashboard/admin/programmes");
-
-    return {
-      success: true,
-      data: programmeTemplate,
-    };
-  } catch (err: any) {
-    console.error("Error updating programme template:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
-  }
-}
-
-export async function deleteProgramTemplate(
-  id: string
-): Promise<ActionResult<void>> {
-  try {
-    await prisma.programmeTemplate.delete({
-      where: { id },
-    });
-
-    revalidatePath("/dashboard/admin/programmes");
-
-    return {
-      success: true,
-      data: undefined,
-    };
-  } catch (err: any) {
-    console.error("Error deleting programme template:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
-  }
-}
 
 // Programme Server Actions
 export async function readProgrammes(): Promise<ActionResult<Programme[]>> {
@@ -305,9 +26,6 @@ export async function readProgrammes(): Promise<ActionResult<Programme[]>> {
     const programmes = await prisma.programme.findMany({
       orderBy: {
         name: "asc",
-      },
-      include: {
-        ProgrammeTemplate: true,
       },
     });
 
@@ -321,7 +39,6 @@ export async function readProgrammes(): Promise<ActionResult<Programme[]>> {
     // Transform the data to match our Programme type
     const programmeList: Programme[] = programmes.map((programme) => ({
       id: programme.id,
-      programmeTemplateId: programme.programmeTemplateId,
       humanReadableId: programme.humanReadableId,
       name: programme.name,
       startDate: programme.startDate,
@@ -362,9 +79,6 @@ export async function readProgrammeById(
   try {
     const programme = await prisma.programme.findUnique({
       where: { id },
-      include: {
-        ProgrammeTemplate: true,
-      },
     });
 
     if (!programme) {
@@ -377,7 +91,6 @@ export async function readProgrammeById(
 
     const programmeData: Programme = {
       id: programme.id,
-      programmeTemplateId: programme.programmeTemplateId,
       humanReadableId: programme.humanReadableId,
       name: programme.name,
       startDate: programme.startDate,
@@ -418,7 +131,6 @@ export async function createProgramme(
   try {
     const programme = await prisma.programme.create({
       data: {
-        programmeTemplateId: data.programmeTemplateId,
         humanReadableId: data.humanReadableId,
         name: data.name,
         startDate: data.startDate,
@@ -433,7 +145,6 @@ export async function createProgramme(
 
     const programmeData: Programme = {
       id: programme.id,
-      programmeTemplateId: programme.programmeTemplateId,
       humanReadableId: programme.humanReadableId,
       name: programme.name,
       startDate: programme.startDate,
@@ -478,8 +189,6 @@ export async function updateProgramme(
     // Filter out undefined values to avoid Prisma errors
     const updateData: any = {};
 
-    if (data.programmeTemplateId !== undefined)
-      updateData.programmeTemplateId = data.programmeTemplateId;
     if (data.humanReadableId !== undefined)
       updateData.humanReadableId = data.humanReadableId;
     if (data.name !== undefined) updateData.name = data.name;
@@ -500,7 +209,6 @@ export async function updateProgramme(
 
     const programmeData: Programme = {
       id: programme.id,
-      programmeTemplateId: programme.programmeTemplateId,
       humanReadableId: programme.humanReadableId,
       name: programme.name,
       startDate: programme.startDate,
@@ -585,7 +293,6 @@ export async function duplicateProgramme(
     // Create a new programme with copied data
     const newProgramme = await prisma.programme.create({
       data: {
-        programmeTemplateId: originalProgramme.programmeTemplateId,
         humanReadableId: `${originalProgramme.humanReadableId}_copy`,
         name: `${originalProgramme.name} (Copy)`,
         startDate: new Date(),
@@ -601,7 +308,6 @@ export async function duplicateProgramme(
 
     const programmeData: Programme = {
       id: newProgramme.id,
-      programmeTemplateId: newProgramme.programmeTemplateId,
       humanReadableId: newProgramme.humanReadableId,
       name: newProgramme.name,
       startDate: newProgramme.startDate,
@@ -622,83 +328,6 @@ export async function duplicateProgramme(
     };
   } catch (err: any) {
     console.error("Error duplicating programme:", err);
-
-    return {
-      success: false,
-      message: `An unexpected server error occurred: ${
-        err.message || "Unknown error"
-      }`,
-      code: "UNEXPECTED_SERVER_ERROR",
-      details:
-        process.env.NODE_ENV === "development"
-          ? { stack: err.stack }
-          : undefined,
-    };
-  }
-}
-
-export async function createProgrammeFromTemplate(
-  templateId: string,
-  startDate: Date,
-  programmeName?: string
-): Promise<ActionResult<Programme>> {
-  try {
-    const template = await prisma.programmeTemplate.findUnique({
-      where: { id: templateId },
-    });
-
-    if (!template) {
-      return {
-        success: false,
-        message: "Template not found.",
-        code: "TEMPLATE_NOT_FOUND",
-      };
-    }
-
-    // Generate a unique human-readable ID
-    const timestamp = new Date().getTime();
-    const humanReadableId = `${template.name
-      .replace(/\s+/g, "_")
-      .toUpperCase()}_${timestamp}`;
-
-    // Create a new programme from the template
-    const newProgramme = await prisma.programme.create({
-      data: {
-        programmeTemplateId: template.id,
-        humanReadableId: humanReadableId,
-        name: programmeName || template.name,
-        startDate: startDate,
-        maxClients: template.maxClients,
-        sessionsDescription: template.sessionsDescription || undefined,
-        programmeCost: template.programmeCost,
-        notes: template.notes || undefined,
-        adhocData: template.adhocData || undefined,
-      },
-    });
-
-    const programmeData: Programme = {
-      id: newProgramme.id,
-      programmeTemplateId: newProgramme.programmeTemplateId,
-      humanReadableId: newProgramme.humanReadableId,
-      name: newProgramme.name,
-      startDate: newProgramme.startDate,
-      maxClients: newProgramme.maxClients,
-      sessionsDescription: newProgramme.sessionsDescription as any,
-      programmeCost: newProgramme.programmeCost.toNumber(),
-      notes: newProgramme.notes,
-      adhocData: newProgramme.adhocData as any,
-      createdAt: newProgramme.createdAt,
-      updatedAt: newProgramme.updatedAt,
-    };
-
-    revalidatePath("/dashboard/admin/programmes");
-
-    return {
-      success: true,
-      data: programmeData,
-    };
-  } catch (err: any) {
-    console.error("Error creating programme from template:", err);
 
     return {
       success: false,

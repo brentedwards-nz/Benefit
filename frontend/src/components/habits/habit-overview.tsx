@@ -13,9 +13,14 @@ export interface DayData {
 export interface HabitOverViewProps {
   days: DayData[];
   selectedDate: Date | null;
+  onDateSelected?: (date: Date) => void;
 }
 
-export const HabitOverView = ({ days, selectedDate }: HabitOverViewProps) => {
+export const HabitOverView = ({
+  days,
+  selectedDate,
+  onDateSelected,
+}: HabitOverViewProps) => {
   // Use the selectedDate prop as the initial selected day
   const [selectedDay, setSelectedDay] = useState<Date | null>(selectedDate);
 
@@ -49,6 +54,7 @@ export const HabitOverView = ({ days, selectedDate }: HabitOverViewProps) => {
                 onClick={() => {
                   if (day.isProgrammeDay) {
                     setSelectedDay(day.date);
+                    onDateSelected?.(day.date);
                   }
                 }}
               >

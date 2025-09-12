@@ -15,6 +15,7 @@ import HabitOverViewWeeklyNav from "./habit-overview-weekly-nav";
 import HabitOverViewDaily from "./habit-overview-daily";
 import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
 import { addDays } from "date-fns";
+import { readClient } from "@/server-actions/client/actions";
 
 // Get the start of the week (Monday) for a given date
 const getStartOfWeek = (date: Date): Date => {
@@ -28,69 +29,67 @@ const HabitOverViewWeekly = () => {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [startOfWeek, setStartOfWeek] = useState(new Date());
   const [endOfWeek, setEndOfWeek] = useState(new Date());
   const [dayData, setDayData] = useState<DayData[]>([]);
+  const [userId, setUserId] = useState<string>("");
 
-  // Get client ID from search params or fall back to current user
-  const clientId = searchParams.get("clientId") || session?.user?.id;
-  const isSelf =
-    !searchParams.get("clientId") ||
-    searchParams.get("clientId") === session?.user?.id;
-
-  // Get date from search params if provided
+  const sessionUser = session?.user.id;
+  const clientId = searchParams.get("clientId");
   const dateParam = searchParams.get("date");
 
-  // Update currentDate when dateParam changes
   useEffect(() => {
     if (dateParam) {
-      const newDate = new Date(dateParam);
-      setCurrentDate(newDate);
-      setStartOfWeek(getStartOfWeek(newDate));
-      setEndOfWeek(addDays(getStartOfWeek(newDate), 7));
+      const parsedDate = new Date(dateParam);
+      if (!isNaN(parsedDate.getTime())) {
+        setCurrentDate(parsedDate);
+        setSelectedDate(parsedDate);
+      }
     }
   }, [dateParam]);
 
   useEffect(() => {
-    if (!clientId) {
-      return;
-      setDayData([]);
-    }
-
     const fetchData = async () => {
-      const result = await readClientHabitsByDateRange(
-        clientId,
-        startOfWeek,
-        endOfWeek
-      );
-
-      if (!result.success) {
-        toast.error("Failed to fetch habit data");
-        setDayData([]);
+      if (!session || (!session.user.id && !clientId)) {
+        setUserId("");
         return;
       }
 
-      setDayData(result.data.HabitDayData);
+      const result = await readClient(session?.user.id, clientId ?? "");
+
+      if (!result.success) {
+        toast.error("Failed to fetch client:" + result.message || "");
+        setUserId("");
+        return;
+      }
+
+      setUserId(result.data.id);
     };
 
     fetchData();
-  }, [startOfWeek, clientId]);
+  }, [session]);
 
   useEffect(() => {
-    if (!clientId) {
-      return;
+    if (!userId) {
       setDayData([]);
+      return;
+    }
+
+    if (!dateParam) {
+      setDayData([]);
+      return;
     }
 
     const fetchData = async () => {
       const result = await readClientHabitsByDateRange(
-        clientId,
-        startOfWeek,
-        endOfWeek
+        userId,
+        getStartOfWeek(currentDate),
+        addDays(getStartOfWeek(currentDate), 7)
       );
 
       if (!result.success) {
-        toast.error("Failed to fetch daily habit data");
+        toast.error("Failed to fetch daily habit data:" + result.message || "");
         setDayData([]);
         return;
       }
@@ -99,7 +98,7 @@ const HabitOverViewWeekly = () => {
     };
 
     fetchData();
-  }, [currentDate, clientId]);
+  }, [userId, currentDate]);
 
   return (
     <div>
@@ -107,10 +106,16 @@ const HabitOverViewWeekly = () => {
         <HabitOverViewWeeklyNav selectedDate={currentDate} />
       </div>
       <div className="w-full">
-        <HabitOverView days={dayData} selectedDate={currentDate} />
+        <HabitOverView
+          days={dayData}
+          selectedDate={currentDate}
+          onDateSelected={(clickedDate) => {
+            setSelectedDate(clickedDate);
+          }}
+        />
       </div>
       <div className="w-full">
-        <HabitOverViewDaily selectedDate={currentDate} clientId={clientId} />
+        <HabitOverViewDaily selectedDate={selectedDate} clientId={userId} />
       </div>
     </div>
   );

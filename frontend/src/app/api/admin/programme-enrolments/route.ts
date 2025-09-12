@@ -163,7 +163,6 @@ export async function POST(request: NextRequest) {
         clientId,
         notes,
         adhocData: adhocData || {},
-        programmeTemplateId: programme.programmeTemplateId,
       },
       include: {
         programme: {

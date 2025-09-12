@@ -9,7 +9,7 @@
         "command": "taskkill /im chrome.exe /f & \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --remote-debugging-port=9222 --user-data-dir=\"C:\\Temp\\chrome-debug-profile\""
       },
       "osx": {
-        "command": "killall 'Google Chrome' ; /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --remote-debugging-port=9222 --user-data-dir=\"/tmp/chrome-debug-profile\""
+        "command": "killall 'Google Chrome' ; /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --remote-debugging-port=9222 --user-data-dir=\"/Users/brentedwards/GoogleChromeDebugUser\""
       },
       "linux": {
         "command": "killall chrome ; google-chrome --remote-debugging-port=9222 --user-data-dir=\"/tmp/chrome-debug-profile\""
@@ -20,6 +20,20 @@
         "panel": "new"
       },
       "isBackground": true
+    },
+    {
+      "label": "Restart Next.js Server",
+      "type": "shell",
+      "command": "clear && npx kill-port 3000 && npm run 3000",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
     }
   ]
 }

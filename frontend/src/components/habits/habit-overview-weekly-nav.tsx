@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 
@@ -33,12 +34,14 @@ function getMondayToSundayRange(selectedDate: Date): string {
 const HabitOverViewWeeklyNav = ({
   selectedDate,
 }: HabitOverViewWeeklyNavProps) => {
+  const router = useRouter();
+
   return (
     <div className="flex items-center justify-between mb-4">
       <Button
         variant="outline"
         size="icon"
-        onClick={() => alert("To do...")}
+        onClick={() => router.push("/dashboard/client/habits")}
         aria-label="Back to overview"
         className="p-0"
       >

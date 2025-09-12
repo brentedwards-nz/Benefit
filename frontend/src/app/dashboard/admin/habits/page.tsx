@@ -324,8 +324,7 @@ export default function HabitsManagementPage() {
                                     ))}
                                 </div>
                                 <div className="grid grid-cols-[auto_repeat(7,minmax(0,1fr))_auto] gap-2 items-center">
-                                    {editingHabit && (
-                                        <Button
+                                    <Button
                                             type="button"
                                             variant="secondary"
                                             size="sm"
@@ -334,7 +333,6 @@ export default function HabitsManagementPage() {
                                         >
                                             <ArrowDown className="h-4 w-4" />
                                         </Button>
-                                    )}
                                     {daysOfWeek.map((day, index) => {
                                         const frequencyKey = `${day.toLowerCase()}Frequency` as keyof HabitFormData;
                                         return (
@@ -349,8 +347,7 @@ export default function HabitsManagementPage() {
                                             />
                                         )
                                     })}
-                                    {editingHabit && (
-                                        <Button
+                                    <Button
                                             type="button"
                                             variant="secondary"
                                             size="sm"
@@ -359,7 +356,6 @@ export default function HabitsManagementPage() {
                                         >
                                             <ArrowUp className="h-4 w-4" />
                                         </Button>
-                                    )}
                                 </div>
 
                                 <div className="flex items-center space-x-2 mt-4">

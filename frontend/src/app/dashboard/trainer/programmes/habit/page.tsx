@@ -243,6 +243,24 @@ function ProgrammeHabitManagementContent() {
     }
   };
 
+  const handleHabitSelect = (habitId: string) => {
+    const selectedHabit = availableHabits.find((h) => h.id === habitId);
+    if (selectedHabit) {
+      setFormData((prev) => ({
+        ...prev,
+        habitId: selectedHabit.id,
+        notes: selectedHabit.notes || "",
+        monFrequency: selectedHabit.monFrequency || 0,
+        tueFrequency: selectedHabit.tueFrequency || 0,
+        wedFrequency: selectedHabit.wedFrequency || 0,
+        thuFrequency: selectedHabit.thuFrequency || 0,
+        friFrequency: selectedHabit.friFrequency || 0,
+        satFrequency: selectedHabit.satFrequency || 0,
+        sunFrequency: selectedHabit.sunFrequency || 0,
+      }));
+    }
+  };
+
   const handleEdit = (programmeHabit: ProgrammeHabit) => {
     setEditingId(programmeHabit.id);
     setIsAdding(false);
@@ -493,9 +511,7 @@ function ProgrammeHabitManagementContent() {
                 <Label>Base Habit</Label>
                 <Select
                   value={formData.habitId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, habitId: value })
-                  }
+                  onValueChange={handleHabitSelect}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Habit" />
