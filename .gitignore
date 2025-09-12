@@ -106,3 +106,4 @@ dist
 frontend/.env.production
 frontend/.env.staging
 frontend/env.env
+frontend/prisma/seed.ts
