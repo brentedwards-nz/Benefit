@@ -24,7 +24,7 @@
     {
       "label": "Restart Next.js Server",
       "type": "shell",
-      "command": "clear && npx kill-port 3000 && npm run 3000",
+      "command": "clear && npx kill-port 3000 && npm run dev",
       "presentation": {
         "reveal": "always",
         "panel": "new"

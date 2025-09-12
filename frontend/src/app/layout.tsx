@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
+import Providers from "@/components/query-provider/QueryProvider";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -12,10 +13,17 @@ export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: {
     default: "Bene-Fit Wellness Solutions",
-    template: "%s | Bene-Fit Wellness Solutions"
+    template: "%s | Bene-Fit Wellness Solutions",
   },
   description: "Changing lives through wellness. Feel the Bene-Fit",
-  keywords: ["wellness", "fitness", "health", "nutrition", "coaching", "therapy"],
+  keywords: [
+    "wellness",
+    "fitness",
+    "health",
+    "nutrition",
+    "coaching",
+    "therapy",
+  ],
   authors: [{ name: "Bene-Fit Wellness Solutions" }],
   creator: "Bene-Fit Wellness Solutions",
   robots: {
@@ -69,7 +77,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {children}
+              <Providers>{children}</Providers>
               <Toaster />
             </ThemeProvider>
           </NextAuthProvider>

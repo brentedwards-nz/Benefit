@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -13,7 +14,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
-import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -30,72 +30,53 @@ import {
   endOfWeek,
 } from "date-fns";
 import { cn } from "@/lib/utils";
-import {
-  Dumbbell,
-  Footprints,
-  Bike,
-  Waves,
-  Activity,
-  Calculator,
-  LucideIcon,
-  CalendarIcon,
-} from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 
 import {
   fetchClientsForTrainer,
   ClientForTrainer,
 } from "@/server-actions/trainer/clients/actions";
-import { getClientActivities } from "@/server-actions/fitbit/actions";
-import { readEmail } from "@/server-actions/email/actions";
-import { Email } from "@/server-actions/email/types";
-import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
-import {
-  HabitOverView,
-  HabitOverViewProps,
-  DayData,
-} from "@/components/habits/habit-overview";
+import { ClientHabitsSummary } from "@/components/dashboard/trainer/ClientHabitsSummary";
+import { FitbitActivities } from "@/components/dashboard/trainer/FitbitActivities";
+import { ClientEmailsSummary } from "@/components/dashboard/trainer/ClientEmailsSummary";
+
+const calculateAge = (dateOfBirth: string | undefined) => {
+  if (!dateOfBirth) return "N/A";
+  const dob = new Date(dateOfBirth);
+  const diff_ms = Date.now() - dob.getTime();
+  const age_dt = new Date(diff_ms);
+  return Math.abs(age_dt.getUTCFullYear() - 1970);
+};
 
 interface Client extends ClientForTrainer {}
 
 const TrainerClientsPage = () => {
-  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [clientActivities, setClientActivities] = useState<any[]>([]);
-  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
-  const [clientEmails, setClientEmails] = useState<Email[]>([]);
-  const [isLoadingEmails, setIsLoadingEmails] = useState(false);
-  const [isLoadingClientHabits, setIsLoadingClientHabits] = useState(false);
-  const [habitOverViewProps, setHabitOverViewProps] =
-    useState<HabitOverViewProps>({
-      days: [],
-      selectedDate: new Date(),
-    });
   const [isStartDatePopoverOpen, setIsStartDatePopoverOpen] = useState(false);
   const [isEndDatePopoverOpen, setIsEndDatePopoverOpen] = useState(false);
-  const [endDate, setEndDate] = useState<Date | undefined>(() => {
-    return endOfDay(endOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [startDate, setStartDate] = useState<Date>(() => {
+    return startOfWeek(new Date(), { weekStartsOn: 1 });
+  });
+  const [endDate, setEndDate] = useState<Date>(() => {
+    return endOfWeek(new Date(), { weekStartsOn: 1 });
   });
 
-  const [startDate, setStartDate] = useState<Date | undefined>(() => {
-    return startOfDay(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const { data: clients = [], error: fetchClientsError } = useQuery({
+    queryKey: ["clients", searchTerm],
+    queryFn: () => fetchClientsForTrainer(searchTerm),
+    placeholderData: (previousData) => previousData,
   });
 
   useEffect(() => {
-    startTransition(async () => {
-      try {
-        const fetchedClients = await fetchClientsForTrainer(searchTerm);
-        setClients(fetchedClients);
-      } catch (error) {
-        console.error("Failed to fetch clients:", error);
-        toast.error("Failed to load clients", {
-          description: "Could not retrieve client list.",
-        });
-      }
-    });
-  }, [searchTerm]);
+    if (fetchClientsError) {
+      console.error("Failed to fetch clients:", fetchClientsError);
+      toast.error("Failed to load clients", {
+        description: "Could not retrieve client list.",
+      });
+    }
+  }, [fetchClientsError]);
 
   useEffect(() => {
     if (selectedClientId) {
@@ -104,123 +85,6 @@ const TrainerClientsPage = () => {
       setSelectedClient(null);
     }
   }, [selectedClientId, clients]);
-
-  // Fitbit Activities Fetch
-  useEffect(() => {
-    if (selectedClient?.id && startDate && endDate) {
-      setIsLoadingActivities(true);
-      startTransition(async () => {
-        try {
-          const activities = await getClientActivities(
-            selectedClient.id,
-            startOfDay(startDate),
-            endOfDay(endDate)
-          );
-          setClientActivities(activities);
-        } catch (error) {
-          console.error("Failed to fetch client activities:", error);
-          toast.error("Failed to load activities", {
-            description: "Could not retrieve client Fitbit activities.",
-          });
-        } finally {
-          setIsLoadingActivities(false);
-        }
-      });
-    } else {
-      setClientActivities([]);
-      setIsLoadingActivities(false);
-    }
-  }, [selectedClient, startDate, endDate, startTransition]);
-
-  // Emails Fetch
-  useEffect(() => {
-    if (selectedClient?.id) {
-      setIsLoadingEmails(true);
-      startTransition(async () => {
-        try {
-          const emailsResult = await readEmail(
-            selectedClient.email,
-            startDate,
-            endDate,
-            [],
-            ["Benefit"]
-          );
-          if (emailsResult.success) {
-            setClientEmails(emailsResult.data || []);
-          } else {
-            toast.error("Failed to load emails", {
-              description:
-                emailsResult.message || "Could not retrieve client emails.",
-            });
-          }
-        } catch (error) {
-          console.error("Failed to fetch client emails:", error);
-          toast.error("Failed to load emails", {
-            description: "Could not retrieve client emails.",
-          });
-        } finally {
-          setIsLoadingEmails(false);
-        }
-      });
-    } else {
-      setClientEmails([]);
-      setIsLoadingEmails(false);
-    }
-  }, [selectedClient, startDate, endDate, startTransition]);
-
-  useEffect(() => {
-    const clientId = selectedClient?.id || null;
-    if (!clientId) {
-      setHabitOverViewProps({
-        days: [],
-        selectedDate: new Date(),
-      });
-      return;
-    }
-
-    const fetchData = async () => {
-      try {
-        setIsLoadingClientHabits(true);
-
-        if (!clientId) {
-          return;
-        }
-
-        const clientHabits = await readClientHabitsByDateRange(
-          clientId,
-          startDate || new Date(),
-          endDate || new Date()
-        );
-        if (!clientHabits.success) {
-          throw new Error("No habit data found for the client.");
-        }
-
-        const days = clientHabits.data.HabitDayData;
-
-        console.log(JSON.stringify(days, null, 2));
-
-        const viewProps: HabitOverViewProps = {
-          days: days,
-          selectedDate: new Date(), // Use startDate directly
-        };
-        setHabitOverViewProps(viewProps);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoadingClientHabits(false);
-      }
-    };
-
-    fetchData();
-  }, [endDate, startDate, selectedClient]);
-
-  const calculateAge = (dateOfBirth: string | undefined) => {
-    if (!dateOfBirth) return "N/A";
-    const dob = new Date(dateOfBirth);
-    const diff_ms = Date.now() - dob.getTime();
-    const age_dt = new Date(diff_ms);
-    return Math.abs(age_dt.getUTCFullYear() - 1970);
-  };
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
@@ -296,7 +160,7 @@ const TrainerClientsPage = () => {
           <CardHeader>
             <CardTitle className="text-2xl">Date Range</CardTitle>
             <CardDescription>
-              Select a date range to view client data.
+              Select a date range to view client data. (Max 7-days)
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row gap-4">
@@ -418,156 +282,24 @@ const TrainerClientsPage = () => {
       )}
 
       {selectedClient && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">Client Habits Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoadingClientHabits ? (
-              <Loading
-                title="Loading Client Habits"
-                description="Fetching client's habit data..."
-                size="sm"
-              />
-            ) : habitOverViewProps.days.length > 0 ? (
-              <HabitOverView
-                days={habitOverViewProps.days}
-                selectedDate={habitOverViewProps.selectedDate}
-              />
-            ) : (
-              <p>No habit data found for this client.</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedClient && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">Fitbit Activities</CardTitle>
-            {clientActivities.length > 0 && startDate && endDate && (
-              <CardDescription>
-                {`${differenceInDays(endDate, startDate) + 1} day${
-                  differenceInDays(endDate, startDate) + 1 === 1 ? "" : "s"
-                } of Fitbit activity.`}
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            {isLoadingActivities ? (
-              <Loading
-                title="Loading Fitbit Activities"
-                description="Fetching client's Fitbit data..."
-                size="sm"
-              />
-            ) : clientActivities.length > 0 ? (
-              <ul className="flex flex-wrap gap-4">
-                {clientActivities.map((activity, index) => {
-                  const IconComponent: LucideIcon | undefined = {
-                    Dumbbell: Dumbbell,
-                    Footprints: Footprints,
-                    Bike: Bike,
-                    Waves: Waves,
-                    Activity: Activity,
-                    Calculator: Calculator,
-                  }[activity.summary?.iconName as string];
-
-                  const renderDetail = (
-                    label: string,
-                    value: any,
-                    unit: string = ""
-                  ) => {
-                    if (
-                      value === null ||
-                      value === undefined ||
-                      value === "N/A"
-                    ) {
-                      return null;
-                    }
-                    return (
-                      <p>
-                        {label}: {value} {unit}
-                      </p>
-                    );
-                  };
-
-                  return (
-                    <li
-                      key={index}
-                      className="flex-1 min-w-[200px] border p-3 rounded-md flex flex-col items-center justify-center text-center space-y-1"
-                    >
-                      {IconComponent && (
-                        <IconComponent className="h-8 w-8 mb-2" />
-                      )}
-                      <p className="font-semibold text-lg">{activity.date}</p>
-                      {renderDetail("Times Done", activity.summary?.count)}
-                      {activity.summary?.totalDuration !== undefined &&
-                        activity.summary.totalDuration > 0 && (
-                          <p>
-                            Time:{" "}
-                            {Math.round(activity.summary.totalDuration / 60000)}{" "}
-                            minutes
-                          </p>
-                        )}
-                      {renderDetail("Steps", activity.summary?.steps)}
-                      {renderDetail("Calories", activity.summary?.caloriesOut)}
-                      {renderDetail(
-                        "Distance",
-                        activity.summary?.distances?.find(
-                          (d: any) => d.activity === "total"
-                        )?.distance,
-                        "km"
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p>
-                No Fitbit activities found for this client or Fitbit is not
-                connected.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedClient && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">Client Emails Summary</CardTitle>
-            {!isLoadingEmails && clientEmails.length === 0 && (
-              <CardDescription>
-                Summary of client's emails will be displayed here.
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            {isLoadingEmails ? (
-              <Loading
-                title="Loading Client Emails"
-                description="Fetching client's email data..."
-                size="sm"
-              />
-            ) : clientEmails.length > 0 ? (
-              <ul className="space-y-4">
-                {clientEmails.map((email, index) => (
-                  <li key={index} className="border p-3 rounded-md">
-                    <p className="font-semibold">Subject: {email.subject}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Received: {email.receivedAt}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {email.body}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No emails found for this client.</p>
-            )}
-          </CardContent>
-        </Card>
+        <>
+          <ClientHabitsSummary
+            clientId={selectedClient.id}
+            startDate={startDate}
+            endDate={endDate}
+          />
+          <FitbitActivities
+            clientId={selectedClient.id}
+            startDate={startDate}
+            endDate={endDate}
+          />
+          <ClientEmailsSummary
+            clientId={selectedClient.id}
+            clientEmail={selectedClient.email}
+            startDate={startDate}
+            endDate={endDate}
+          />
+        </>
       )}
     </div>
   );

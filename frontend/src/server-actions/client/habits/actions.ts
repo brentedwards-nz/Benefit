@@ -1,6 +1,12 @@
 "use server";
-import { addDays, isSameDay } from "date-fns";
-import { toBenefitDateRange, BenefitDateRange } from "@/utils/date-utils";
+import {
+  addDays,
+  isSameDay,
+  differenceInCalendarDays,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
+import { format } from "date-fns-tz";
 import { ActionResult } from "@/types/server-action-results";
 import { HabitDayData } from "./types";
 import prisma from "@/utils/prisma/client";
@@ -13,7 +19,6 @@ interface QueryParameters {
   user_id: string;
   startDate: Date;
   endDate: Date;
-  dateRange: BenefitDateRange;
 }
 
 export interface HabitIntermediateData {
@@ -26,7 +31,8 @@ export interface HabitIntermediateData {
 export async function readClientHabitsByDateRange(
   user_id: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  timezone: string = "UTC"
 ): Promise<ActionResult<HabitIntermediateData>> {
   if (typeof user_id !== "string" || user_id.trim() === "") {
     console.error("Invalid auth_id provided to getClient Server Action.");
@@ -36,8 +42,14 @@ export async function readClientHabitsByDateRange(
     };
   }
 
-  const dateRange = toBenefitDateRange(startDate, endDate);
-  if (!dateRange) {
+  const normalizedStartDate = startOfDay(startDate);
+  const normalizedEndDate = endOfDay(endDate);
+
+  if (
+    !normalizedStartDate ||
+    !normalizedEndDate ||
+    normalizedStartDate > normalizedEndDate
+  ) {
     console.error("Invalid date range provided to getClientHabitsByDateRange.");
     return {
       success: false,
@@ -48,8 +60,8 @@ export async function readClientHabitsByDateRange(
   try {
     const programmes = await getProgrammeHabitsbyClientAndDateRange(
       user_id,
-      startDate,
-      endDate
+      normalizedStartDate,
+      normalizedEndDate
     );
 
     if (!programmes.success) {
@@ -63,8 +75,8 @@ export async function readClientHabitsByDateRange(
 
     const clientHabits = await getClientHabitsByDateRange(
       user_id,
-      startDate,
-      endDate
+      normalizedStartDate,
+      normalizedEndDate
     );
     if (!clientHabits.success) {
       return {
@@ -76,17 +88,18 @@ export async function readClientHabitsByDateRange(
     }
 
     let habitDayData = calculateHabitDayData(
-      dateRange,
+      normalizedStartDate,
+      normalizedEndDate,
       programmes.data,
-      clientHabits.data
+      clientHabits.data,
+      timezone
     );
 
     const queryParameters: QueryParameters = {
       function_name: "readClientHabitsByDateRange",
       user_id,
-      startDate: startDate,
-      endDate: endDate,
-      dateRange: dateRange,
+      startDate: normalizedStartDate,
+      endDate: normalizedEndDate,
     };
 
     const clientHabitsResult: HabitIntermediateData = {
@@ -105,7 +118,9 @@ export async function readClientHabitsByDateRange(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -124,28 +139,32 @@ const areDatesOnSameDay = (date1: Date, date2: Date): boolean => {
 };
 
 function calculateHabitDayData(
-  range: BenefitDateRange,
+  startDate: Date,
+  endDate: Date,
   programmes: Programme[],
-  clientHabits: ClientHabit[]
+  clientHabits: ClientHabit[],
+  timezone: string
 ): HabitDayData[] {
   let result: HabitDayData[] = [];
+  const duration = differenceInCalendarDays(endDate, startDate) + 1;
 
-  for (let i = 0; i < range.duration; i++) {
-    const currentDate = addDays(new Date(range.start), i);
-    currentDate.setHours(0, 0, 0, 0);
+  for (let i = 0; i < duration; i++) {
+    const currentDate = addDays(new Date(startDate), i);
+    const dayStart = currentDate;
+    const dayEnd = addDays(dayStart, 1);
 
     // Calculate how many habits are scheduled for this day
-    const dayOfWeek = currentDate.getDay(); // 0 (Sun) to 6 (Sat)
+    const dayOfWeek =
+      parseInt(format(currentDate, "e", { timeZone: timezone })) - 1;
     let habitCount = 0;
 
     let isProgrammeDay = false;
 
     programmes.forEach((programme) => {
-      // Check if the current date is within the programme's date range
-      if (
-        currentDate >= programme.startDate &&
-        currentDate <= programme.endDate
-      ) {
+      // A programme is active on a day if the day overlaps with the programme's date range.
+      // The programme's date range is inclusive, so we add a day to the end.
+      const programmeEnd = addDays(programme.endDate, 0);
+      if (dayStart < programmeEnd && dayEnd > programme.startDate) {
         isProgrammeDay = true;
         programme.habits.forEach((habit) => {
           switch (dayOfWeek) {
@@ -177,24 +196,21 @@ function calculateHabitDayData(
 
     // Calculate how many habits were completed on this day
     let completedHabitCount = 0;
-    //console.log("Client habit:", currentDate);
     clientHabits.forEach((clientHabit) => {
-      //console.log("Client habit:", clientHabit.completionDate, currentDate);
       if (
-        areDatesOnSameDay(clientHabit.completionDate, currentDate) &&
+        clientHabit.habitDate >= dayStart &&
+        clientHabit.habitDate < dayEnd &&
         clientHabit.timesDone > 0
       ) {
         completedHabitCount++;
       }
     });
-    console.log("\n");
 
     const completionRate =
       habitCount === 0 ? 0 : completedHabitCount / habitCount;
 
     result.push({
       date: currentDate,
-      dayNumber: currentDate.getDate(),
       completionRate: completionRate,
       isCurrentMonth: false,
       isProgrammeDay: isProgrammeDay,
@@ -234,9 +250,30 @@ export interface HabitIntermediateData {
 async function getProgrammeHabitsbyClientAndDateRange(
   user_id: string,
   begin: Date,
-  finish: Date
+  finish: Date | null
 ): Promise<ActionResult<Programme[]>> {
   try {
+    const normalizedBegin = new Date(begin.getTime());
+    normalizedBegin.setUTCHours(0, 0, 0, 0);
+
+    const normalizedFinish = finish ? new Date(finish.getTime()) : null;
+    if (normalizedFinish) {
+      normalizedFinish.setUTCHours(0, 0, 0, 0);
+    }
+
+    const programmeWhereClause: any = {};
+    if (normalizedFinish === null) {
+      programmeWhereClause.AND = [
+        { startDate: { lte: addDays(normalizedBegin, 1) } },
+        { endDate: { gte: normalizedBegin } },
+      ];
+    } else {
+      programmeWhereClause.AND = [
+        { startDate: { lte: normalizedFinish } },
+        { endDate: { gte: normalizedBegin } },
+      ];
+    }
+
     const client = await prisma.client.findUnique({
       where: {
         id: user_id,
@@ -246,12 +283,7 @@ async function getProgrammeHabitsbyClientAndDateRange(
         lastName: true,
         programmeEnrolments: {
           where: {
-            programme: {
-              AND: [
-                { startDate: { lte: finish } },
-                { endDate: { gte: begin } },
-              ],
-            },
+            programme: programmeWhereClause,
           },
           select: {
             programme: {
@@ -293,9 +325,7 @@ async function getProgrammeHabitsbyClientAndDateRange(
       };
     }
 
-    const programmesResult = client.programmeEnrolments;
-
-    const programmes: Programme[] = programmesResult.map((value) => ({
+    const programmes: Programme[] = client.programmeEnrolments.map((value) => ({
       id: value.programme.id,
       name: value.programme.name,
       humanReadableId: value.programme.humanReadableId,
@@ -323,7 +353,9 @@ async function getProgrammeHabitsbyClientAndDateRange(
 
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -335,7 +367,7 @@ async function getProgrammeHabitsbyClientAndDateRange(
 
 interface ClientHabit {
   programmeHabitId: string;
-  completionDate: Date;
+  habitDate: Date;
   completed: boolean;
   timesDone: number;
 }
@@ -379,7 +411,7 @@ async function getClientHabitsByDateRange(
 
     const result: ClientHabit[] = habits.map((habit) => ({
       programmeHabitId: habit.programmeHabitId,
-      completionDate: habit.habitDate,
+      habitDate: habit.habitDate,
       completed: habit.completed,
       timesDone: habit.timesDone,
     }));
@@ -391,7 +423,9 @@ async function getClientHabitsByDateRange(
   } catch (err: any) {
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"
@@ -400,24 +434,6 @@ async function getClientHabitsByDateRange(
     };
   }
 }
-
-// model ClientHabits {
-//   id               String   @id @default(cuid())
-//   programmeHabitId String
-//   clientId         String
-//   completionDate   DateTime @db.Date
-//   completed        Boolean  @default(false)
-//   timesDone        Int      @default(0)
-//   notes            String?
-//   createdAt        DateTime @default(now()) @db.Timestamp(6)
-//   updatedAt        DateTime @default(now()) @db.Timestamp(6)
-
-//   // Relationships
-//   programmeHabit ProgrammeHabit @relation(fields: [programmeHabitId], references: [id], onDelete: Cascade)
-//   client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-//   @@unique([programmeHabitId, clientId, completionDate]) // One completion per habit per client per day
-// }
 
 export interface DailyHabit {
   title: string;
@@ -447,12 +463,13 @@ export async function readClientHabitsByDate(
     const programmesResult = await getProgrammeHabitsbyClientAndDateRange(
       user_id,
       date,
-      date
+      null
     );
 
     if (!programmesResult.success) {
       return programmesResult;
     }
+
     if (programmesResult.data.length === 0) {
       return { success: true, data: [] };
     }
@@ -508,7 +525,9 @@ export async function readClientHabitsByDate(
     console.error("Error in readClientHabitsByDate:", err);
     return {
       success: false,
-      message: `An unexpected server error occurred: ${err.message || "Unknown error"}`,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
       code: "UNEXPECTED_SERVER_ERROR",
       details:
         process.env.NODE_ENV === "development"

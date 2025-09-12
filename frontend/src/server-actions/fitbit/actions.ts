@@ -171,16 +171,13 @@ export async function getClientActivities(
         properties: updatedFitbitProperties,
       };
 
-      const currentSettings = (client.settings as unknown as JsonObject) || {};
-      currentSettings["fitbit"] = {
-        settings: fitbitClientSettings.map((s) =>
-          s.id === updatedFitbitConfig.id ? updatedFitbitConfig : s
-        ),
-      };
+      const newSettings = fitbitClientSettings.map((s) =>
+        s.id === fitbitConfig!.id ? updatedFitbitConfig : s
+      );
 
       await prisma.client.update({
         where: { id: clientId },
-        data: { settings: currentSettings },
+        data: { settings: newSettings as any },
       });
     } catch (error) {
       console.error(

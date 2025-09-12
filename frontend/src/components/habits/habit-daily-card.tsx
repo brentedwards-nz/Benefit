@@ -15,9 +15,10 @@ import { Progress } from "@/components/ui/progress";
 
 interface HabitDailyCardProps {
   habit: DailyHabit;
+  onHabitUpdated: () => void;
 }
 
-export const HabitDailyCard = ({ habit }: HabitDailyCardProps) => {
+export const HabitDailyCard = ({ habit, onHabitUpdated }: HabitDailyCardProps) => {
   const [isPending, startTransition] = useTransition();
   const [timesDone, setTimesDone] = useState(habit.timesDone);
   const [clientHabitId, setClientHabitId] = useState(
@@ -44,6 +45,7 @@ export const HabitDailyCard = ({ habit }: HabitDailyCardProps) => {
         if (result.data.id !== clientHabitId) {
           setClientHabitId(result.data.id);
         }
+        onHabitUpdated();
       } else {
         toast.error(`Failed to update '${habit.title}'.`);
         setTimesDone(oldTimesDone); // Revert on failure
@@ -68,16 +70,14 @@ export const HabitDailyCard = ({ habit }: HabitDailyCardProps) => {
   return (
     <Card
       className={cn(
-        "w-full transition-colors",
-        isCompleted
-          ? "bg-green-100/50 dark:bg-green-900/50"
-          : "bg-red-100/50 dark:bg-red-900/50"
+        "w-full transition-colors p-3 gap-1.5",
+        isCompleted ? "bg-green-500" : "bg-red-500"
       )}
     >
       <CardHeader>
-        <CardTitle className="text-lg">{habit.title}</CardTitle>
+        <CardTitle className="text-lg text-center">{habit.title}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-0.5">
         <div className="flex items-center justify-center space-x-4">
           <Button
             variant="outline"
@@ -88,8 +88,9 @@ export const HabitDailyCard = ({ habit }: HabitDailyCardProps) => {
             <MinusIcon className="h-4 w-4" />
           </Button>
           <div className="text-center">
-            <p className="text-2xl font-bold">{timesDone}</p>
-            <p className="text-xs text-muted-foreground">/ {habitFrequency}</p>
+            <p className="text-lg font-bold">
+              {timesDone} of {habitFrequency}
+            </p>
           </div>
           <Button
             variant="outline"

@@ -65,7 +65,7 @@ export interface WeekViewProps {
   ) => void;
 }
 
-export const WeekView = ({
+export const MonthlyView = ({
   selectedWeek,
   selectedDate,
   programmeHabits,

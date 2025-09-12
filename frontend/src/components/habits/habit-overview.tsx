@@ -4,7 +4,6 @@ import { isSameDay } from "date-fns";
 
 export interface DayData {
   date: Date;
-  dayNumber: number;
   completionRate: number;
   isProgrammeDay: boolean;
   color: string;
@@ -13,12 +12,16 @@ export interface DayData {
 export interface HabitOverViewProps {
   days: DayData[];
   selectedDate: Date | null;
+  showDayLabels?: boolean;
+  showCompletionRate?: boolean;
   onDateSelected?: (date: Date) => void;
 }
 
 export const HabitOverView = ({
   days,
   selectedDate,
+  showDayLabels,
+  showCompletionRate,
   onDateSelected,
 }: HabitOverViewProps) => {
   // Use the selectedDate prop as the initial selected day
@@ -59,14 +62,15 @@ export const HabitOverView = ({
                 }}
               >
                 {/* Day label above */}
-                <div
-                  className={`text-xs font-medium text-center ${
-                    isSelected ? "text-blue-600" : "text-muted-foreground"
-                  }`}
-                >
-                  {day.date.toLocaleDateString("en-US", { weekday: "short" })}
-                </div>
-
+                {showDayLabels && (
+                  <div
+                    className={`text-xs font-medium text-center ${
+                      isSelected ? "text-blue-600" : "text-muted-foreground"
+                    }`}
+                  >
+                    {day.date.toLocaleDateString("en-US", { weekday: "short" })}
+                  </div>
+                )}
                 {/* Day circle */}
                 <div
                   className={`w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
@@ -87,9 +91,11 @@ export const HabitOverView = ({
                   )}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  {Math.round(day.completionRate * 100)}%
-                </div>
+                {showCompletionRate && (
+                  <div className="text-xs text-muted-foreground">
+                    {Math.round(day.completionRate * 100)}%
+                  </div>
+                )}
               </div>
             );
           })}

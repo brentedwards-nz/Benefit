@@ -79,8 +79,8 @@ model Programme {
   id                  String               @id @default(cuid())
   humanReadableId     String               @unique
   name                String
-  startDate           DateTime
-  endDate             DateTime?
+  startDate           DateTime             @db.Date
+  endDate             DateTime?            @db.Date
   maxClients          Int
   programmeCost       Decimal              @db.Decimal(10, 2)
   notes               String?

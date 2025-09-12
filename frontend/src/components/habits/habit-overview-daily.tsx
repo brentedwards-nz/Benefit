@@ -1,44 +1,39 @@
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
 import {
   readClientHabitsByDate,
   DailyHabit,
 } from "@/server-actions/client/habits/actions";
 import { HabitDailyCard } from "@/components/habits/habit-daily-card";
 import { Loading } from "@/components/ui/loading";
+import { useQuery } from "@tanstack/react-query";
 
 interface HabitOverViewDaily {
   clientId: string | undefined;
   selectedDate: Date;
+  onHabitUpdated: () => void;
 }
 
-const HabitOverViewDaily = ({ selectedDate, clientId }: HabitOverViewDaily) => {
-  const [dailyHabits, setDailyHabits] = useState<DailyHabit[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// External function to fetch daily habits
+const fetchDailyHabits = async (clientId: string | undefined, selectedDate: Date) => {
+  if (!clientId) {
+    return [];
+  }
+  const result = await readClientHabitsByDate(clientId, selectedDate);
+  if (!result.success) {
+    toast.error("Failed to fetch daily habit data");
+    return [];
+  }
+  return result.data;
+};
 
-  useEffect(() => {
-    if (!clientId) {
-      setDailyHabits([]);
-      setIsLoading(false);
-      return;
+const HabitOverViewDaily = ({ selectedDate, clientId, onHabitUpdated }: HabitOverViewDaily) => {
+  const { data: dailyHabits, isLoading } = useQuery<DailyHabit[]>(
+    {
+      queryKey: ["dailyHabits", clientId, selectedDate.toISOString()],
+      queryFn: () => fetchDailyHabits(clientId, selectedDate),
+      enabled: !!clientId,
     }
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      const result = await readClientHabitsByDate(clientId, selectedDate);
-
-      if (!result.success) {
-        toast.error("Failed to fetch daily habit data");
-        setDailyHabits([]);
-      } else {
-        setDailyHabits(result.data);
-      }
-      setIsLoading(false);
-    };
-
-    fetchData();
-  }, [selectedDate, clientId]);
+  );
 
   return (
     <div className="flex w-full flex-col items-center">
@@ -49,9 +44,13 @@ const HabitOverViewDaily = ({ selectedDate, clientId }: HabitOverViewDaily) => {
             description="Fetching client's habit data..."
             size="sm"
           />
-        ) : dailyHabits.length > 0 ? (
+        ) : dailyHabits && dailyHabits.length > 0 ? (
           dailyHabits.map((habit) => (
-            <HabitDailyCard key={habit.programmeHabitId} habit={habit} />
+            <HabitDailyCard
+              key={habit.programmeHabitId}
+              habit={habit}
+              onHabitUpdated={onHabitUpdated}
+            />
           ))
         ) : (
           <div className="rounded-lg border-2 border-dashed p-8 text-center text-muted-foreground">

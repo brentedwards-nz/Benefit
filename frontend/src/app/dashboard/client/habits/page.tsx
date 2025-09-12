@@ -1,5 +1,4 @@
 "use client";
-import { getDayColor } from "@/utils/general-utils";
 import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -8,42 +7,69 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Lock,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { UserRole } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loading } from "@/components/ui/loading";
-import { WeekView, ClientHabits, ProgrammeHabit } from "@/components/habits/week-view";
+import { HabitOverView } from "@/components/habits/habit-overview";
 import { toast } from "sonner";
+import { addDays, isSameDay } from "date-fns";
+import { readClientHabitsByDateRange } from "@/server-actions/client/habits/actions";
+import { readClient } from "@/server-actions/client/actions";
 
-interface DayData {
-  date: Date;
-  dayNumber: number;
-  isCurrentMonth: boolean;
-  completionRate: number; // 0-1
+import { useQuery } from "@tanstack/react-query";
+import { Session } from "next-auth";
+import { getStartOfWeek } from "@/utils/date-utils";
+
+async function getUser(session: Session | null) {
+  if (!session?.user?.id) {
+    throw new Error("No user ID found in session");
+  }
+  const auth_id = session.user.id;
+  const res = await readClient(auth_id);
+  if (!res.success) {
+    throw new Error("Could not get user");
+  }
+  return res.data;
 }
 
-interface WeekData {
-  days: DayData[];
+async function getUserHabits(selectedClientId: string, startDate?: Date) {
+  if (!selectedClientId) {
+    throw new Error("No client ID provided");
+  }
+
+  if (!startDate) {
+    startDate = new Date();
+  }
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const res = await readClientHabitsByDateRange(
+    selectedClientId,
+    getStartOfWeek(startDate),
+    addDays(getStartOfWeek(startDate), 27),
+    timezone
+  );
+
+  if (!res.success) {
+    throw new Error("Could not get client habits");
+  }
+  return res.data;
 }
 
 const ClientHabitsPage = () => {
-  const { data: session } = useSession();
   const router = useRouter();
+
+  // SearchParams
   const searchParams = useSearchParams();
+
+  // State variables
+  const { data: session } = useSession();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [weeks, setWeeks] = useState<WeekData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [programmeHabits, setProgrammeHabits] = useState<ProgrammeHabit[]>([]);
-  const [habitCompletions, setHabitCompletions] = useState<ClientHabits[]>([]);
-  const [selectedWeek, setSelectedWeek] = useState<WeekData | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isLoadingClientHabits, setIsLoadingClientHabits] = useState(false);
 
-  // Get client ID from search params or fall back to current user
-  const clientId = searchParams.get("clientId") || session?.user?.id;
-
-  // If a date query param is present, anchor the calendar to that date
+  // Use Effect
   const anchorDateParam = searchParams.get("date");
   useEffect(() => {
     if (anchorDateParam) {
@@ -52,24 +78,27 @@ const ClientHabitsPage = () => {
         setCurrentDate(d);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anchorDateParam]);
 
-  // Helper: check if a date is within any programme window
-  const isWithinProgramme = (date: Date): boolean => {
-    const dateOnly = new Date(date.toISOString().split("T")[0]);
-    return programmeHabits.some((ph) => {
-      const start = ph.programme?.startDate
-        ? new Date(ph.programme.startDate)
-        : null;
-      const end = ph.programme?.endDate ? new Date(ph.programme.endDate) : null;
-      if (!start || !end) return true; // If bounds unknown, do not block
-      const d = dateOnly.getTime();
-      const s = new Date(start.toISOString().split("T")[0]).getTime();
-      const e = new Date(end.toISOString().split("T")[0]).getTime();
-      return d >= s && d <= e;
-    });
-  };
+  const {
+    data: selectedClient,
+    isLoading: isLoadingSelectedClient,
+    error: errorSelectedClient,
+  } = useQuery({
+    queryKey: ["getUserId", session?.user?.id],
+    queryFn: () => getUser(session),
+    enabled: !!(session && session.user && session.user.id),
+  });
+
+  const {
+    data: habitOverViewProps,
+    isLoading: isLoadingHabitOverViewProps,
+    error: errorHabitOverViewProps,
+  } = useQuery({
+    queryKey: ["getUserHabits", selectedClient?.id || "", currentDate],
+    queryFn: () => getUserHabits(selectedClient?.id || "", currentDate),
+    enabled: !!(selectedClient && selectedClient.id),
+  });
 
   // Get the start of the week (Monday) for a given date
   const getStartOfWeek = (date: Date): Date => {
@@ -77,46 +106,6 @@ const ClientHabitsPage = () => {
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
     return new Date(d.setDate(diff));
-  };
-
-  // Generate 4 weeks of data starting from the given date
-  const generateWeeks = (startDate: Date, clientHabits: ClientHabits[]): WeekData[] => {
-    const weeks: WeekData[] = [];
-    const startOfWeek = getStartOfWeek(startDate);
-
-    for (let week = 0; week < 4; week++) {
-      const weekStart = new Date(startOfWeek);
-      weekStart.setDate(weekStart.getDate() + week * 7);
-
-      const days: DayData[] = [];
-      for (let day = 0; day < 7; day++) {
-        const currentDate = new Date(weekStart);
-        currentDate.setDate(currentDate.getDate() + day);
-
-        // Get habit completions for this specific date
-        const dateString = currentDate.toISOString().split("T")[0];
-        const dayCompletions = clientHabits.filter(
-          (c) => c.habitDate.split("T")[0] === dateString
-        );
-
-        const completedCount = dayCompletions.filter((c) => c.completed).length;
-        const completionRate =
-          programmeHabits.length > 0
-            ? completedCount / programmeHabits.length
-            : 0;
-
-        days.push({
-          date: currentDate,
-          dayNumber: currentDate.getDate(),
-          isCurrentMonth: currentDate.getMonth() === startDate.getMonth(),
-          completionRate,
-        });
-      }
-
-      weeks.push({ days });
-    }
-
-    return weeks;
   };
 
   // Navigate to previous 4 weeks
@@ -162,8 +151,15 @@ const ClientHabitsPage = () => {
   };
 
   // Handle day click to redirect to weekly view
-  const handleDayClick = (day: DayData) => {
-    // Allow clicking days across month boundaries
+  const handleDayClick = (clickedDate: Date) => {
+    const day = habitOverViewProps?.HabitDayData.find((d) =>
+      isSameDay(d.date, clickedDate)
+    );
+    if (!day) {
+      // This should not happen if the clickedDate comes from HabitOverView
+      console.error("DayData not found for clicked date:", clickedDate);
+      return;
+    }
 
     // Redirect to weekly page with the selected date and clientId
     const dateString = day.date.toISOString().split("T")[0];
@@ -181,117 +177,11 @@ const ClientHabitsPage = () => {
     }
     const queryParams = new URLSearchParams();
     queryParams.set("date", dateString);
-    if (clientId && clientId !== session?.user?.id) {
-      queryParams.set("clientId", clientId);
-    }
-
     router.push(`/dashboard/client/habits/weekly?${queryParams.toString()}`);
   };
 
-  // Handle habit completion toggle
-  const handleHabitToggle = async (
-    programmeHabitId: string,
-    date: Date,
-    completed: boolean
-  ) => {
-    const dateString = date.toISOString().split("T")[0];
-
-    try {
-      const response = await fetch("/api/client/habits/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          programmeHabitId,
-          habitDate: dateString,
-          completed: !completed,
-          clientId,
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh the data for the current week only
-        const weekStart = getStartOfWeek(selectedDate || currentDate);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6); // 7 days (current week)
-
-        const completionsResponse = await fetch(
-          `/api/client/habits/completions?startDate=${
-            weekStart.toISOString().split("T")[0]
-          }&endDate=${weekEnd.toISOString().split("T")[0]}&clientId=${clientId}`
-        );
-        if (completionsResponse.ok) {
-          const completionsData = await completionsResponse.json();
-          setHabitCompletions(completionsData);
-        }
-      } else {
-        const errorData = await response.json();
-        console.error("Habit toggle failed:", response.status, errorData);
-        toast.error(
-          `Failed to update habit: ${errorData.error || "Unknown error"}`
-        );
-      }
-    } catch (error) {
-      console.error("Error updating habit completion:", error);
-      toast.error("Error updating habit completion");
-    }
-  };
-
-  // Go back to 4-week view
-  const goBackToOverview = () => {
-    setSelectedWeek(null);
-    setSelectedDate(null);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Wait for clientId to be available
-        if (!clientId) {
-          return;
-        }
-
-        // Fetch programme habits
-        const habitsResponse = await fetch(
-          `/api/client/habits?clientId=${clientId}`
-        );
-        if (habitsResponse.ok) {
-          const habitsData = await habitsResponse.json();
-          setProgrammeHabits(habitsData);
-        }
-
-        // Fetch habit completions for the current 4-week period
-        const startDate = getStartOfWeek(currentDate);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 27); // 4 weeks
-
-        const completionsResponse = await fetch(
-          `/api/client/habits/completions?startDate=${
-            startDate.toISOString().split("T")[0]
-          }&endDate=${endDate.toISOString().split("T")[0]}&clientId=${clientId}`
-        );
-        if (completionsResponse.ok) {
-          const completionsData = await completionsResponse.json();
-          setHabitCompletions(completionsData);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentDate, clientId]);
-
-  useEffect(() => {
-    if (programmeHabits.length > 0) {
-      setWeeks(generateWeeks(currentDate, habitCompletions));
-    }
-  }, [currentDate, programmeHabits, habitCompletions]);
-
-  if (loading) {
+  // ---------- Loading state -----------------------------------------------
+  if (isLoadingClientHabits) {
     return (
       <Loading
         title="Loading Habits"
@@ -302,25 +192,7 @@ const ClientHabitsPage = () => {
     );
   }
 
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-  // Week view component
-  if (selectedWeek && selectedDate) {
-    return (
-      <ProtectedRoute
-        requiredRoles={[UserRole.Client, UserRole.Admin, UserRole.SystemAdmin]}
-      >
-        <WeekView
-          selectedWeek={selectedWeek}
-          selectedDate={selectedDate}
-          programmeHabits={programmeHabits}
-          habitCompletions={habitCompletions}
-          onHabitToggle={handleHabitToggle}
-        />
-      </ProtectedRoute>
-    );
-  }
-
+  // ---------- Main render -------------------------------------------------
   return (
     <ProtectedRoute
       requiredRoles={[UserRole.Client, UserRole.Admin, UserRole.SystemAdmin]}
@@ -400,125 +272,35 @@ const ClientHabitsPage = () => {
         <div className="space-y-3">
           {/* Calendar Grid - Centered with 10px gaps and aligned headers */}
           <div className="flex justify-center">
-            <div className="w-full max-w-xl">
-              {/* Week day headers as transparent circles */}
-              <div className="grid grid-cols-7 gap-2 justify-items-center">
-                {weekDays.map((day) => (
-                  <div
-                    key={day}
-                    className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xs text-muted-foreground"
-                    style={{ backgroundColor: "transparent" }}
-                  >
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar weeks */}
-              <div className="mt-2.5 space-y-2.5">
-                {weeks.map((week, weekIndex) => (
-                  <div
-                    key={weekIndex}
-                    className="grid grid-cols-7 gap-2 justify-items-center"
-                  >
-                    {week.days.map((day, dayIndex) => {
-                      // Calculate completion rate on the fly like the weekly view
-                      const dateString = day.date.toISOString().split("T")[0];
-                      const dayCompletions = habitCompletions.filter(
-                        (c) => c.habitDate.split("T")[0] === dateString
-                      );
-                      // Only consider habits whose programme is active on this specific date
-                      const isHabitActiveOnDate = (
-                        ph: ProgrammeHabit
-                      ): boolean => {
-                        const s = ph.programme?.startDate
-                          ? new Date(
-                              new Date(ph.programme.startDate)
-                                .toISOString()
-                                .split("T")[0]
-                            )
-                          : null;
-                        const e = ph.programme?.endDate
-                          ? new Date(
-                              new Date(ph.programme.endDate)
-                                .toISOString()
-                                .split("T")[0]
-                            )
-                          : null;
-                        if (!s || !e) return true;
-                        const d = new Date(dateString);
-                        return d >= s && d <= e;
-                      };
-                      const activeHabits =
-                        programmeHabits.filter(isHabitActiveOnDate);
-                      const completedCount = activeHabits.filter((ph) => {
-                        const requiredPerDay = Math.max(
-                          1,
-                          ph.frequencyPerDay ?? 1
-                        );
-                        const rec = dayCompletions.find(
-                          (c) => c.programmeHabitId === ph.id
-                        );
-                        const times =
-                          rec?.timesDone ??
-                          (rec?.completed ? requiredPerDay : 0);
-                        return times >= requiredPerDay;
-                      }).length;
-                      const completionRate =
-                        activeHabits.length > 0
-                          ? completedCount / activeHabits.length
-                          : 0;
-
-                      const withinProgramme = isWithinProgramme(day.date);
-                      const isToday =
-                        day.date.toISOString().split("T")[0] ===
-                        new Date().toISOString().split("T")[0];
-                      const circleBase =
-                        "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200";
-                      const circleEnabled = `${getDayColor(
-                        completionRate
-                      )} text-white hover:scale-110 cursor-pointer`;
-                      const circleDisabled =
-                        "bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed";
-                      const todayRing =
-                        withinProgramme && isToday
-                          ? " ring-2 ring-blue-500 ring-offset-2"
-                          : "";
-                      return (
-                        <div
-                          key={dayIndex}
-                          className={`${circleBase} ${
-                            withinProgramme ? circleEnabled : circleDisabled
-                          }${todayRing}`}
-                          {...(withinProgramme
-                            ? {
-                                title: `${Math.round(
-                                  completionRate * 100
-                                )}% habits completed`,
-                              }
-                            : {})}
-                          onClick={() => {
-                            if (!withinProgramme) return;
-                            handleDayClick(day);
-                          }}
-                        >
-                          {withinProgramme ? (
-                            <>{day.dayNumber}</>
-                          ) : (
-                            <Lock className="w-4 h-4 opacity-80" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+            <div className="w-full">
+              {habitOverViewProps &&
+                habitOverViewProps.HabitDayData.length > 0 &&
+                Array.from(
+                  {
+                    length: Math.ceil(
+                      habitOverViewProps.HabitDayData.length / 7
+                    ),
+                  },
+                  (_, i) => (
+                    <HabitOverView
+                      key={i}
+                      days={habitOverViewProps.HabitDayData.slice(
+                        i * 7,
+                        (i + 1) * 7
+                      )}
+                      selectedDate={currentDate}
+                      showCompletionRate={false}
+                      showDayLabels={i === 0} // Only show day labels for the first week
+                      onDateSelected={handleDayClick}
+                    />
+                  )
+                )}
             </div>
           </div>
         </div>
 
         {/* Empty state */}
-        {programmeHabits.length === 0 && (
+        {habitOverViewProps && habitOverViewProps.HabitDayData.length === 0 && (
           <div className="mt-8 text-center">
             <p className="text-muted-foreground">
               No habits assigned yet. Contact your programme administrator.
