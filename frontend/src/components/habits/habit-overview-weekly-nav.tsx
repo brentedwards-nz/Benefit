@@ -13,6 +13,8 @@ import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 
 interface HabitOverViewWeeklyNavProps {
   selectedDate: Date;
+  onPreviousWeek: () => void;
+  onNextWeek: () => void;
 }
 
 function getMondayToSundayRange(selectedDate: Date): string {
@@ -33,11 +35,13 @@ function getMondayToSundayRange(selectedDate: Date): string {
 
 const HabitOverViewWeeklyNav = ({
   selectedDate,
+  onPreviousWeek,
+  onNextWeek,
 }: HabitOverViewWeeklyNavProps) => {
   const router = useRouter();
 
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-2">
       <Button
         variant="outline"
         size="icon"
@@ -48,13 +52,13 @@ const HabitOverViewWeeklyNav = ({
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" onClick={() => alert("To do...")}>
+        <Button variant="outline" size="icon" onClick={onPreviousWeek}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-2xl font-bold mx-4">
+        <h2 className="text-lg md:text-2xl font-bold mx-2">
           {getMondayToSundayRange(selectedDate)}
         </h2>
-        <Button variant="outline" size="icon" onClick={() => alert("To do...")}>
+        <Button variant="outline" size="icon" onClick={onNextWeek}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

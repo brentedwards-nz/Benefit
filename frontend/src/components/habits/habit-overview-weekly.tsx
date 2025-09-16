@@ -84,6 +84,14 @@ const HabitOverViewWeekly = () => {
     enabled: !!userId && !!dateParam,
   });
 
+  const goToPreviousWeek = () => {
+    setCurrentDate((prevDate) => addDays(prevDate, -7));
+  };
+
+  const goToNextWeek = () => {
+    setCurrentDate((prevDate) => addDays(prevDate, 7));
+  };
+
   if (isLoadingUserId || isLoadingDayData) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -95,7 +103,11 @@ const HabitOverViewWeekly = () => {
   return (
     <div>
       <div className="w-full">
-        <HabitOverViewWeeklyNav selectedDate={currentDate} />
+        <HabitOverViewWeeklyNav
+          selectedDate={currentDate}
+          onPreviousWeek={goToPreviousWeek}
+          onNextWeek={goToNextWeek}
+        />
       </div>
       {/* <div>
         <pre>{JSON.stringify(dayData, null, 2)}</pre>
