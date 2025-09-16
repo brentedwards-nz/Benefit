@@ -26,7 +26,8 @@ export interface HabitIntermediateData {
 export async function readClientHabitsByDateRange(
   user_id: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  timezone: string = "UTC"
 ): Promise<ActionResult<HabitIntermediateData>> {
   if (typeof user_id !== "string" || user_id.trim() === "") {
     console.error("Invalid auth_id provided to getClient Server Action.");
@@ -77,7 +78,8 @@ export async function readClientHabitsByDateRange(
       startDate,
       endDate,
       programmes.data,
-      clientHabits.data
+      clientHabits.data,
+      timezone
     );
 
     const clientHabitsResult: HabitIntermediateData = {
@@ -120,7 +122,8 @@ function calculateHabitDayData(
   startDate: string,
   endDate: string,
   programmes: Programme[],
-  clientHabits: ClientHabit[]
+  clientHabits: ClientHabit[],
+  timezone: string
 ): HabitDayData[] {
   let result: HabitDayData[] = [];
   const duration = differenceInCalendarDays(endDate, startDate) + 1;
@@ -129,7 +132,7 @@ function calculateHabitDayData(
     const currentDate = normalizeDate(addDays(new Date(startDate), i));
 
     // Calculate how many habits are scheduled for this day
-    const dayOfWeek = parseInt(format(currentDate, "e")) - 1;
+    const dayOfWeek = parseInt(format(currentDate, "e", { timeZone: timezone })) - 1;
     let habitCount = 0;
 
     let isProgrammeDay = false;
