@@ -85,11 +85,15 @@ const HabitOverViewWeekly = () => {
   });
 
   const goToPreviousWeek = () => {
-    setCurrentDate((prevDate) => addDays(prevDate, -7));
+    const newDate = addDays(currentDate, -7);
+    setCurrentDate(newDate);
+    setSelectedDate(getStartOfWeek(newDate));
   };
 
   const goToNextWeek = () => {
-    setCurrentDate((prevDate) => addDays(prevDate, 7));
+    const newDate = addDays(currentDate, 7);
+    setCurrentDate(newDate);
+    setSelectedDate(getStartOfWeek(newDate));
   };
 
   if (isLoadingUserId || isLoadingDayData) {
