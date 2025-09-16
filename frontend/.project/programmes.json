@@ -1,0 +1,44 @@
+[
+  {
+    "prog D": "15 16 17 18 19 20 21",
+    "prog 0": "M  T  W  T  F  S  S ",
+    "prog 1": "X  X                ",
+    "prog 2": "   X  X  X.         "
+  },
+  {
+    "id": "cmfc4tm5b0003y06fyxdw80q6",
+    "humanReadableId": "Benefit Winter 2025 1757397039364",
+    "name": "Benefit Winter 2025",
+    "startDate": "2025-09-15",
+    "endDate": "2025-09-16",
+    "maxClients": 1,
+    "programmeCost": "100.00",
+    "notes": "",
+    "adhocData": null,
+    "createdAt": "2025-09-09 05:50:39.415",
+    "updatedAt": "2025-09-09 05:50:39.415",
+    "sessionsDescription": {
+      "schedule": [],
+      "totalWeeks": 1,
+      "sessionsPerWeek": 1
+    }
+  },
+  {
+    "id": "cmfc6zpk2000by02w2wwqk939",
+    "humanReadableId": "Benefit Spring 2025 1757400682936",
+    "name": "Benefit Spring 2025",
+    "startDate": "2025-09-16",
+    "endDate": "2025-09-18",
+    "maxClients": 1,
+    "programmeCost": "100.00",
+    "notes": "",
+    "adhocData": null,
+    "createdAt": "2025-09-09 06:51:23.001",
+    "updatedAt": "2025-09-09 06:51:23.001",
+    "sessionsDescription": {
+      "schedule": [],
+      "totalWeeks": 1,
+      "sessionsPerWeek": 1
+    }
+  }
+]

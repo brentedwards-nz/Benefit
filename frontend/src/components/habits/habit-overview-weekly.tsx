@@ -15,7 +15,10 @@ import { getStartOfWeek } from "@/utils/date-utils";
 import { Session } from "next-auth";
 
 // External function to fetch userId
-const fetchUserId = async (session: Session | null, clientIdParam: string | null) => {
+const fetchUserId = async (
+  session: Session | null,
+  clientIdParam: string | null
+) => {
   if (!session || (!session.user.id && !clientIdParam)) {
     return "";
   }
@@ -32,13 +35,12 @@ const fetchHabitDayData = async (userId: string, currentDate: Date) => {
   if (!userId) {
     return [];
   }
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const result = await readClientHabitsByDateRange(
-    userId,
-    getStartOfWeek(currentDate),
-    addDays(getStartOfWeek(currentDate), 6),
-    timezone
-  );
+
+  const start = getStartOfWeek(currentDate).toISOString().split("T")[0];
+  const end = addDays(getStartOfWeek(currentDate), 6)
+    .toISOString()
+    .split("T")[0];
+  const result = await readClientHabitsByDateRange(userId, start, end);
 
   if (!result.success) {
     toast.error("Failed to fetch daily habit data:" + result.message || "");
@@ -72,7 +74,11 @@ const HabitOverViewWeekly = () => {
     enabled: !!session && (!!session.user.id || !!clientIdParam),
   });
 
-  const { data: dayData, isLoading: isLoadingDayData, refetch: refetchDayData } = useQuery<DayData[]>({
+  const {
+    data: dayData,
+    isLoading: isLoadingDayData,
+    refetch: refetchDayData,
+  } = useQuery<DayData[]>({
     queryKey: ["dayData", userId, currentDate],
     queryFn: () => fetchHabitDayData(userId || "", currentDate),
     enabled: !!userId && !!dateParam,
@@ -91,6 +97,9 @@ const HabitOverViewWeekly = () => {
       <div className="w-full">
         <HabitOverViewWeeklyNav selectedDate={currentDate} />
       </div>
+      {/* <div>
+        <pre>{JSON.stringify(dayData, null, 2)}</pre>
+      </div> */}
       <div className="w-full">
         <HabitOverView
           days={dayData || []}

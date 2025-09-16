@@ -13,8 +13,8 @@ import { startOfDay, endOfDay } from "date-fns";
 
 interface ClientHabitsSummaryProps {
   clientId: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
 }
 
 export const ClientHabitsSummary = ({
@@ -48,7 +48,6 @@ export const ClientHabitsSummary = ({
         );
       }
       const viewProps: HabitOverViewProps = {
-        
         days: result.data.HabitDayData,
         selectedDate: new Date(), // Use startDate directly
       };
@@ -81,13 +80,11 @@ export const ClientHabitsSummary = ({
         ) : habitOverViewProps && habitOverViewProps.days.length > 0 ? (
           <div>
             <HabitOverView
-              
               days={habitOverViewProps.days}
               selectedDate={habitOverViewProps.selectedDate}
               showCompletionRate={true}
               showDayLabels={true}
             />
-            
           </div>
         ) : (
           <p>No habit data found for this client.</p>

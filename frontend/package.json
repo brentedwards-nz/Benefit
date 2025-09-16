@@ -2,6 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "clear && npx kill-port 3000 && PORT=3000 next dev",
+    "debug": "clear && npx kill-port 3000 && PORT=3000 NODE_OPTIONS='--inspect' next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",

@@ -46,8 +46,8 @@ async function getUserHabits(selectedClientId: string, startDate?: Date) {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const res = await readClientHabitsByDateRange(
     selectedClientId,
-    getStartOfWeek(startDate),
-    addDays(getStartOfWeek(startDate), 27),
+    getStartOfWeek(startDate).toISOString().split("T")[0],
+    addDays(getStartOfWeek(startDate), 27).toISOString().split("T")[0],
     timezone
   );
 
@@ -100,13 +100,7 @@ const ClientHabitsPage = () => {
     enabled: !!(selectedClient && selectedClient.id),
   });
 
-  // Get the start of the week (Monday) for a given date
-  const getStartOfWeek = (date: Date): Date => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    return new Date(d.setDate(diff));
-  };
+  
 
   // Navigate to previous 4 weeks
   const goToPreviousWeeks = () => {

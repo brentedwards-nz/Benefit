@@ -14,11 +14,18 @@ interface HabitOverViewDaily {
 }
 
 // External function to fetch daily habits
-const fetchDailyHabits = async (clientId: string | undefined, selectedDate: Date) => {
+const fetchDailyHabits = async (
+  clientId: string | undefined,
+  selectedDate: Date
+) => {
   if (!clientId) {
     return [];
   }
-  const result = await readClientHabitsByDate(clientId, selectedDate);
+
+  const result = await readClientHabitsByDate(
+    clientId,
+    selectedDate.toISOString().split("T")[0]
+  );
   if (!result.success) {
     toast.error("Failed to fetch daily habit data");
     return [];
@@ -26,17 +33,31 @@ const fetchDailyHabits = async (clientId: string | undefined, selectedDate: Date
   return result.data;
 };
 
-const HabitOverViewDaily = ({ selectedDate, clientId, onHabitUpdated }: HabitOverViewDaily) => {
-  const { data: dailyHabits, isLoading } = useQuery<DailyHabit[]>(
-    {
-      queryKey: ["dailyHabits", clientId, selectedDate.toISOString()],
-      queryFn: () => fetchDailyHabits(clientId, selectedDate),
-      enabled: !!clientId,
-    }
-  );
+const HabitOverViewDaily = ({
+  selectedDate,
+  clientId,
+  onHabitUpdated,
+}: HabitOverViewDaily) => {
+  const {
+    data: dailyHabits,
+    isLoading,
+    refetch,
+  } = useQuery<DailyHabit[]>({
+    queryKey: ["habitOverViewDaily", clientId, selectedDate.toISOString()],
+    queryFn: () => fetchDailyHabits(clientId, selectedDate),
+    enabled: !!clientId,
+  });
+
+  const handleHabitUpdated = () => {
+    refetch();
+    onHabitUpdated();
+  };
 
   return (
     <div className="flex w-full flex-col items-center">
+      {/* <div className="w-full max-w-sm space-y-4">
+        <pre>{JSON.stringify(dailyHabits, null, 2)}</pre>
+      </div> */}
       <div className="w-full max-w-sm space-y-4">
         {isLoading ? (
           <Loading
@@ -47,9 +68,9 @@ const HabitOverViewDaily = ({ selectedDate, clientId, onHabitUpdated }: HabitOve
         ) : dailyHabits && dailyHabits.length > 0 ? (
           dailyHabits.map((habit) => (
             <HabitDailyCard
-              key={habit.programmeHabitId}
+              key={habit.clientHabitId}
               habit={habit}
-              onHabitUpdated={onHabitUpdated}
+              onHabitUpdated={handleHabitUpdated}
             />
           ))
         ) : (

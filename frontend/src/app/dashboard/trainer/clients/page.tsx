@@ -39,6 +39,7 @@ import {
 import { ClientHabitsSummary } from "@/components/dashboard/trainer/ClientHabitsSummary";
 import { FitbitActivities } from "@/components/dashboard/trainer/FitbitActivities";
 import { ClientEmailsSummary } from "@/components/dashboard/trainer/ClientEmailsSummary";
+import { normalizeDate } from "@/utils/date-utils";
 
 const calculateAge = (dateOfBirth: string | undefined) => {
   if (!dateOfBirth) return "N/A";
@@ -57,10 +58,12 @@ const TrainerClientsPage = () => {
   const [isStartDatePopoverOpen, setIsStartDatePopoverOpen] = useState(false);
   const [isEndDatePopoverOpen, setIsEndDatePopoverOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date>(() => {
-    return startOfWeek(new Date(), { weekStartsOn: 1 });
+    const start = normalizeDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
+    return start;
   });
   const [endDate, setEndDate] = useState<Date>(() => {
-    return endOfWeek(new Date(), { weekStartsOn: 1 });
+    const end = endOfWeek(new Date(), { weekStartsOn: 1 });
+    return normalizeDate(end);
   });
 
   const { data: clients = [], error: fetchClientsError } = useQuery({
@@ -285,8 +288,8 @@ const TrainerClientsPage = () => {
         <>
           <ClientHabitsSummary
             clientId={selectedClient.id}
-            startDate={startDate}
-            endDate={endDate}
+            startDate={normalizeDate(startDate).toISOString().split("T")[0]}
+            endDate={normalizeDate(endDate).toISOString().split("T")[0]}
           />
           <FitbitActivities
             clientId={selectedClient.id}

@@ -18,15 +18,27 @@ interface HabitDailyCardProps {
   onHabitUpdated: () => void;
 }
 
-export const HabitDailyCard = ({ habit, onHabitUpdated }: HabitDailyCardProps) => {
+export const HabitDailyCard = ({
+  habit,
+  onHabitUpdated,
+}: HabitDailyCardProps) => {
   const [isPending, startTransition] = useTransition();
+
   const [timesDone, setTimesDone] = useState(habit.timesDone);
+  const [habitFrequency, setHabitFrequency] = useState(
+    habit.habitFrequency || 1
+  );
+  const [isCompleted, setIsCompleted] = useState<boolean>(habit.completed);
+
   const [clientHabitId, setClientHabitId] = useState(
     habit.clientHabitId ?? null
   );
 
-  const habitFrequency = habit.habitFrequency ?? 1;
-  const isCompleted = timesDone >= habitFrequency;
+  // const habitFrequency = habit.habitFrequency ?? 1;
+  // const isCompleted = timesDone >= habitFrequency;
+
+  // console.log("*** Rendering HabitDailyCard for:");
+  // console.log(JSON.stringify(habit,null,2));
 
   const handleUpdate = (newTimesDone: number) => {
     const oldTimesDone = timesDone;
@@ -45,6 +57,7 @@ export const HabitDailyCard = ({ habit, onHabitUpdated }: HabitDailyCardProps) =
         if (result.data.id !== clientHabitId) {
           setClientHabitId(result.data.id);
         }
+        setIsCompleted(result.data.completed);
         onHabitUpdated();
       } else {
         toast.error(`Failed to update '${habit.title}'.`);
@@ -102,6 +115,11 @@ export const HabitDailyCard = ({ habit, onHabitUpdated }: HabitDailyCardProps) =
           </Button>
         </div>
         {habitFrequency > 1 && <Progress value={progress} className="w-full" />}
+
+        {/* <div>
+          <p>Is Completed {isCompleted ? "true" : "false"}</p>
+          <pre>{JSON.stringify(habit, null, 2)}</pre>
+        </div> */}
       </CardContent>
     </Card>
   );

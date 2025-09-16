@@ -13,8 +13,8 @@ export default async function ServerHabitsPage() {
 
   const clientHabits = await readClientHabitsByDateRange(
     session.user.id,
-    new Date("2025-09-01T00:00:00Z"),
-    new Date("2025-09-07T23:59:59Z")
+    new Date("2025-09-01T00:00:00Z").toISOString().split("T")[0],
+    new Date("2025-09-07T23:59:59Z").toISOString().split("T")[0]
   );
 
   const daysData = clientHabits.success ? clientHabits.data.HabitDayData : [];

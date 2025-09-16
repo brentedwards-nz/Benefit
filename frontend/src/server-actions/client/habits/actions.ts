@@ -1,11 +1,5 @@
 "use server";
-import {
-  addDays,
-  isSameDay,
-  differenceInCalendarDays,
-  startOfDay,
-  endOfDay,
-} from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 import { format } from "date-fns-tz";
 import { ActionResult } from "@/types/server-action-results";
 import { HabitDayData } from "./types";
@@ -13,12 +7,13 @@ import prisma from "@/utils/prisma/client";
 import { getDayColor } from "@/utils/general-utils";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { normalizeDate, normalizeDateString } from "@/utils/date-utils";
 
 interface QueryParameters {
   function_name: string;
   user_id: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
 }
 
 export interface HabitIntermediateData {
@@ -30,9 +25,8 @@ export interface HabitIntermediateData {
 
 export async function readClientHabitsByDateRange(
   user_id: string,
-  startDate: Date,
-  endDate: Date,
-  timezone: string = "UTC"
+  startDate: string,
+  endDate: string
 ): Promise<ActionResult<HabitIntermediateData>> {
   if (typeof user_id !== "string" || user_id.trim() === "") {
     console.error("Invalid auth_id provided to getClient Server Action.");
@@ -42,26 +36,18 @@ export async function readClientHabitsByDateRange(
     };
   }
 
-  const normalizedStartDate = startOfDay(startDate);
-  const normalizedEndDate = endOfDay(endDate);
-
-  if (
-    !normalizedStartDate ||
-    !normalizedEndDate ||
-    normalizedStartDate > normalizedEndDate
-  ) {
-    console.error("Invalid date range provided to getClientHabitsByDateRange.");
-    return {
-      success: false,
-      message: `Invalid date range provided`,
-    };
-  }
+  const queryParameters: QueryParameters = {
+    function_name: "readClientHabitsByDateRange",
+    user_id,
+    startDate,
+    endDate,
+  };
 
   try {
     const programmes = await getProgrammeHabitsbyClientAndDateRange(
       user_id,
-      normalizedStartDate,
-      normalizedEndDate
+      startDate,
+      endDate
     );
 
     if (!programmes.success) {
@@ -75,8 +61,8 @@ export async function readClientHabitsByDateRange(
 
     const clientHabits = await getClientHabitsByDateRange(
       user_id,
-      normalizedStartDate,
-      normalizedEndDate
+      startDate,
+      endDate
     );
     if (!clientHabits.success) {
       return {
@@ -88,19 +74,11 @@ export async function readClientHabitsByDateRange(
     }
 
     let habitDayData = calculateHabitDayData(
-      normalizedStartDate,
-      normalizedEndDate,
+      startDate,
+      endDate,
       programmes.data,
-      clientHabits.data,
-      timezone
+      clientHabits.data
     );
-
-    const queryParameters: QueryParameters = {
-      function_name: "readClientHabitsByDateRange",
-      user_id,
-      startDate: normalizedStartDate,
-      endDate: normalizedEndDate,
-    };
 
     const clientHabitsResult: HabitIntermediateData = {
       QueryParameters: queryParameters,
@@ -139,32 +117,28 @@ const areDatesOnSameDay = (date1: Date, date2: Date): boolean => {
 };
 
 function calculateHabitDayData(
-  startDate: Date,
-  endDate: Date,
+  startDate: string,
+  endDate: string,
   programmes: Programme[],
-  clientHabits: ClientHabit[],
-  timezone: string
+  clientHabits: ClientHabit[]
 ): HabitDayData[] {
   let result: HabitDayData[] = [];
   const duration = differenceInCalendarDays(endDate, startDate) + 1;
 
   for (let i = 0; i < duration; i++) {
-    const currentDate = addDays(new Date(startDate), i);
-    const dayStart = currentDate;
-    const dayEnd = addDays(dayStart, 1);
+    const currentDate = normalizeDate(addDays(new Date(startDate), i));
 
     // Calculate how many habits are scheduled for this day
-    const dayOfWeek =
-      parseInt(format(currentDate, "e", { timeZone: timezone })) - 1;
+    const dayOfWeek = parseInt(format(currentDate, "e")) - 1;
     let habitCount = 0;
 
     let isProgrammeDay = false;
 
     programmes.forEach((programme) => {
-      // A programme is active on a day if the day overlaps with the programme's date range.
-      // The programme's date range is inclusive, so we add a day to the end.
-      const programmeEnd = addDays(programme.endDate, 0);
-      if (dayStart < programmeEnd && dayEnd > programme.startDate) {
+      if (
+        currentDate >= programme.startDate &&
+        currentDate <= programme.endDate
+      ) {
         isProgrammeDay = true;
         programme.habits.forEach((habit) => {
           switch (dayOfWeek) {
@@ -198,9 +172,8 @@ function calculateHabitDayData(
     let completedHabitCount = 0;
     clientHabits.forEach((clientHabit) => {
       if (
-        clientHabit.habitDate >= dayStart &&
-        clientHabit.habitDate < dayEnd &&
-        clientHabit.timesDone > 0
+        isSameDay(clientHabit.habitDate, currentDate) &&
+        clientHabit.timesDone >= clientHabit.habitFrequency
       ) {
         completedHabitCount++;
       }
@@ -249,22 +222,21 @@ export interface HabitIntermediateData {
 
 async function getProgrammeHabitsbyClientAndDateRange(
   user_id: string,
-  begin: Date,
-  finish: Date | null
+  begin: string,
+  finish: string | null
 ): Promise<ActionResult<Programme[]>> {
   try {
-    const normalizedBegin = new Date(begin.getTime());
-    normalizedBegin.setUTCHours(0, 0, 0, 0);
+    const normalizedBegin = normalizeDateString(begin);
 
-    const normalizedFinish = finish ? new Date(finish.getTime()) : null;
+    const normalizedFinish = finish ? normalizeDateString(finish) : null;
     if (normalizedFinish) {
-      normalizedFinish.setUTCHours(0, 0, 0, 0);
+      normalizedFinish.setHours(0, 0, 0, 0);
     }
 
     const programmeWhereClause: any = {};
     if (normalizedFinish === null) {
       programmeWhereClause.AND = [
-        { startDate: { lte: addDays(normalizedBegin, 1) } },
+        { startDate: { lte: normalizedBegin } },
         { endDate: { gte: normalizedBegin } },
       ];
     } else {
@@ -370,22 +342,29 @@ interface ClientHabit {
   habitDate: Date;
   completed: boolean;
   timesDone: number;
+  habitFrequency: number;
 }
 
 async function getClientHabitsByDateRange(
   clientId: string,
-  beginDate: Date,
-  finishDate: Date
+  beginDate: string,
+  finishDate: string
 ): Promise<ActionResult<ClientHabit[]>> {
   try {
+    const normalizedBegin = normalizeDateString(beginDate);
+    normalizedBegin.setHours(0, 0, 0, 0);
+
+    const normalizedFinish = normalizeDateString(finishDate);
+    normalizedFinish.setHours(0, 0, 0, 0);
+
     const habits = await prisma.clientHabit.findMany({
       where: {
         AND: [
           { clientId: clientId },
           {
             habitDate: {
-              gte: beginDate,
-              lte: finishDate,
+              gte: normalizedBegin,
+              lte: normalizedFinish,
             },
           },
         ],
@@ -395,6 +374,17 @@ async function getClientHabitsByDateRange(
         habitDate: true,
         completed: true,
         timesDone: true,
+        programmeHabit: {
+          select: {
+            monFrequency: true,
+            tueFrequency: true,
+            wedFrequency: true,
+            thuFrequency: true,
+            friFrequency: true,
+            satFrequency: true,
+            sunFrequency: true,
+          },
+        },
       },
       orderBy: {
         habitDate: "asc",
@@ -409,12 +399,27 @@ async function getClientHabitsByDateRange(
       };
     }
 
-    const result: ClientHabit[] = habits.map((habit) => ({
-      programmeHabitId: habit.programmeHabitId,
-      habitDate: habit.habitDate,
-      completed: habit.completed,
-      timesDone: habit.timesDone,
-    }));
+    const result: ClientHabit[] = habits.map((habit) => {
+      const dayOfWeek = habit.habitDate.getDay(); // 0 for Sunday, 1 for Monday, ...
+      const frequencies = [
+        habit.programmeHabit.sunFrequency,
+        habit.programmeHabit.monFrequency,
+        habit.programmeHabit.tueFrequency,
+        habit.programmeHabit.wedFrequency,
+        habit.programmeHabit.thuFrequency,
+        habit.programmeHabit.friFrequency,
+        habit.programmeHabit.satFrequency,
+      ];
+      const habitFrequency = frequencies[dayOfWeek];
+
+      return {
+        programmeHabitId: habit.programmeHabitId,
+        habitDate: habit.habitDate,
+        completed: habit.completed,
+        timesDone: habit.timesDone,
+        habitFrequency: habitFrequency,
+      };
+    });
 
     return {
       success: true,
@@ -439,7 +444,7 @@ export interface DailyHabit {
   title: string;
   clientHabitId?: string;
   programmeHabitId: string;
-  habitDate: Date;
+  habitDate: string;
   completed: boolean;
   timesDone: number;
   habitFrequency?: number;
@@ -447,7 +452,7 @@ export interface DailyHabit {
 
 export async function readClientHabitsByDate(
   user_id: string, // Parameter restored as per user feedback
-  date: Date
+  date: string
 ): Promise<ActionResult<DailyHabit[]>> {
   // Security check: Ensure the caller is logged in.
   const session = await getServerSession(authOptions);
@@ -475,12 +480,15 @@ export async function readClientHabitsByDate(
     }
 
     // 2. Get existing ClientHabit records for that day for the specified user_id
+    const selectedDate = normalizeDateString(date);
     const existingClientHabits = await prisma.clientHabit.findMany({
       where: {
         clientId: user_id,
-        habitDate: date,
+        habitDate: selectedDate,
       },
     });
+
+    console.log(JSON.stringify(existingClientHabits, null, 2));
 
     // 3. Create a lookup map for easy access
     const clientHabitMap = new Map(
@@ -492,7 +500,7 @@ export async function readClientHabitsByDate(
       for (const habit of programme.habits) {
         const existingRecord = clientHabitMap.get(habit.id);
 
-        const dayOfWeek = date.getDay();
+        const dayOfWeek = selectedDate.getDay();
         const habitFrequency = [
           habit.sunFrequency,
           habit.monFrequency,
@@ -517,6 +525,9 @@ export async function readClientHabitsByDate(
       }
     }
 
+    console.log("*** readClientHabitsByDate result:");
+    console.log(JSON.stringify(result, null, 2));
+
     return {
       success: true,
       data: result,
@@ -538,11 +549,13 @@ export async function readClientHabitsByDate(
 }
 
 import { ClientHabit as PrismaClientHabit } from "@prisma/client";
+import en from "zod/v4/locales/en.cjs";
+import is from "zod/v4/locales/is.cjs";
 
 // This type is for data coming from the client
 type UpsertHabitData = {
   programmeHabitId: string;
-  habitDate: Date;
+  habitDate: string;
   timesDone: number;
   completed: boolean;
 };
@@ -570,12 +583,15 @@ export async function upsertClientHabit(
 
     // The unique constraint is on (programmeHabitId, clientId, habitDate)
     // So we use that to find the record to update or create.
+    const selectedDate = new Date(habitDate);
+    selectedDate.setUTCHours(0, 0, 0, 0); // Normalize to start of day UTC
+
     const result = await prisma.clientHabit.upsert({
       where: {
         programmeHabitId_clientId_habitDate: {
           programmeHabitId,
           clientId,
-          habitDate,
+          habitDate: selectedDate,
         },
       },
       update: {
@@ -585,7 +601,7 @@ export async function upsertClientHabit(
       create: {
         programmeHabitId,
         clientId,
-        habitDate,
+        habitDate: selectedDate,
         timesDone,
         completed,
       },
@@ -596,4 +612,7 @@ export async function upsertClientHabit(
     console.error("Error upserting client habit:", error);
     return { success: false, message: "Failed to update habit." };
   }
+}
+function isSameDay(habitDate: Date, currentDate: Date): boolean {
+  return areDatesOnSameDay(habitDate, currentDate);
 }
