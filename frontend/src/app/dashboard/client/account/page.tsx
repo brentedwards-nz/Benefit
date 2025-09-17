@@ -1,28 +1,45 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { readTransactions } from "@/server-actions/admin/transactions/actions";
 import { readAllClients } from "@/server-actions/admin/clients/actions";
 import TransactionManager from "@/components/dashboard/admin/transactions/transaction-manager";
+import { Loading } from "@/components/ui/loading";
 
-export default async function ClientTransactions() {
-  const [transactionsResult, clientsResult] = await Promise.all([
-    readTransactions(),
-    readAllClients(),
-  ]);
+export default function ClientTransactions() {
+  const {
+    data: transactionsResult,
+    error: transactionsError,
+    isLoading: isLoadingTransactions,
+  } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: () => readTransactions(),
+  });
 
-  const transactions = transactionsResult.success
+  const {
+    data: clientsResult,
+    error: clientsError,
+    isLoading: isLoadingClients,
+  } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => readAllClients(),
+  });
+
+  if (isLoadingTransactions || isLoadingClients) {
+    return <Loading title="Loading..." />;
+  }
+
+  const transactions = transactionsResult?.success
     ? transactionsResult.data
     : [];
-  const transactionsError = transactionsResult.success
-    ? null
-    : transactionsResult.message;
-  const clients = clientsResult.success ? clientsResult.data : [];
-  const clientError = clientsResult.success ? null : clientsResult.message;
+  const clients = clientsResult?.success ? clientsResult.data : [];
 
   return (
     <TransactionManager
       initialTransactions={transactions}
-      transactionsError={transactionsError}
+      transactionsError={transactionsError?.message || transactionsResult?.message || null}
       initialClients={clients}
-      clientError={clientError}
+      clientError={clientsError?.message || clientsResult?.message || null}
     />
   );
 }
