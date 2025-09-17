@@ -26,6 +26,10 @@ const menuDefinition: NavData = {
           url: "/dashboard/client/settings",
         },
         {
+          title: "Account",
+          url: "/dashboard/client/account",
+        },
+        {
           title: "Weekly View",
           url: "/dashboard/client/habits/weekly",
           isDisabled: true,
@@ -69,7 +73,7 @@ const menuDefinition: NavData = {
     {
       title: "Settings",
       url: "/dashboard/settings",
-      roles: ["SystemAdmin", "Admin"], // Only SystemAdmin
+      roles: ["SystemAdmin", "Admin"],
       items: [
         {
           title: "OAuth Settings",
