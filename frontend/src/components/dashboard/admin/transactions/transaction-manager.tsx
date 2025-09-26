@@ -366,6 +366,7 @@ export default function TransactionManager({
               />
             </DialogContent>
           </Dialog>
+          <Button className="w-full md:flex-1">Import Payments</Button>
         </div>
       </div>
       <Table>
