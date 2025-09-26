@@ -88,8 +88,6 @@ export async function readTransactions(
       },
     });
 
-    console.log(JSON.stringify(transactions, null, 2));
-
     return {
       success: true,
       data: transactions.map((tx) => ({

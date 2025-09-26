@@ -37,9 +37,17 @@ export default function ClientTransactions() {
   return (
     <TransactionManager
       initialTransactions={transactions}
-      transactionsError={transactionsError?.message || transactionsResult?.message || null}
+      transactionsError={
+        transactionsError?.message ||
+        (!transactionsResult?.success && transactionsResult?.message) ||
+        null
+      }
       initialClients={clients}
-      clientError={clientsError?.message || clientsResult?.message || null}
+      clientError={
+        clientsError?.message ||
+        (!clientsResult?.success && clientsResult?.message) ||
+        null
+      }
     />
   );
 }
