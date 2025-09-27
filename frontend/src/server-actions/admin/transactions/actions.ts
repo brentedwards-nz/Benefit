@@ -13,6 +13,7 @@ import {
   $Enums,
 } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 export async function readTransactions(
   clientId?: string,
@@ -272,6 +273,69 @@ export async function updateTransaction(
         total: updatedTransaction.total.toNumber(),
         taxRate: updatedTransaction.taxRate.toNumber(),
       },
+    };
+  } catch (err: any) {
+    console.error(err);
+
+    return {
+      success: false,
+      message: `An unexpected server error occurred: ${
+        err.message || "Unknown error"
+      }`,
+      code: "UNEXPECTED_SERVER_ERROR",
+      details:
+        process.env.NODE_ENV === "development"
+          ? { stack: err.stack }
+          : undefined,
+    };
+  }
+}
+
+export async function importPayments(
+  formData: FormData
+): Promise<ActionResult<{ message: string }>> {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
+    return {
+      success: false,
+      message: "You must be logged in to perform this action.",
+      code: "UNAUTHENTICATED",
+    };
+  }
+
+  const userRoles = session.user.roles as UserRole[] | undefined;
+  if (
+    !userRoles ||
+    (!userRoles.includes(UserRole.Admin) &&
+      !userRoles.includes(UserRole.SystemAdmin))
+  ) {
+    return {
+      success: false,
+      message: "You are not authorized to import payments.",
+      code: "UNAUTHORIZED",
+    };
+  }
+
+  try {
+    // Dummy implementation that waits for 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    if (Math.random() > 0.5) {
+      return {
+        success: false,
+        message: "The import failed due to a random error.",
+        code: "RANDOM_ERROR",
+      };
+    }
+
+    const file = formData.get("file") as File;
+    console.log("Processing file:", file.name);
+
+    revalidatePath("/dashboard/admin/transactions");
+
+    return {
+      success: true,
+      data: { message: "Import completed successfully." },
     };
   } catch (err: any) {
     console.error(err);
